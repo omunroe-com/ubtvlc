@@ -2,7 +2,7 @@
  * i420_yuy2.c : YUV to YUV conversion module for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: i420_yuy2.c 12371 2005-08-23 18:23:20Z sam $
+ * $Id: i420_yuy2.c 14276 2006-02-12 21:22:20Z titer $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -390,6 +390,10 @@ static void I420_UYVY( vout_thread_t *p_vout, picture_t *p_source,
         p_line1 += i_dest_margin;
         p_line2 += i_dest_margin;
     }
+
+#if defined (MODULE_NAME_IS_i420_yuy2_mmx)
+    __asm__ __volatile__("emms" :: );
+#endif
 }
 
 /*****************************************************************************

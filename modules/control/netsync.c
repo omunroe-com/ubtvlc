@@ -2,7 +2,7 @@
  * netsync.c: synchronisation between several network clients.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: netsync.c 12657 2005-09-22 21:23:35Z gbazin $
+ * $Id: netsync.c 15169 2006-04-11 09:27:46Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -41,8 +41,7 @@
 
 #include "network.h"
 
-#define NETSYNC_PORT_MASTER 9875
-#define NETSYNC_PORT_SLAVE  9876
+#define NETSYNC_PORT 9875
 
 /* Needed for Solaris */
 #ifndef INADDR_NONE
@@ -57,19 +56,21 @@ static void Close   ( vlc_object_t * );
 
 static mtime_t GetClockRef( intf_thread_t *, mtime_t );
 
-#define NETSYNC_TEXT N_( "Act as master for network synchronisation" )
-#define NETSYNC_LONGTEXT N_( "Allows you to specify if this client should " \
-  "act as the master client for the network synchronisation." )
+/// \bug [String] This string is BAD.
+#define NETSYNC_TEXT N_( "Act as master" )
+#define NETSYNC_LONGTEXT N_( "Should " \
+  "act as the master client for the network synchronisation?" )
 
+/// \bug [String] This string is BAD.
 #define MIP_TEXT N_( "Master client ip address" )
-#define MIP_LONGTEXT N_( "Allows you to specify the ip address of " \
+#define MIP_LONGTEXT N_( "IP address of " \
   "the master client used for the network synchronisation." )
 
 vlc_module_begin();
-    set_shortname( _("Netsync"));
+    set_shortname( _("Network Sync"));
     set_description( _("Network synchronisation") );
-    set_category( CAT_INTERFACE );
-    set_subcategory( SUBCAT_INTERFACE_CONTROL );
+    set_category( CAT_ADVANCED );
+    set_subcategory( SUBCAT_ADVANCED_MISC );
 
     add_bool( "netsync-master", 0, NULL,
               NETSYNC_TEXT, NETSYNC_LONGTEXT, VLC_TRUE );
@@ -96,8 +97,6 @@ static void Run( intf_thread_t *p_intf );
 static int Activate( vlc_object_t *p_this )
 {
     intf_thread_t *p_intf = (intf_thread_t*)p_this;
-
-    msg_Info( p_intf, "Using the netsync interface module..." );
 
     p_intf->p_sys = malloc( sizeof( intf_sys_t ) );
     if( !p_intf->p_sys )
@@ -144,16 +143,16 @@ static void Run( intf_thread_t *p_intf )
         }
     }
 
-    i_socket = net_OpenUDP( p_intf, NULL,
-                   b_master ? NETSYNC_PORT_MASTER : NETSYNC_PORT_SLAVE,
-                   b_master ? NULL : psz_master,
-                   b_master ? 0 : NETSYNC_PORT_MASTER );
+    if( b_master )
+        i_socket = net_OpenUDP( p_intf, NULL, NETSYNC_PORT, NULL, 0 );
+    else
+        i_socket = net_ConnectUDP( p_intf, psz_master, NETSYNC_PORT, 0 );
 
     if( psz_master ) free( psz_master );
 
     if( i_socket < 0 )
     {
-        msg_Err( p_intf, "failed opening UDP socket." );
+        msg_Err( p_intf, "failed opening UDP socket" ); /* str review: is this good enough? */
         return;
     }
 
@@ -214,7 +213,8 @@ static void Run( intf_thread_t *p_intf )
             /* We received something */
             i_struct_size = sizeof( from );
             i_read = recvfrom( i_socket, p_data, MAX_MSG_LENGTH, 0,
-                               (struct sockaddr*)&from, &i_struct_size );
+                               (struct sockaddr*)&from,
+                               (unsigned int *)&i_struct_size );
 
             i_clockref = ntoh64(*(int64_t *)p_data);
 
@@ -295,7 +295,7 @@ static void Run( intf_thread_t *p_intf )
 #if 0
             msg_Dbg( p_intf, "Slave clockref: "I64Fd" -> "I64Fd" -> "I64Fd", "
                      "clock diff: "I64Fd" drift: "I64Fd,
-                     i_clockref, i_master_clockref, 
+                     i_clockref, i_master_clockref,
                      i_client_clockref, i_diff_date, i_drift );
 #endif
 

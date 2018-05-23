@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "plugin.h"
@@ -41,7 +41,7 @@ STDMETHODIMP VLCOleInPlaceActiveObject::GetWindow(HWND *pHwnd)
 
 STDMETHODIMP VLCOleInPlaceActiveObject::EnableModeless(BOOL fEnable)
 {
-    return E_NOTIMPL;
+    return S_OK;
 };
 
 STDMETHODIMP VLCOleInPlaceActiveObject::ContextSensitiveHelp(BOOL fEnterMode)
@@ -51,21 +51,41 @@ STDMETHODIMP VLCOleInPlaceActiveObject::ContextSensitiveHelp(BOOL fEnterMode)
 
 STDMETHODIMP VLCOleInPlaceActiveObject::TranslateAccelerator(LPMSG lpmsg)
 {
-    return E_NOTIMPL;
+    HRESULT hr = S_FALSE;
+    LPOLEOBJECT oleObj;
+    if( SUCCEEDED(QueryInterface(IID_IOleObject, (LPVOID *)&oleObj)) )
+    {
+        LPOLECLIENTSITE clientSite;
+        if( SUCCEEDED(oleObj->GetClientSite(&clientSite)) && (NULL != clientSite) )
+        {
+            IOleControlSite *controlSite;
+            if( SUCCEEDED(clientSite->QueryInterface(IID_IOleControlSite, (LPVOID *)&controlSite)) )
+            {
+                hr = controlSite->TranslateAccelerator(lpmsg,
+                    ((GetKeyState(VK_SHIFT) >> 15) & 1) |
+                    ((GetKeyState(VK_CONTROL) >> 14) & 2) |
+                    ((GetKeyState(VK_MENU) >> 13) & 4) );
+                controlSite->Release();
+            }
+            clientSite->Release();
+        }
+        oleObj->Release();
+    }
+    return hr;
 };
 
 STDMETHODIMP VLCOleInPlaceActiveObject::OnFrameWindowActivate(BOOL fActivate)
 {
-    return E_NOTIMPL;
+    return S_OK;
 };
 
 STDMETHODIMP VLCOleInPlaceActiveObject::OnDocWindowActivate(BOOL fActivate)
 {
-    return E_NOTIMPL;
+    return S_OK;
 };
 
 STDMETHODIMP VLCOleInPlaceActiveObject::ResizeBorder(LPCRECT prcBorder, LPOLEINPLACEUIWINDOW pUIWindow, BOOL fFrameWindow)
 {
-    return E_NOTIMPL;
+    return S_OK;
 };
 

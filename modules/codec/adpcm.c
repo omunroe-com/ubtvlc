@@ -2,10 +2,10 @@
  * adpcm.c : adpcm variant audio decoder
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: adpcm.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: adpcm.c 14989 2006-03-30 22:58:23Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
- *          Remi Denis-Courmont <rem # videolan.org>
+ *          Rémi Denis-Courmont <rem # videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -147,7 +147,8 @@ static int OpenDecoder( vlc_object_t *p_this )
     if( p_dec->fmt_in.audio.i_channels <= 0 ||
         p_dec->fmt_in.audio.i_channels > 5 )
     {
-        msg_Err( p_dec, "bad channels count(1-5)" );
+        msg_Err( p_dec, "invalid number of channel (not between 1 and 5): %i", 
+                 p_dec->fmt_in.audio.i_channels );
         return VLC_EGENERIC;
     }
 
@@ -236,7 +237,7 @@ static int OpenDecoder( vlc_object_t *p_this )
             p_dec->fmt_in.audio.i_channels;
     }
 
-    msg_Dbg( p_dec, "format: samplerate:%dHz channels:%d bits/sample:%d "
+    msg_Dbg( p_dec, "format: samplerate:%d Hz channels:%d bits/sample:%d "
              "blockalign:%d samplesperblock:%d",
              p_dec->fmt_in.audio.i_rate, p_dec->fmt_in.audio.i_channels,
              p_dec->fmt_in.audio.i_bitspersample, p_sys->i_block,

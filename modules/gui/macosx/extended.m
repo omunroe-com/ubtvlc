@@ -2,9 +2,9 @@
  * extended.m: MacOS X Extended interface panel
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: extended.m 12767 2005-10-06 16:45:21Z fkuehne $
+ * $Id: extended.m 15209 2006-04-14 09:37:39Z zorglub $
  *
- * Authors: Felix Kühne <fkuehne@users.sf.net>
+ * Authors: Felix KÃ¼hne <fkuehne@users.sf.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,14 +18,14 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 
 /*****************************************************************************
  * Note: 
  * the code used to bind with VLC's modules is heavily based upon 
- * ../wxwidgets/extrapanel.cpp, written by Clément Stenac.
+ * ../wxwidgets/extrapanel.cpp, written by ClÃ©ment Stenac.
  * the code used to insert/remove the views was inspired by intf.m, 
  * written by Derk-Jan Hartman and Benjamin Pracht. 
  * (all 3 are members of the VideoLAN team) 
@@ -81,26 +81,27 @@ static VLCExtended *_o_sharedInstance = nil;
     [o_lbl_audio setStringValue: _NS("Audio")];
     [o_lbl_audioFlts setStringValue: _NS("Audio filters")];
     [o_lbl_videoFlts setStringValue: _NS("Video filters")];
-    [o_lbl_adjustImage setStringValue: _NS("Adjust Image")];
+    [o_lbl_adjustImage setStringValue: _NS("Image adjustment")];
     [o_btn_vidFlts_mrInfo setTitle: _NS("More Info")];
     [o_ckb_blur setTitle: _NS("Blurring")];
-    [o_ckb_blur setToolTip: _NS("Creates a motion blurring on the image")];
+    [o_ckb_blur setToolTip: _NS("Adds motion blurring to the image")];
     [o_ckb_distortion setTitle: _NS("Distortion")];
-    [o_ckb_distortion setToolTip: _NS("Adds distorsion effects")];
+    [o_ckb_distortion setToolTip: _NS("Adds distortion effects")];
     [o_ckb_imgClone setTitle: _NS("Image clone")];
-    [o_ckb_imgClone setToolTip: _NS("Creates several clones of the image")];
+    [o_ckb_imgClone setToolTip: _NS("Creates several copies of the Video " \
+                                    "output window" )];
     [o_ckb_imgCrop setTitle: _NS("Image cropping")];
-    [o_ckb_imgCrop setToolTip: _NS("Crops the image")];
+    [o_ckb_imgCrop setToolTip: _NS("Crops a defined part of the image")];
     [o_ckb_imgInvers setTitle: _NS("Image inversion")];
-    [o_ckb_imgInvers setToolTip: _NS("Inverts the image colors")];
+    [o_ckb_imgInvers setToolTip: _NS("Inverts the colors of the image")];
     [o_ckb_trnsform setTitle: _NS("Transformation")];
     [o_ckb_trnsform setToolTip: _NS("Rotates or flips the image")];
     [o_ckb_vlme_norm setTitle: _NS("Volume normalization")];
-    [o_ckb_vlme_norm setToolTip: _NS("This filters prevents the audio output " \
-        "power from going over a defined value.")];
+    [o_ckb_vlme_norm setToolTip: _NS("Prevents the audio output from going " \
+        "over a predefined value.")];
     [o_ckb_hdphnVirt setTitle: _NS("Headphone virtualization")];
-    [o_ckb_hdphnVirt setToolTip: _NS("This filter gives the feeling of a " \
-        "5.1 speaker set when using a headphone.")];
+    [o_ckb_hdphnVirt setToolTip: _NS("Imitates the effect of surround sound " \
+        "when using headphones.")];
     [o_lbl_maxLevel setStringValue: _NS("Maximum level")];
     [o_btn_rstrDefaults setTitle: _NS("Restore Defaults")];
     [o_ckb_enblAdjustImg setTitle: _NS("Enable")];
@@ -305,8 +306,7 @@ static VLCExtended *_o_sharedInstance = nil;
         {
             config_PutFloat( p_intf , "saturation" , [o_sld_saturation floatValue] / 100);
         } else {
-            msg_Warn( p_intf, "cannot find adjust-image-subfilter related to " \
-                "moved slider");
+            msg_Warn( p_intf, "the corresponding subfilter coundn't be found" );
         }
     } else {
         vlc_value_t val;
@@ -336,8 +336,7 @@ static VLCExtended *_o_sharedInstance = nil;
             var_Set( p_vout, "saturation", val );
             config_PutFloat( p_intf , "saturation" , [o_sld_saturation floatValue] / 100);
         } else {
-            msg_Warn( p_intf, "cannot find adjust-image-subfilter related to " \
-                "moved slider");
+            msg_Warn( p_intf, "the corresponding subfilter coundn't be found" );
         }
         vlc_object_release( p_vout );
     }
@@ -356,24 +355,20 @@ static VLCExtended *_o_sharedInstance = nil;
         FIND_ANYWHERE );
     vout_thread_t *p_vout = vlc_object_find( VLCIntf, VLC_OBJECT_VOUT, FIND_ANYWHERE );
     vout_thread_t *p_real_vout;
-    
+
     val.f_float = [o_sld_opaque floatValue] / 100;
+
 
     if( p_vout != NULL )
     {
-        if( p_vout->i_object_type == VLC_OBJECT_OPENGL )
-        {
-            p_real_vout = (vout_thread_t *) p_vout->p_parent;
-        }
-        else
-        {
-            p_real_vout = p_vout;
-        }
+        p_real_vout = [VLCVoutView getRealVout: p_vout];
         var_Set( p_real_vout, "macosx-opaqueness", val );
-    
+
         while ((o_window = [o_enumerator nextObject]))
         {
-            if( [[o_window className] isEqualToString: @"VLCWindow"] )
+            if( [[o_window className] isEqualToString: @"VLCWindow"] ||
+                [[[VLCMain sharedInstance] getEmbeddedList]
+                                    windowContainsEmbedded: o_window])
             {
                 [o_window setAlphaValue: val.f_float];
             }
@@ -603,14 +598,14 @@ static VLCExtended *_o_sharedInstance = nil;
 - (IBAction)vidFlts_mrInfo:(id)sender
 {
     /* show info sheet */
-    NSBeginInformationalAlertSheet(_NS("More information"), _NS("OK"), @"", @"", \
-        o_extended_window, nil, nil, nil, nil, _NS("Select the video effects " \
-        "filters to apply. You must restart the stream for these settings to " \
-        "take effect.\nTo configure the filters, go to the Preferences, and " \
-        "go to Modules/Video Filters. You can then configure each filter.\n" \
-        "If you want fine control over the filters ( to choose the order in " \
-        "which they are applied ), you need to enter manually a filters " \
-        "string (Preferences / Video / Filters)."));
+/// \bug [String] Misplaced \n
+    NSBeginInformationalAlertSheet(_NS("More Information"), _NS("OK"), @"", @"", \
+        o_extended_window, nil, nil, nil, nil, _NS("This panel allows to " \
+        "select video effects filters to apply.\n" \
+        "The filters can be configured indivudually in the Preferences, in " \
+        "the subsections of Video/Filters\n." \
+        "To choose the order in which the filter are applied, a filter " \
+        "option string can be set in the Preferences, Video / Filters section."));
 }
 
 
@@ -783,10 +778,9 @@ static VLCExtended *_o_sharedInstance = nil;
 
         if (returnedValue != 0)
         {
-            msg_Err(p_playlist, "VLCExtended: error while saving the " \
-            "preferences of '%s' (%i)", [[theModules objectAtIndex: x] \
-            UTF8String] , returnedValue);
-            
+            msg_Err(p_playlist, "unable to save the preferences of the " \
+            "extended control attribute '%s' (%i)", 
+            [[theModules objectAtIndex: x] UTF8String] , returnedValue);
             [theModules release];
             vlc_object_release( p_playlist );
             

@@ -1,11 +1,12 @@
 # ***************************************************************************
 # Makefile : Build vlc-contrib files
 # ***************************************************************************
-# Copyright (C) 2003-2005 the VideoLAN team
-# $Id: Makefile 12879 2005-10-18 21:02:04Z fkuehne $
+# Copyright (C) 2003-2006 the VideoLAN team
+# $Id: Makefile 14760 2006-03-14 21:52:53Z xtophe $
 # 
 # Authors: Christophe Massiot <massiot@via.ecp.fr>
 #          Derk-Jan Hartman <hartman at videolan dot org>
+#          Christophe Mutricy <xtophe at videolan dot org>
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +20,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 # ***************************************************************************
 
 include ./config.mak
@@ -27,7 +28,10 @@ include ./config.mak
 BUILDDIRS = bin doc etc include info lib man sbin share vlc-lib tmp
 
 all: FORCE
-	@echo "Do you mean to make src or make bin ?"
+#	@echo "Do you mean to make src or make bin ?"
+	@echo "    'make bin' isn't functional at the moment,"
+	@echo "    running 'make src' instead..."
+	$(MAKE) src
 
 src: FORCE
 	$(MAKE) -C src all
@@ -66,7 +70,7 @@ clean: FORCE
 	@echo "    you can still run 'make clean-bin' manually if needed"
 	$(MAKE) clean-src
 
-package: FORCE
+package-macosx: FORCE
 	@if test -d tmp; then \
 		echo "Move away ./tmp, it's in the way" ; \
 		exit 1 ; \
@@ -79,4 +83,27 @@ package: FORCE
 	(cd tmp; tar cf - .) | bzip2 -c > contrib-macosx.tar.bz2
 	rm -rf tmp
 
+package-win32: FORCE
+	@if test -d tmp; then \
+		echo "Move away ./tmp, it's in the way" ; \
+		exit 1 ; \
+	fi
+	mkdir -p tmp/usr/win32
+	tar cf - --dereference bin sbin include lib share/aclocal*\
+		share/autoconf* \
+		share/automake* share/gettext* gecko-sdk\
+		| (cd tmp/usr/win32; tar xpf -)
+#kludge for live.com
+	mkdir -p tmp/usr/win32/live.com
+	for i in groupsock liveMedia UsageEnvironment BasicUsageEnvironment; do \
+		mkdir -p  tmp/usr/win32/live.com/$$i/include; \
+		cp -r src/live/$$i/include tmp/usr/win32/live.com/$$i; \
+		cp src/live/$$i/lib$${i}.a  tmp/usr/win32/live.com/$$i; \
+	done;
+	./change_prefix.sh tmp $(PREFIX) /usr/win32
+#	Klugy kludge	
+	(cd tmp/usr/win32/bin; rm -f *.exe; chmod a+x *)
+	(cd tmp; tar cf - usr/win32/) | bzip2 -c > contrib-`date +%Y%m%d`-win32-bin-gcc-`$(CC) --version|head -n 1|cut -f 3 -d ' '`-only.tar.bz2
+	rm -rf tmp
 FORCE:
+

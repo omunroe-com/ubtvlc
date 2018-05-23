@@ -1,10 +1,11 @@
 /*****************************************************************************
  r playlistinfo.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: playlistinfo.m 12560 2005-09-15 14:21:38Z hartman $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: playlistinfo.m 14929 2006-03-25 18:54:58Z fkuehne $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org>
+ *          Felix Kühne <fkuehne at videolan dot org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -42,6 +43,7 @@
     if( self != nil )
     {
         p_item = NULL;
+        o_statUpdateTimer = nil;
     }
     return( self );
 }
@@ -50,18 +52,66 @@
 {
     [o_info_window setExcludedFromWindowsMenu: TRUE];
 
-    [o_info_window setTitle: _NS("Properties")];
+    [o_info_window setTitle: _NS("Information")];
     [o_uri_lbl setStringValue: _NS("URI")];
     [o_title_lbl setStringValue: _NS("Title")];
     [o_author_lbl setStringValue: _NS("Author")];
     [o_btn_ok setTitle: _NS("OK")];
     [o_btn_cancel setTitle: _NS("Cancel")];
+    
+    [[o_tab_view tabViewItemAtIndex: 0] setLabel: _NS("General")];
+    [[o_tab_view tabViewItemAtIndex: 1] setLabel: _NS("Advanced Information")];
+    [[o_tab_view tabViewItemAtIndex: 2] setLabel: _NS("Statistics")];
+    [o_tab_view selectTabViewItemAtIndex: 0];
+
+    /* constants defined in vlc_meta.h */
+    [o_genre_lbl setStringValue: _NS(VLC_META_GENRE)];
+    [o_copyright_lbl setStringValue: _NS(VLC_META_COPYRIGHT)];
+    [o_collection_lbl setStringValue: _NS(VLC_META_COLLECTION)];
+    [o_seqNum_lbl setStringValue: _NS(VLC_META_SEQ_NUM)];
+    [o_description_lbl setStringValue: _NS(VLC_META_DESCRIPTION)];
+    [o_rating_lbl setStringValue: _NS(VLC_META_RATING)];
+    [o_date_lbl setStringValue: _NS(VLC_META_DATE)];
+    [o_language_lbl setStringValue: _NS(VLC_META_LANGUAGE)];
+    [o_nowPlaying_lbl setStringValue: _NS(VLC_META_NOW_PLAYING)];
+    [o_publisher_lbl setStringValue: _NS(VLC_META_PUBLISHER)];
+    
+    /* statistics */
+    [o_input_box setTitle: _NS("Input")];
+    [o_read_bytes_lbl setStringValue: _NS("Read at media")];
+    [o_input_bitrate_lbl setStringValue: _NS("Input bitrate")];
+    [o_demux_bytes_lbl setStringValue: _NS("Demuxed")];
+    [o_demux_bitrate_lbl setStringValue: _NS("Stream bitrate")];
+    
+    [o_video_box setTitle: _NS("Video")];
+    [o_video_decoded_lbl setStringValue: _NS("Decoded blocks")];
+    [o_displayed_lbl setStringValue: _NS("Displayed frames")];
+    [o_lost_frames_lbl setStringValue: _NS("Lost frames")];
+    
+    [o_sout_box setTitle: _NS("Streaming")];
+    [o_sent_packets_lbl setStringValue: _NS("Sent packets")];
+    [o_sent_bytes_lbl setStringValue: _NS("Sent bytes")];
+    [o_sent_bitrate_lbl setStringValue: _NS("Send rate")];
+    
+    [o_audio_box setTitle: _NS("Audio")];
+    [o_audio_decoded_lbl setStringValue: _NS("Decoded blocks")];
+    [o_played_abuffers_lbl setStringValue: _NS("Played buffers")];
+    [o_lost_abuffers_lbl setStringValue: _NS("Lost buffers")];
+}
+
+- (void)dealloc
+{
+    /* make sure that it is released in any case */
+    if ( o_statUpdateTimer )
+        [o_statUpdateTimer release];
+    [super dealloc];
 }
 
 - (IBAction)togglePlaylistInfoPanel:(id)sender
 {
     if( [o_info_window isVisible] )
     {
+        [self windowShouldClose: nil];
         [o_info_window orderOut: sender];
     }
     else
@@ -75,6 +125,7 @@
 {
     if( [o_info_window isVisible] )
     {
+        [self windowShouldClose: nil];
         [o_info_window orderOut: sender];
     }
     else
@@ -88,16 +139,52 @@
             p_item = p_playlist->status.p_item;
             vlc_object_release( p_playlist );
         }
+
+        BOOL b_stats = config_GetInt(VLCIntf, "stats");
+        if( b_stats )
+        {
+            o_statUpdateTimer = [NSTimer scheduledTimerWithTimeInterval: 1 \
+                target: self selector: @selector(updateStatistics:) \
+                userInfo: nil repeats: YES]; 
+            [o_statUpdateTimer fire];
+            [o_statUpdateTimer retain];
+        }
+        else
+        {
+            if( [o_tab_view numberOfTabViewItems] > 2 )
+            [o_tab_view removeTabViewItem: [o_tab_view tabViewItemAtIndex: 2]];
+        }
+
         [self initPanel:sender];
     }
 }
 
 - (void)initPanel:(id)sender
 {
+    [self updatePanel];
+    [o_info_window makeKeyAndOrderFront: sender];
+}
+
+- (void)updatePanel
+{
+    /* make sure that we got the current item and not an outdated one */
+    intf_thread_t * p_intf = VLCIntf;
+        playlist_t * p_playlist = vlc_object_find( p_intf, VLC_OBJECT_PLAYLIST,
+                                          FIND_ANYWHERE );
+
+    if( p_playlist )
+    {
+        p_item = p_playlist->status.p_item;
+        vlc_object_release( p_playlist );
+    }
+
+    /* check whether our item is valid, because we would crash if not */
+    if(! [self isItemInPlaylist: p_item] ) return;
+
     char *psz_temp;
     vlc_mutex_lock( &p_item->input.lock );
 
-    /*fill uri / title / author info */
+    /* fill uri / title / author info */
     if( p_item->input.psz_uri )
     {
         [o_uri_txt setStringValue:
@@ -123,14 +210,85 @@
         free( psz_temp );
     }
 
+    /* fill the other fields */
+    [self setMeta: VLC_META_GENRE forLabel: o_genre_txt];
+    [self setMeta: VLC_META_COPYRIGHT forLabel: o_copyright_txt];
+    [self setMeta: VLC_META_COLLECTION forLabel: o_collection_txt];
+    [self setMeta: VLC_META_SEQ_NUM forLabel: o_seqNum_txt];
+    [self setMeta: VLC_META_DESCRIPTION forLabel: o_description_txt];
+    [self setMeta: VLC_META_RATING forLabel: o_rating_txt];
+    [self setMeta: VLC_META_DATE forLabel: o_date_txt];
+    [self setMeta: VLC_META_LANGUAGE forLabel: o_language_txt];
+    [self setMeta: VLC_META_NOW_PLAYING forLabel: o_nowPlaying_txt];
+    [self setMeta: VLC_META_PUBLISHER forLabel: o_publisher_txt];
+
+    /* reload the advanced table */
     [[VLCInfoTreeItem rootItem] refresh];
     [o_outline_view reloadData];
 
-    [o_info_window makeKeyAndOrderFront: sender];
+    /* update the stats once to display p_item change faster */
+    [self updateStatistics: nil];
+}
+
+- (void)setMeta: (char *)meta forLabel: (id)theItem
+{
+    char *psz_meta = vlc_input_item_GetInfo( &p_item->input, \
+        _(VLC_META_INFO_CAT), _(meta) );
+    if( psz_meta != NULL && *psz_meta)
+        [theItem setStringValue: [NSString stringWithUTF8String: psz_meta]];
+    else
+        [theItem setStringValue: @"-"];
+}
+
+- (void)updateStatistics:(NSTimer*)theTimer
+{
+    if( [self isItemInPlaylist: p_item] )
+    {
+        /* we can only do that if there's a valid input around */
+
+        vlc_mutex_lock( &p_item->input.p_stats->lock );
+
+        /* input */
+        [o_read_bytes_txt setStringValue: [NSString stringWithFormat: \
+            @"%8.0f kB", (float)(p_item->input.p_stats->i_read_bytes)/1000]];
+        [o_input_bitrate_txt setStringValue: [NSString stringWithFormat: \
+            @"%6.0f kb/s", (float)(p_item->input.p_stats->f_input_bitrate)*8000]];
+        [o_demux_bytes_txt setStringValue: [NSString stringWithFormat: \
+            @"%8.0f kB", (float)(p_item->input.p_stats->i_demux_read_bytes)/1000]];
+        [o_demux_bitrate_txt setStringValue: [NSString stringWithFormat: \
+            @"%6.0f kb/s", (float)(p_item->input.p_stats->f_demux_bitrate)*8000]];
+
+        /* Video */
+        [o_video_decoded_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_decoded_video]];
+        [o_displayed_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_displayed_pictures]];
+        [o_lost_frames_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_lost_pictures]];
+
+        /* Sout */
+        [o_sent_packets_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_sent_packets]];
+        [o_sent_bytes_txt setStringValue: [NSString stringWithFormat: @"%8.0f kB", \
+            (float)(p_item->input.p_stats->i_sent_bytes)/1000]];
+        [o_sent_bitrate_txt setStringValue: [NSString stringWithFormat: \
+            @"%6.0f kb/s", (float)(p_item->input.p_stats->f_send_bitrate*8)*1000]];
+
+        /* Audio */
+        [o_audio_decoded_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_decoded_audio]];
+        [o_played_abuffers_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_played_abuffers]];
+        [o_lost_abuffers_txt setStringValue: [NSString stringWithFormat: @"%5i", \
+            p_item->input.p_stats->i_lost_abuffers]];
+
+        vlc_mutex_unlock( &p_item->input.p_stats->lock );
+    }
 }
 
 - (IBAction)infoCancel:(id)sender
 {
+    [self windowShouldClose: nil];
     [o_info_window orderOut: self];
 }
 
@@ -155,6 +313,7 @@
         var_Set( p_playlist, "intf-change", val );
     }
     vlc_object_release( p_playlist );
+    [self windowShouldClose: nil];
     [o_info_window orderOut: self];
 }
 
@@ -175,9 +334,9 @@
         return NO;
     }
 
-    for( i = 0 ; i < p_playlist->i_size ; i++ )
+    for( i = 0 ; i < p_playlist->i_all_size ; i++ )
     {
-        if( p_playlist->pp_items[i] == p_local_item )
+        if( p_playlist->pp_all_items[i] == p_local_item )
         {
             vlc_object_release( p_playlist );
             return YES;
@@ -185,6 +344,16 @@
     }
     vlc_object_release( p_playlist );
     return NO;
+}
+
+- (BOOL)windowShouldClose:(id)sender
+{
+    if( o_statUpdateTimer )
+    {
+        [o_statUpdateTimer invalidate];
+        [o_statUpdateTimer release];
+    }
+    return YES;
 }
 
 @end
@@ -199,7 +368,7 @@
     input_thread_t * p_input = vlc_object_find( p_intf, VLC_OBJECT_INPUT,
                                                        FIND_ANYWHERE );
 
-    if( [[o_mi title] isEqualToString: _NS("Info")] )
+    if( [[o_mi title] isEqualToString: _NS("Information")] )
     {
         if( p_input == NULL )
         {
@@ -226,7 +395,7 @@
 
 - (id)outlineView:(NSOutlineView *)outlineView child:(int)index ofItem:(id)item
 {
-    return (item == nil) ? [[VLCInfoTreeItem rootItem] childAtIndex:index] : [item childAtIndex:index];
+    return (item == nil) ? [[VLCInfoTreeItem rootItem] childAtIndex:index] : (id)[item childAtIndex:index];
 }
 
 - (id)outlineView:(NSOutlineView *)outlineView objectValueForTableColumn:(NSTableColumn *)tableColumn byItem:(id)item

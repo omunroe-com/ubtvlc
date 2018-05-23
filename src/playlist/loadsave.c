@@ -2,7 +2,7 @@
  * loadsave.c : Playlist loading / saving functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: loadsave.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: loadsave.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
@@ -31,6 +31,7 @@
 #include <vlc/input.h>
 
 #include "vlc_playlist.h"
+#include "charset.h"
 
 #define PLAYLIST_FILE_HEADER  "# vlc playlist file version 0.5"
 
@@ -126,7 +127,10 @@ int playlist_Export( playlist_t * p_playlist, const char *psz_filename ,
         msg_Err( p_playlist, "out of memory");
         return VLC_ENOMEM;
     }
-    p_export->p_file = fopen( psz_filename, "wt" );
+    p_export->psz_filename = NULL;
+    if ( psz_filename )
+        p_export->psz_filename = strdup( psz_filename );
+    p_export->p_file = utf8_fopen( psz_filename, "wt" );
     if( !p_export->p_file )
     {
         msg_Err( p_playlist , "could not create playlist file %s"
@@ -142,14 +146,18 @@ int playlist_Export( playlist_t * p_playlist, const char *psz_filename ,
     p_module = module_Need( p_playlist, "playlist export", psz_type, VLC_TRUE);
     if( !p_module )
     {
-        msg_Warn( p_playlist, "failed to export playlist" );
+        msg_Warn( p_playlist, "exporting playlist failed" );
         vlc_mutex_unlock( &p_playlist->object_lock );
         return VLC_ENOOBJ;
     }
     module_Unneed( p_playlist , p_module );
 
+    /* Clean up */
     fclose( p_export->p_file );
-
+    if ( p_export->psz_filename )
+        free( p_export->psz_filename );
+    free ( p_export );
+    p_playlist->p_private = NULL;
     vlc_mutex_unlock( &p_playlist->object_lock );
 
     return VLC_SUCCESS;

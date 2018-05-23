@@ -2,7 +2,7 @@
  * PreferencesWindow.cpp: beos interface
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2001 the VideoLAN team
- * $Id: PreferencesWindow.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: PreferencesWindow.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Eric Petit <titer@m0k.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h> /* atoi(), strtod() */

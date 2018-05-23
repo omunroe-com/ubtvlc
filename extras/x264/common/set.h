@@ -94,6 +94,21 @@ typedef struct
         int b_aspect_ratio_info_present;
         int i_sar_width;
         int i_sar_height;
+        
+        int b_overscan_info_present;
+        int b_overscan_info;
+
+        int b_signal_type_present;
+        int i_vidformat;
+        int b_fullrange;
+        int b_color_description_present;
+        int i_colorprim;
+        int i_transfer;
+        int i_colmatrix;
+
+        int b_chroma_loc_info_present;
+        int i_chroma_loc_top;
+        int i_chroma_loc_bottom;
 
         int b_timing_info_present;
         int i_num_units_in_tick;
@@ -125,23 +140,6 @@ typedef struct
 
     int b_pic_order;
     int i_num_slice_groups;
-
-#if 0
-    /* FIXME: if this stuff is ever needed, move SPS/PPS from x264_t
-     * to the heap, to avoid excessive memcpy'ing with threads. */
-    int i_slice_group_map_type;
-    /* i_slice_group_map_type == 0 */
-    int i_run_length[256];      /* FIXME */
-    /* i_slice_group_map_type == 2 */
-    int i_top_left[256];        /* FIXME */
-    int i_bottom_right[256];    /* FIXME */
-    /* i_slice_group_map_type == 3, 4, 5 */
-    int b_slice_group_change_direction;
-    int i_slice_group_change_rate;
-    /* i_slice_group_map_type == 6 */
-    int i_pic_size_in_map_units;
-    int i_slice_group_id[256];  /* FIXME */
-#endif
 
     int i_num_ref_idx_l0_active;
     int i_num_ref_idx_l1_active;
@@ -212,6 +210,12 @@ static const uint8_t x264_cqm_flat16[64] =
     16,16,16,16,16,16,16,16,
     16,16,16,16,16,16,16,16,
     16,16,16,16,16,16,16,16
+};
+static const uint8_t * const x264_cqm_jvt[6] =
+{
+    x264_cqm_jvt4i, x264_cqm_jvt4p,
+    x264_cqm_jvt4i, x264_cqm_jvt4p,
+    x264_cqm_jvt8i, x264_cqm_jvt8p
 };
 
 void x264_cqm_init( x264_t *h );

@@ -2,10 +2,10 @@
  * win32_loop.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: win32_loop.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: win32_loop.cpp 14246 2006-02-11 18:01:42Z ipkiss $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
@@ -29,6 +29,7 @@
 #include "../src/generic_window.hpp"
 #include "../events/evt_key.hpp"
 #include "../events/evt_leave.hpp"
+#include "../events/evt_menu.hpp"
 #include "../events/evt_motion.hpp"
 #include "../events/evt_mouse.hpp"
 #include "../events/evt_refresh.hpp"
@@ -65,6 +66,8 @@ Win32Loop::Win32Loop( intf_thread_t *pIntf ): OSLoop( pIntf )
     virtKeyToVlcKey[VK_RIGHT] = KEY_RIGHT;
     virtKeyToVlcKey[VK_UP] = KEY_UP;
     virtKeyToVlcKey[VK_DOWN] = KEY_DOWN;
+    virtKeyToVlcKey[VK_INSERT] = KEY_INSERT;
+    virtKeyToVlcKey[VK_DELETE] = KEY_DELETE;
     virtKeyToVlcKey[VK_HOME] = KEY_HOME;
     virtKeyToVlcKey[VK_END] = KEY_END;
     virtKeyToVlcKey[VK_PRIOR] = KEY_PAGEUP;
@@ -129,6 +132,12 @@ void Win32Loop::run()
                                 Infos.rcPaint.right - Infos.rcPaint.left + 1,
                                 Infos.rcPaint.bottom - Infos.rcPaint.top + 1 );
                 EndPaint( msg.hwnd, &Infos );
+                win.processEvent( evt );
+                break;
+            }
+            case WM_COMMAND:
+            {
+                EvtMenu evt( getIntf(), LOWORD( msg.wParam ) );
                 win.processEvent( evt );
                 break;
             }

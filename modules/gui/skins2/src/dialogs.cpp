@@ -2,10 +2,10 @@
  * dialogs.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: dialogs.cpp 12802 2005-10-09 17:57:58Z ipkiss $
+ * $Id: dialogs.cpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "dialogs.hpp"
@@ -45,7 +45,6 @@ void Dialogs::showChangeSkinCB( intf_dialog_args_t *pArg )
 
             // Push the command in the asynchronous command queue
             AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-            pQueue->remove( "change skin" );
             pQueue->push( CmdGenericPtr( pCmd ) );
         }
     }
@@ -71,8 +70,6 @@ void Dialogs::showPlaylistLoadCB( intf_dialog_args_t *pArg )
 
         // Push the command in the asynchronous command queue
         AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-        pQueue->remove( "load playlist" );
-        pQueue->remove( "load playtree" );
         pQueue->push( CmdGenericPtr( pCmd ) );
     }
 }
@@ -90,8 +87,6 @@ void Dialogs::showPlaylistSaveCB( intf_dialog_args_t *pArg )
 
         // Push the command in the asynchronous command queue
         AsyncQueue *pQueue = AsyncQueue::instance( pIntf );
-        pQueue->remove( "load playlist" );
-        pQueue->remove( "load playtree" );
         pQueue->push( CmdGenericPtr( pCmd ) );
     }
 }
@@ -175,7 +170,7 @@ bool Dialogs::init()
     m_pModule = module_Need( m_pProvider, "dialogs provider", NULL, 0 );
     if( m_pModule == NULL )
     {
-        msg_Err( getIntf(), "No suitable dialogs provider found (hint: compile the wxWidgets plugin, and make sure it is loaded properly)" );
+        msg_Err( getIntf(), "no suitable dialogs provider found (hint: compile the wxWidgets plugin, and make sure it is loaded properly)" );
         vlc_object_destroy( m_pProvider );
         m_pProvider = NULL;
         return false;
@@ -226,7 +221,7 @@ void Dialogs::showFileGeneric( const string &rTitle, const string &rExtensions,
 void Dialogs::showChangeSkin()
 {
     showFileGeneric( _("Open a skin file"),
-                     _("Skin files (*.vlt)|*.vlt|Skin files (*.xml)|*.xml"),
+                     _("Skin files (*.vlt;*.wsz)|*.vlt;*.wsz|Skin files (*.xml)|*.xml"),
                      showChangeSkinCB, kOPEN );
 }
 
@@ -234,14 +229,16 @@ void Dialogs::showChangeSkin()
 void Dialogs::showPlaylistLoad()
 {
     showFileGeneric( _("Open playlist"),
-                     _("All playlists|*.pls;*.m3u;*.asx;*.b4s|M3U files|*.m3u"),
+                     _("All playlists|*.pls;*.m3u;*.asx;*.b4s;*.xspf|"
+                       "M3U files|*.m3u|"
+                       "XSPF playlist|*.xspf"),
                      showPlaylistLoadCB, kOPEN );
 }
 
 
 void Dialogs::showPlaylistSave()
 {
-    showFileGeneric( _("Save playlist"), _("M3U file|*.m3u"),
+    showFileGeneric( _("Save playlist"), _("M3U file|*.m3u|XSPF playlist|*.xspf"),
                      showPlaylistSaveCB, kSAVE );
 }
 
@@ -341,3 +338,18 @@ void Dialogs::showPopupMenu( bool bShow )
     }
 }
 
+void Dialogs::showInteraction( interaction_dialog_t *p_dialog )
+{
+    intf_dialog_args_t *p_arg =
+            (intf_dialog_args_t *)malloc( sizeof(intf_dialog_args_t) );
+    memset( p_arg, 0, sizeof(intf_dialog_args_t) );
+
+    p_arg->p_dialog = p_dialog;
+    p_arg->p_intf = getIntf();
+
+    if( m_pProvider && m_pProvider->pf_show_dialog )
+    {
+        m_pProvider->pf_show_dialog( m_pProvider, INTF_DIALOG_INTERACTION,
+                                     0, p_arg );
+    }
+}

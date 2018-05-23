@@ -24,20 +24,13 @@ BITS 32
 ; Macros and other preprocessor constants
 ;=============================================================================
 
-%macro cglobal 1
-    %ifdef PREFIX
-        global _%1
-        %define %1 _%1
-    %else
-        global %1
-    %endif
-%endmacro
+%include "i386inc.asm"
 
 ;=============================================================================
 ; Read only data
 ;=============================================================================
 
-SECTION .rodata data align=16
+SECTION_RODATA
 
 ALIGN 16
 mmx_dw_one:
@@ -122,7 +115,6 @@ mmx_dw_5:
 
 SECTION .text
 
-cglobal x264_vertical_filter_mmxext
 cglobal x264_horizontal_filter_mmxext
 cglobal x264_center_filter_mmxext
 
@@ -177,30 +169,33 @@ x264_center_filter_mmxext :
     lea         ebx,      [ecx + ecx * 2]    ; 3 * src_stride
     lea         edx,      [ecx + ecx * 4]    ; 5 * src_stride
 
+    picpush     ebx
+    picgetgot   ebx
+
     pxor        mm0,      mm0                ; 0 ---> mm0
-    movq        mm7,      [mmx_dd_one]       ; for rounding
 
 
 loopcy:
 
-;   mov         eax,    [esp + twidth]
-    xor         eax,    eax
-    mov         edi,    [esp + tdst1]
-    lea         ebp,    [esp + tbuffer]
-    mov         esi,    [esp + tsrc]
+    mov         edi,    [picesp + tdst1]
+    lea         ebp,    [picesp + tbuffer]
+    mov         esi,    [picesp + tsrc]
+    movq        mm7,    [mmx_dw_one GOT_ebx]
+
+    picpop      ebx
 
     FILT_ALL    esi
 
     pshufw      mm2,    mm1, 0
     movq        [ebp + 8],  mm1
     movq        [ebp],  mm2
-    paddw       mm1,    [mmx_dw_one]
+    paddw       mm1,    mm7
     psraw       mm1,    5
 
     packuswb    mm1,    mm1
     movd        [edi],  mm1
 
-    add         eax,    8
+    mov         eax,    8
     add         esi,    4
 
 loopcx1:
@@ -208,7 +203,7 @@ loopcx1:
     FILT_ALL    esi
 
     movq        [ebp + 2 * eax],  mm1
-    paddw       mm1,    [mmx_dw_one]
+    paddw       mm1,    mm7
     psraw       mm1,    5
     packuswb    mm1,    mm1
     movd        [edi + eax - 4],  mm1
@@ -223,7 +218,7 @@ loopcx1:
     pshufw      mm2,    mm1,  7
     movq        [ebp + 2 * eax],  mm1
     movq        [ebp + 2 * eax + 8],  mm2
-    paddw       mm1,    [mmx_dw_one]
+    paddw       mm1,    mm7
     psraw       mm1,    5
     packuswb    mm1,    mm1
     movd        [edi + eax - 4],  mm1
@@ -236,29 +231,33 @@ loopcx1:
     mov         [esp + tdst1], edi
 
     mov         edi,    [esp + tdst2]
-    xor         eax,    eax
+;   mov         eax,    [esp + twidth]
+    sub         eax,    4
+
+    picpush     ebx
+    picgetgot   ebx
 
 loopcx2:
 
-    movq        mm2,    [esp + 2 * eax + 2  + 4 + tbuffer]
-    movq        mm3,    [esp + 2 * eax + 4  + 4 + tbuffer]
-    movq        mm4,    [esp + 2 * eax + 6  + 4 + tbuffer]
-    movq        mm5,    [esp + 2 * eax + 8  + 4 + tbuffer]
-    movq        mm1,    [esp + 2 * eax      + 4 + tbuffer]
-    movq        mm6,    [esp + 2 * eax + 10 + 4 + tbuffer]
+    movq        mm2,    [picesp + 2 * eax + 2  + 4 + tbuffer]
+    movq        mm3,    [picesp + 2 * eax + 4  + 4 + tbuffer]
+    movq        mm4,    [picesp + 2 * eax + 6  + 4 + tbuffer]
+    movq        mm5,    [picesp + 2 * eax + 8  + 4 + tbuffer]
+    movq        mm1,    [picesp + 2 * eax      + 4 + tbuffer]
+    movq        mm6,    [picesp + 2 * eax + 10 + 4 + tbuffer]
     paddw       mm2,    mm5
     paddw       mm3,    mm4
     paddw       mm1,    mm6
 
-    movq        mm5,    [mmx_dw_20]
-    movq        mm4,    [mmx_dw_5]
+    movq        mm5,    [mmx_dw_20 GOT_ebx]
+    movq        mm4,    [mmx_dw_5 GOT_ebx]
     movq        mm6,    mm1
     pxor        mm7,    mm7
 
     punpckhwd   mm5,    mm2
     punpcklwd   mm4,    mm3
-    punpcklwd   mm2,    [mmx_dw_20]
-    punpckhwd   mm3,    [mmx_dw_5]
+    punpcklwd   mm2,    [mmx_dw_20 GOT_ebx]
+    punpckhwd   mm3,    [mmx_dw_5 GOT_ebx]
 
     pcmpgtw     mm7,    mm1
 
@@ -271,8 +270,8 @@ loopcx2:
     paddd       mm2,    mm1
     paddd       mm3,    mm6
 
-    paddd       mm2,    [mmx_dd_one]
-    paddd       mm3,    [mmx_dd_one]
+    paddd       mm2,    [mmx_dd_one GOT_ebx]
+    paddd       mm3,    [mmx_dd_one GOT_ebx]
 
     psrad       mm2,    10
     psrad       mm3,    10
@@ -282,18 +281,16 @@ loopcx2:
 
     movd        [edi + eax], mm2
 
-    add         eax,    4
-    cmp         eax,    [esp + twidth]
-    jnz         loopcx2
+    sub         eax,    4
+    jge         loopcx2
 
-    add         edi,    [esp + tdstp2]
-    mov         [esp + tdst2], edi
+    add         edi,    [picesp + tdstp2]
+    mov         [picesp + tdst2], edi
 
-    mov         ebp,    [esp + theight]
-    dec         ebp
-    test        ebp,    ebp
-    mov         [esp + theight], ebp
+    dec         dword [picesp + theight]
     jnz         loopcy
+
+    picpop      ebx
 
     add         esp,    [esp + toffset]
 
@@ -321,7 +318,10 @@ x264_horizontal_filter_mmxext :
     mov         esi,    [esp + 20]           ; src
 
     pxor        mm0,    mm0
-    movq        mm7,    [mmx_dw_one]
+    picpush     ebx
+    picgetgot   ebx
+    movq        mm7,    [mmx_dw_one GOT_ebx]
+    picpop      ebx
 
     mov         ecx,    [esp + 32]           ; height
 
@@ -329,7 +329,6 @@ x264_horizontal_filter_mmxext :
 
 loophy:
 
-    dec         ecx
     xor         eax,    eax
 
 loophx:
@@ -368,7 +367,7 @@ loophx:
     add         esi,    [esp + 24]           ; src_pitch
     add         edi,    [esp + 16]           ; dst_pitch
 
-    test        ecx,    ecx
+    dec         ecx
     jnz         loophy
 
     pop         esi

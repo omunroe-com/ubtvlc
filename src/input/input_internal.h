@@ -2,7 +2,7 @@
  * input_internal.h:
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: input.c 7955 2004-06-07 22:21:33Z fenrir $
+ * $Id: input_internal.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _INPUT_INTERNAL_H
@@ -133,17 +133,17 @@ typedef struct
     /* Synchronization information */
     mtime_t                 delta_cr;
     mtime_t                 cr_ref, sysdate_ref;
+    mtime_t                 last_sysdate;
     mtime_t                 last_cr; /* reference to detect unexpected stream
                                       * discontinuities                      */
     mtime_t                 last_pts;
-    count_t                 c_average_count;
-                           /* counter used to compute dynamic average values */
     int                     i_synchro_state;
 
     vlc_bool_t              b_master;
 
     /* Config */
     int                     i_cr_average;
+    int                     i_delta_cr_residue;
 } input_clock_t;
 
 void input_ClockInit( input_clock_t *, vlc_bool_t b_master, int i_cr_average );

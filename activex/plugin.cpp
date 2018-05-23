@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "plugin.h"
@@ -244,15 +244,11 @@ STDMETHODIMP VLCPluginClass::LockServer(BOOL fLock)
 
 VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     _inplacewnd(NULL),
+    _videownd(NULL),
     _p_class(p_class),
     _i_ref(1UL),
     _i_codepage(CP_ACP),
     _b_usermode(TRUE),
-    _bstr_mrl(NULL),
-    _b_autoplay(TRUE),
-    _b_autoloop(FALSE),
-    _b_visible(TRUE),
-    _b_mute(FALSE),
     _i_vlc(0)
 {
     p_class->AddRef();
@@ -277,12 +273,8 @@ VLCPlugin::VLCPlugin(VLCPluginClass *p_class, LPUNKNOWN pUnkOuter) :
     // default picure
     _p_pict = p_class->getInPlacePict();
 
-    // set default/preferred size (320x240) pixels in HIMETRIC
-    HDC hDC = CreateDevDC(NULL);
-    _extent.cx = 320;
-    _extent.cy = 240;
-    HimetricFromDP(hDC, (LPPOINT)&_extent, 1);
-    DeleteDC(hDC);
+    // make sure that persistable properties are initialized
+    onInit();
 };
 
 VLCPlugin::~VLCPlugin()
@@ -474,6 +466,83 @@ HRESULT VLCPlugin::onInit(void)
 {
     if( 0 == _i_vlc )
     {
+        // initialize persistable properties
+        _bstr_mrl = NULL;
+        _b_autoplay = TRUE;
+        _b_autoloop = FALSE;
+        _b_visible = TRUE;
+        _b_mute = FALSE;
+        _i_volume = 50;
+        _i_time   = 0;
+        // set default/preferred size (320x240) pixels in HIMETRIC
+        HDC hDC = CreateDevDC(NULL);
+        _extent.cx = 320;
+        _extent.cy = 240;
+        HimetricFromDP(hDC, (LPPOINT)&_extent, 1);
+        DeleteDC(hDC);
+
+        return S_OK;
+    }
+    return CO_E_ALREADYINITIALIZED;
+};
+
+HRESULT VLCPlugin::onLoad(void)
+{
+    if( SysStringLen(_bstr_mrl) > 0 )
+    {
+        /*
+        ** try to combine MRL with client site moniker, which for Internet Explorer
+        ** is the URL of the page the plugin is embedded into. Hence, if the MRL
+        ** is a relative URL, we should end up with an absolute URL
+        */
+        LPOLECLIENTSITE pClientSite;
+        if( SUCCEEDED(vlcOleObject->GetClientSite(&pClientSite)) && (NULL != pClientSite) )
+        {
+            IBindCtx *pBC = 0;
+            if( SUCCEEDED(CreateBindCtx(0, &pBC)) )
+            {
+                LPMONIKER pContMoniker = NULL;
+                if( SUCCEEDED(pClientSite->GetMoniker(OLEGETMONIKER_ONLYIFTHERE,
+                                OLEWHICHMK_CONTAINER, &pContMoniker)) )
+                {
+                    LPOLESTR base_url;
+                    if( SUCCEEDED(pContMoniker->GetDisplayName(pBC, NULL, &base_url)) )
+                    {
+                        /*
+                        ** check that the moniker name is a URL
+                        */
+                        if( UrlIsW(base_url, URLIS_URL) )
+                        {
+                            DWORD len = INTERNET_MAX_URL_LENGTH;
+                            LPOLESTR abs_url = (LPOLESTR)CoTaskMemAlloc(sizeof(OLECHAR)*len);
+                            if( NULL != abs_url )
+                            {
+                                if( SUCCEEDED(UrlCombineW(base_url, _bstr_mrl, abs_url, &len,
+                                                URL_ESCAPE_UNSAFE|URL_PLUGGABLE_PROTOCOL)) )
+                                {
+                                    SysFreeString(_bstr_mrl);
+                                    _bstr_mrl = SysAllocStringLen(abs_url, len);
+                                }
+                                CoTaskMemFree(abs_url);
+                            }
+                        }
+                        CoTaskMemFree(base_url);
+                    }
+                    pContMoniker->Release();
+                }
+                pBC->Release();
+            }
+            pClientSite->Release();
+        }
+    }
+    setDirty(FALSE);
+    return S_OK;
+};
+
+HRESULT VLCPlugin::getVLCObject(int *i_vlc)
+{
+    if( ! isRunning() )
+    {
         _i_vlc = VLC_Create();
         if( _i_vlc < 0 )
         {
@@ -484,8 +553,8 @@ HRESULT VLCPlugin::onInit(void)
         /*
         ** default initialization options
         */
-        char *ppsz_argv[10] = { "vlc", "-vv" };
-        int   ppsz_argc = 2;
+        char *ppsz_argv[10] = { "vlc", };
+        int   ppsz_argc = 1;
 
         HKEY h_key;
         DWORD i_type, i_data = MAX_PATH + 1;
@@ -509,6 +578,13 @@ HRESULT VLCPlugin::onInit(void)
         ppsz_argv[0] = "C:\\cygwin\\home\\Damien_Fouilleul\\dev\\videolan\\vlc-trunk\\vlc";
 #endif
 
+        // make sure plugin isn't affected with VLC single instance mode
+        ppsz_argv[ppsz_argc++] = "--no-one-instance";
+
+        // loop mode is a configuration option only
+        if( _b_autoloop )
+            ppsz_argv[ppsz_argc++] = "--loop";
+
         if( IsDebuggerPresent() )
         {
             /*
@@ -529,79 +605,30 @@ HRESULT VLCPlugin::onInit(void)
             _i_vlc = 0;
             return E_FAIL;
         }
-        return S_OK;
-    }
-    return CO_E_ALREADYINITIALIZED;
-};
 
-HRESULT VLCPlugin::onLoad(void)
-{
-    if( _b_mute )
-        VLC_VolumeMute(_i_vlc);
+        VLC_VolumeSet(_i_vlc, _i_volume);
 
-    if( SysStringLen(_bstr_mrl) > 0 )
-    {
-        /*
-        ** try to combine MRL with client site moniker, which for Internet Explorer
-        ** is the URL of the page the plugin is embedded into. Hence, if the MRL
-        ** is a relative URL, we should end up with an absolute URL
-        */
-        IOleClientSite *pClientSite;
-        if( SUCCEEDED(vlcOleObject->GetClientSite(&pClientSite)) && (NULL != pClientSite) )
-        {
-            IBindCtx *pBC = 0;
-            if( SUCCEEDED(CreateBindCtx(0, &pBC)) )
-            {
-                LPMONIKER pContMoniker = NULL;
-                if( SUCCEEDED(pClientSite->GetMoniker(OLEGETMONIKER_ONLYIFTHERE,
-                                OLEWHICHMK_CONTAINER, &pContMoniker)) )
-                {
-                    LPOLESTR base_url;
-                    if( SUCCEEDED(pContMoniker->GetDisplayName(pBC, NULL, &base_url)) )
-                    {
-                        /*
-                        ** check that the moniker name is a URL
-                        */
-                        if( UrlIsW(base_url, URLIS_URL) )
-                        {
-                            DWORD len = INTERNET_MAX_URL_LENGTH;
-                            LPOLESTR abs_url = (LPOLESTR)CoTaskMemAlloc(sizeof(OLECHAR)*len);
-                            if( NULL != abs_url )
-                            {
-                                if( SUCCEEDED(UrlCombineW(base_url, _bstr_mrl, abs_url, &len,
-                                                URL_ESCAPE_UNSAFE)) )
-                                {
-                                    SysFreeString(_bstr_mrl);
-                                    _bstr_mrl = SysAllocStringLen(abs_url, len);
-                                }
-                                CoTaskMemFree(abs_url);
-                            }
-                        }
-                        CoTaskMemFree(base_url);
-                    }
-                    pContMoniker->Release();
-                }
-                pBC->Release();
-            }
-            pClientSite->Release();
-        }
+        if( _b_mute )
+            VLC_VolumeMute(_i_vlc);
 
         char *psz_mrl = CStrFromBSTR(CP_UTF8, _bstr_mrl);
         if( NULL != psz_mrl )
         {
-            // add default target to playlist
-            char *cOptions[1];
-            int  cOptionsCount = 0;
+            char timeBuffer[32];
+            const char *options[1];
+            int   cOptions = 0;
 
-            if( _b_autoloop )
+            if( _i_time )
             {
-                cOptions[cOptionsCount++] = "loop";
+                snprintf(timeBuffer, sizeof(timeBuffer), ":start-time=%d", _i_time);
+                options[cOptions++] = timeBuffer;
             }
-            VLC_AddTarget(_i_vlc, psz_mrl, (const char **)&cOptions, cOptionsCount, PLAYLIST_APPEND, PLAYLIST_END);
+            // add default target to playlist
+            VLC_AddTarget(_i_vlc, psz_mrl, options, cOptions, PLAYLIST_APPEND, PLAYLIST_END);
             CoTaskMemFree(psz_mrl);
         }
     }
-    setDirty(FALSE);
+    *i_vlc = _i_vlc;
     return S_OK;
 };
 
@@ -665,9 +692,9 @@ HRESULT VLCPlugin::onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID)
         case DISPID_AMBIENT_TOPTOBOTTOM:
             break;
         case DISPID_UNKNOWN:
-        /*
-        ** multiple property change, look up the ones we are interested in
-        */
+            /*
+            ** multiple property change, look up the ones we are interested in
+            */
             VariantInit(&v);
             V_VT(&v) = VT_BOOL;
             if( SUCCEEDED(GetObjectProperty(pContainer, DISPID_AMBIENT_USERMODE, v)) )
@@ -687,15 +714,15 @@ HRESULT VLCPlugin::onAmbientChanged(LPUNKNOWN pContainer, DISPID dispID)
 
 HRESULT VLCPlugin::onClose(DWORD dwSaveOption)
 {
-    if( _i_vlc )
+    if( isInPlaceActive() )
+    {
+        onInPlaceDeactivate();
+    }
+    if( isRunning() )
     {
         int i_vlc = _i_vlc;
 
         _i_vlc = 0;
-        if( isInPlaceActive() )
-        {
-            onInPlaceDeactivate();
-        }
         vlcDataObject->onClose();
 
         VLC_CleanUp(i_vlc);
@@ -775,33 +802,46 @@ HRESULT VLCPlugin::onActivateInPlace(LPMSG lpMesg, HWND hwndParent, LPCRECT lprc
 
     SetWindowLongPtr(_videownd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
-    if( getVisible() )
-        ShowWindow(_inplacewnd, SW_SHOWNORMAL);
-
-    /* set internal video width and height */
-    vlc_value_t val;
-    val.i_int = posRect.right-posRect.left;
-    VLC_VariableSet(_i_vlc, "width", val);
-    val.i_int = posRect.bottom-posRect.top;
-    VLC_VariableSet(_i_vlc, "height", val);
-
-    /* set internal video parent window */
-    /* horrible cast there */
-    val.i_int = reinterpret_cast<int>(_videownd);
-    VLC_VariableSet(_i_vlc, "drawable", val);
-
-    if( _b_usermode && _b_autoplay & (VLC_PlaylistNumberOfItems(_i_vlc) > 0) )
+    if( _b_usermode )
     {
-        VLC_Play(_i_vlc);
-        fireOnPlayEvent();
+        /* will run vlc if not done already */
+        int i_vlc;
+        HRESULT result = getVLCObject(&i_vlc);
+        if( FAILED(result) )
+            return result;
+
+        /* set internal video width and height */
+        vlc_value_t val;
+        val.i_int = posRect.right-posRect.left;
+        VLC_VariableSet(i_vlc, "conf::width", val);
+        val.i_int = posRect.bottom-posRect.top;
+        VLC_VariableSet(i_vlc, "conf::height", val);
+
+        /* set internal video parent window */
+        /* horrible cast there */
+        val.i_int = reinterpret_cast<int>(_videownd);
+        VLC_VariableSet(i_vlc, "drawable", val);
+
+        if( _b_autoplay & (VLC_PlaylistNumberOfItems(i_vlc) > 0) )
+        {
+            VLC_Play(i_vlc);
+            fireOnPlayEvent();
+        }
     }
+
+    if( isVisible() )
+        ShowWindow(_inplacewnd, SW_SHOW);
+
     return S_OK;
 };
 
 HRESULT VLCPlugin::onInPlaceDeactivate(void)
 {
-    VLC_Stop(_i_vlc);
-    fireOnStopEvent();
+    if( isRunning() )
+    {
+        VLC_Stop(_i_vlc);
+        fireOnStopEvent();
+    }
 
     DestroyWindow(_videownd);
     _videownd = NULL;
@@ -813,10 +853,52 @@ HRESULT VLCPlugin::onInPlaceDeactivate(void)
 
 void VLCPlugin::setVisible(BOOL fVisible)
 {
-    _b_visible = fVisible;
-    if( isInPlaceActive() )
-        ShowWindow(_inplacewnd, fVisible ? SW_SHOWNORMAL : SW_HIDE);
-    firePropChangedEvent(DISPID_Visible);
+    if( fVisible != _b_visible )
+    {
+        _b_visible = fVisible;
+        if( isInPlaceActive() )
+        {
+            ShowWindow(_inplacewnd, fVisible ? SW_SHOW : SW_HIDE);
+            if( fVisible )
+                InvalidateRect(_videownd, NULL, TRUE);
+        }
+        setDirty(TRUE);
+        firePropChangedEvent(DISPID_Visible);
+    }
+};
+
+void VLCPlugin::setVolume(int volume)
+{
+    if( volume < 0 )
+        volume = 0;
+    else if( volume > 200 )
+        volume = 200;
+
+    if( volume != _i_volume )
+    {
+        _i_volume = volume;
+        if( isRunning() )
+        {
+            VLC_VolumeSet(_i_vlc, _i_volume);
+        }
+        setDirty(TRUE);
+    }
+};
+
+void VLCPlugin::setTime(int seconds)
+{
+    if( seconds < 0 )
+        seconds = 0;
+
+    if( seconds != _i_time )
+    {
+        _i_time = seconds;
+        if( isRunning() )
+        {
+            VLC_TimeSet(_i_vlc, seconds, VLC_FALSE);
+        }
+        setDirty(TRUE);
+    }
 };
 
 void VLCPlugin::setFocus(BOOL fFocus)
@@ -833,7 +915,7 @@ BOOL VLCPlugin::hasFocus(void)
 void VLCPlugin::onDraw(DVTARGETDEVICE * ptd, HDC hicTargetDev,
         HDC hdcDraw, LPCRECTL lprcBounds, LPCRECTL lprcWBounds)
 {
-    if( getVisible() )
+    if( isVisible() )
     {
         long width = lprcBounds->right-lprcBounds->left;
         long height = lprcBounds->bottom-lprcBounds->top;
@@ -895,7 +977,7 @@ void VLCPlugin::onDraw(DVTARGETDEVICE * ptd, HDC hicTargetDev,
 
 void VLCPlugin::onPaint(HDC hdc, const RECT &bounds, const RECT &clipRect)
 {
-    if( getVisible() )
+    if( isVisible() )
     {
         /** if VLC is playing, it may not display any VIDEO content 
         ** hence, draw control logo*/
@@ -984,9 +1066,9 @@ void VLCPlugin::onPositionChange(LPCRECT lprcPosRect, LPCRECT lprcClipRect)
     //RedrawWindow(_videownd, &posRect, NULL, RDW_INVALIDATE|RDW_ERASE|RDW_ALLCHILDREN);
     vlc_value_t val;
     val.i_int = posRect.right-posRect.left;
-    VLC_VariableSet(_i_vlc, "width", val);
+    VLC_VariableSet(_i_vlc, "conf::width", val);
     val.i_int = posRect.bottom-posRect.top;
-    VLC_VariableSet(_i_vlc, "height", val);
+    VLC_VariableSet(_i_vlc, "conf::height", val);
 };
 
 void VLCPlugin::freezeEvents(BOOL freeze)

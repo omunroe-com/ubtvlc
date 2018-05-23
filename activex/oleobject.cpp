@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "plugin.h"
@@ -67,15 +67,20 @@ STDMETHODIMP VLCOleObject::DoVerb(LONG iVerb, LPMSG lpMsg, LPOLECLIENTSITE pActi
         case OLEIVERB_OPEN:
             // force control to be visible when activating in place
             _p_instance->setVisible(TRUE);
+            return doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect, TRUE);
+
         case OLEIVERB_INPLACEACTIVATE:
-            return doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect);
+            return doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect, FALSE);
 
         case OLEIVERB_HIDE:
             _p_instance->setVisible(FALSE);
             return S_OK;
 
         case OLEIVERB_UIACTIVATE:
-            return doUIActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect);
+            // UI activate only if visible
+            if( _p_instance->isVisible() )
+                return doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect, TRUE);
+            return OLEOBJ_S_CANNOT_DOVERB_NOW;
 
         case OLEIVERB_DISCARDUNDOSTATE:
             return S_OK;
@@ -83,41 +88,38 @@ STDMETHODIMP VLCOleObject::DoVerb(LONG iVerb, LPMSG lpMsg, LPOLECLIENTSITE pActi
         default:
             if( iVerb > 0 ) {
                 _p_instance->setVisible(TRUE);
-                doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect);
+                doInPlaceActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect, TRUE);
                 return OLEOBJ_S_INVALIDVERB;
             }
             return E_NOTIMPL;
     }
 };
 
-HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite, HWND hwndParent, LPCRECT lprcPosRect)
+HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite, HWND hwndParent, LPCRECT lprcPosRect, BOOL uiActivate)
 {
     RECT posRect;
     RECT clipRect;
     LPCRECT lprcClipRect = lprcPosRect;
 
-    if( NULL != pActiveSite )
+    if( pActiveSite )
     {
-        // check if already activated
-        if( _p_instance->isInPlaceActive() )
+        LPOLEINPLACESITE p_inPlaceSite;
+        IOleInPlaceSiteEx *p_inPlaceSiteEx;
+        LPOLEINPLACEFRAME p_inPlaceFrame;
+        LPOLEINPLACEUIWINDOW p_inPlaceUIWindow;
+
+        if( SUCCEEDED(pActiveSite->QueryInterface(IID_IOleInPlaceSiteEx, reinterpret_cast<void**>(&p_inPlaceSiteEx))) )
         {
-            // just attempt to show object then
-            if( _p_instance->getVisible() )
-                pActiveSite->ShowObject();
-            return S_OK;
+            p_inPlaceSite = p_inPlaceSiteEx;
+            p_inPlaceSite->AddRef();
+        }
+        else if FAILED(pActiveSite->QueryInterface(IID_IOleInPlaceSite, reinterpret_cast<void**>(&p_inPlaceSite)) )
+        {
+            p_inPlaceSite = p_inPlaceSiteEx = NULL;
         }
 
-        LPOLEINPLACESITE p_inPlaceSite;
-
-        if( SUCCEEDED(pActiveSite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
+        if( p_inPlaceSite )
         {
-            if( S_OK != p_inPlaceSite->CanInPlaceActivate() )
-            {
-                return OLEOBJ_S_CANNOT_DOVERB_NOW;
-            }
-
-            LPOLEINPLACEFRAME p_inPlaceFrame;
-            LPOLEINPLACEUIWINDOW p_inPlaceUIWindow;
             OLEINPLACEFRAMEINFO oleFrameInfo;
 
             oleFrameInfo.cb = sizeof(OLEINPLACEFRAMEINFO);
@@ -125,16 +127,18 @@ HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite
             {
                 lprcPosRect = &posRect;
                 lprcClipRect = &clipRect;
-
-                if( NULL != p_inPlaceFrame )
-                    p_inPlaceFrame->Release();
-                if( NULL != p_inPlaceUIWindow )
-                    p_inPlaceUIWindow->Release();
             }
 
             if( (NULL == hwndParent) && FAILED(p_inPlaceSite->GetWindow(&hwndParent)) )
             {
                 p_inPlaceSite->Release();
+                if( p_inPlaceSiteEx )
+                    p_inPlaceSiteEx->Release();
+                if( p_inPlaceFrame )
+                    p_inPlaceFrame->Release();
+                if( p_inPlaceUIWindow )
+                    p_inPlaceUIWindow->Release();
+
                 return OLEOBJ_S_INVALIDHWND;
             }
         }
@@ -142,71 +146,85 @@ HRESULT VLCOleObject::doInPlaceActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite
         {
             return OLEOBJ_S_INVALIDHWND;
         }
-
-        if( FAILED(_p_instance->onActivateInPlace(lpMsg, hwndParent, lprcPosRect, lprcClipRect)) )
+        else if( NULL == lprcPosRect )
         {
-            if( NULL != p_inPlaceSite )
-                p_inPlaceSite->Release();
-            return OLEOBJ_S_CANNOT_DOVERB_NOW;
+            SetRect(&posRect, 0, 0, 0, 0);
+            lprcPosRect = &posRect;
+            lprcClipRect = &posRect;
         }
 
-        if( NULL != p_inPlaceSite )
+        // check if not already activated
+        if( ! _p_instance->isInPlaceActive() )
+        {
+            if( ((NULL == p_inPlaceSite) || (S_OK == p_inPlaceSite->CanInPlaceActivate()))
+             && SUCCEEDED(_p_instance->onActivateInPlace(lpMsg, hwndParent, lprcPosRect, lprcClipRect)) ) 
+            {
+                if( p_inPlaceSiteEx )
+                {
+                    BOOL needsRedraw;
+                    p_inPlaceSiteEx->OnInPlaceActivateEx(&needsRedraw, 0);
+                }
+                else if( p_inPlaceSite )
+                    p_inPlaceSite->OnInPlaceActivate();
+            }
+            else
+            {
+                if( p_inPlaceSite )
+                {
+                    p_inPlaceSite->Release();
+                    if( p_inPlaceSiteEx )
+                        p_inPlaceSiteEx->Release();
+                    if( p_inPlaceFrame )
+                        p_inPlaceFrame->Release();
+                    if( p_inPlaceUIWindow )
+                        p_inPlaceUIWindow->Release();
+                }
+                return OLEOBJ_S_CANNOT_DOVERB_NOW;
+            } 
+        }
+
+        if( p_inPlaceSite )
             p_inPlaceSite->OnPosRectChange(lprcPosRect);
 
-        pActiveSite->ShowObject();
-        _p_instance->setVisible(TRUE);
-
-        if( NULL != p_inPlaceSite )
+        if( uiActivate )
         {
-            p_inPlaceSite->OnInPlaceActivate();
-            p_inPlaceSite->Release();
+            if( (NULL == p_inPlaceSiteEx) || (S_OK == p_inPlaceSiteEx->RequestUIActivate()) )
+            {
+                if( p_inPlaceSite) 
+                {
+                    p_inPlaceSite->OnUIActivate();
+
+                    LPOLEINPLACEACTIVEOBJECT p_inPlaceActiveObject;
+                    if( SUCCEEDED(QueryInterface(IID_IOleInPlaceActiveObject, reinterpret_cast<void**>(&p_inPlaceActiveObject))) )
+                    {
+                        if( p_inPlaceFrame )
+                            p_inPlaceFrame->SetActiveObject(p_inPlaceActiveObject, NULL);
+                        if( p_inPlaceUIWindow )
+                            p_inPlaceUIWindow->SetActiveObject(p_inPlaceActiveObject, NULL);
+                        p_inPlaceActiveObject->Release();
+                    }
+                    if( p_inPlaceFrame )
+                        p_inPlaceFrame->RequestBorderSpace(NULL);
+
+                    pActiveSite->ShowObject();
+                }
+                _p_instance->setFocus(TRUE);
+            }
         }
 
-        if( NULL != lpMsg )
+        if( p_inPlaceSite )
         {
-            switch( lpMsg->message )
-            {
-                case WM_LBUTTONDOWN:
-                case WM_LBUTTONDBLCLK:
-                    doUIActivate(lpMsg, pActiveSite, hwndParent, lprcPosRect);
-                    break;
-                default:
-                    break;
-            }
+            p_inPlaceSite->Release();
+            if( p_inPlaceSiteEx )
+                p_inPlaceSiteEx->Release();
+            if( p_inPlaceFrame )
+                p_inPlaceFrame->Release();
+            if( p_inPlaceUIWindow )
+                p_inPlaceUIWindow->Release();
         }
         return S_OK;
     }
     return OLEOBJ_S_CANNOT_DOVERB_NOW;
-};
-
-HRESULT VLCOleObject::doUIActivate(LPMSG lpMsg, LPOLECLIENTSITE pActiveSite, HWND hwndParent, LPCRECT lprcPosRect)
-{
-    if( NULL != pActiveSite )
-    {
-        // check if already activated
-        if( ! _p_instance->isInPlaceActive() )
-            return OLE_E_NOT_INPLACEACTIVE;
-
-        LPOLEINPLACESITE p_inPlaceSite;
-
-        if( SUCCEEDED(pActiveSite->QueryInterface(IID_IOleInPlaceSite, (void**)&p_inPlaceSite)) )
-        {
-            p_inPlaceSite->OnUIActivate();
-
-            if( NULL != lprcPosRect )
-            {
-                p_inPlaceSite->OnPosRectChange(lprcPosRect);
-            }
-            p_inPlaceSite->Release();
-        }
-
-        pActiveSite->ShowObject();
-        _p_instance->setVisible(TRUE);
-        _p_instance->setFocus(TRUE);
-
-        return S_OK;
-    }
-    return E_FAIL;
 };
 
 STDMETHODIMP VLCOleObject::EnumAdvise(IEnumSTATDATA **ppEnumAdvise)

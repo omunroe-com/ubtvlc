@@ -2,7 +2,7 @@
  * vout.c: Windows DirectX video output display method
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: directx.c 12952 2005-10-24 08:26:23Z gbazin $
+ * $Id: directx.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -76,6 +76,7 @@ static int  Init      ( vout_thread_t * );
 static void End       ( vout_thread_t * );
 static int  Manage    ( vout_thread_t * );
 static void Display   ( vout_thread_t *, picture_t * );
+static void OverlayDisplay( vout_thread_t *, picture_t * );
 static void SetPalette( vout_thread_t *, uint16_t *, uint16_t *, uint16_t * );
 
 static int  NewPictureVec  ( vout_thread_t *, picture_t *, int );
@@ -238,6 +239,7 @@ static int OpenVideo( vlc_object_t *p_this )
     var_Create( p_vout, "directx-3buffering", VLC_VAR_BOOL|VLC_VAR_DOINHERIT );
     var_Create( p_vout, "directx-device", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Create( p_vout, "video-title", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
+    var_Create( p_vout, "disable-screensaver", VLC_VAR_BOOL | VLC_VAR_DOINHERIT );
 
     p_vout->p_sys->b_cursor_hidden = 0;
     p_vout->p_sys->i_lastmoved = mdate();
@@ -303,6 +305,30 @@ static int OpenVideo( vlc_object_t *p_this )
     var_AddCallback( p_vout, "directx-wallpaper", WallpaperCallback, NULL );
     var_Get( p_vout, "directx-wallpaper", &val );
     var_Set( p_vout, "directx-wallpaper", val );
+
+    /* disable screensaver by temporarily changing system settings */
+    p_vout->p_sys->i_spi_lowpowertimeout = 0;
+    p_vout->p_sys->i_spi_powerofftimeout = 0;
+    p_vout->p_sys->i_spi_screensavetimeout = 0;
+    var_Get( p_vout, "disable-screensaver", &val);
+    if( val.b_bool ) {
+        msg_Dbg(p_vout, "disabling screen saver");
+        SystemParametersInfo(SPI_GETLOWPOWERTIMEOUT,
+            0, &(p_vout->p_sys->i_spi_lowpowertimeout), 0);
+        if( 0 != p_vout->p_sys->i_spi_lowpowertimeout ) {
+            SystemParametersInfo(SPI_SETLOWPOWERTIMEOUT, 0, NULL, 0);
+        }
+        SystemParametersInfo(SPI_GETPOWEROFFTIMEOUT, 0,
+            &(p_vout->p_sys->i_spi_powerofftimeout), 0);
+        if( 0 != p_vout->p_sys->i_spi_powerofftimeout ) {
+            SystemParametersInfo(SPI_SETPOWEROFFTIMEOUT, 0, NULL, 0);
+        }
+        SystemParametersInfo(SPI_GETSCREENSAVETIMEOUT, 0,
+            &(p_vout->p_sys->i_spi_screensavetimeout), 0);
+        if( 0 != p_vout->p_sys->i_spi_screensavetimeout ) {
+            SystemParametersInfo(SPI_SETSCREENSAVETIMEOUT, 0, NULL, 0);
+        }
+    }
 
     return VLC_SUCCESS;
 
@@ -412,6 +438,11 @@ static int Init( vout_thread_t *p_vout )
         NewPictureVec( p_vout, p_vout->p_picture, MAX_DIRECTBUFFERS );
     }
 
+    if( p_vout->p_sys->b_using_overlay )
+    {
+        p_vout->pf_display = OverlayDisplay;
+    }
+
     /* Change the window title bar text */
     PostMessage( p_vout->p_sys->hwnd, WM_VLC_CHANGE_TEXT, 0, 0 );
 
@@ -468,6 +499,20 @@ static void CloseVideo( vlc_object_t *p_this )
 
     /* Make sure the wallpaper is restored */
     SwitchWallpaperMode( p_vout, VLC_FALSE );
+
+    /* restore screensaver system settings */
+    if( 0 != p_vout->p_sys->i_spi_lowpowertimeout ) {
+        SystemParametersInfo(SPI_SETLOWPOWERTIMEOUT,
+            p_vout->p_sys->i_spi_lowpowertimeout, NULL, 0);
+    }
+    if( 0 != p_vout->p_sys->i_spi_powerofftimeout ) {
+        SystemParametersInfo(SPI_SETPOWEROFFTIMEOUT,
+            p_vout->p_sys->i_spi_powerofftimeout, NULL, 0);
+    }
+    if( 0 != p_vout->p_sys->i_spi_screensavetimeout ) {
+        SystemParametersInfo(SPI_SETSCREENSAVETIMEOUT,
+            p_vout->p_sys->i_spi_screensavetimeout, NULL, 0);
+    }
 
     if( p_vout->p_sys )
     {
@@ -537,6 +582,24 @@ static int Manage( vout_thread_t *p_vout )
             /* This will force the vout core to recreate the picture buffers */
             p_vout->i_changes |= VOUT_PICTURE_BUFFERS_CHANGE;
         }
+    }
+
+    /* Check for cropping / aspect changes */
+    if( p_vout->i_changes & VOUT_CROP_CHANGE ||
+        p_vout->i_changes & VOUT_ASPECT_CHANGE )
+    {
+        p_vout->i_changes &= ~VOUT_CROP_CHANGE;
+        p_vout->i_changes &= ~VOUT_ASPECT_CHANGE;
+
+        p_vout->fmt_out.i_x_offset = p_vout->fmt_in.i_x_offset;
+        p_vout->fmt_out.i_y_offset = p_vout->fmt_in.i_y_offset;
+        p_vout->fmt_out.i_visible_width = p_vout->fmt_in.i_visible_width;
+        p_vout->fmt_out.i_visible_height = p_vout->fmt_in.i_visible_height;
+        p_vout->fmt_out.i_aspect = p_vout->fmt_in.i_aspect;
+        p_vout->fmt_out.i_sar_num = p_vout->fmt_in.i_sar_num;
+        p_vout->fmt_out.i_sar_den = p_vout->fmt_in.i_sar_den;
+        p_vout->output.i_aspect = p_vout->fmt_in.i_aspect;
+        E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
     }
 
     /* We used to call the Win32 PeekMessage function here to read the window
@@ -781,6 +844,28 @@ static void Display( vout_thread_t *p_vout, picture_t *p_pic )
     }
 }
 
+/*
+** this function is only used once when the first picture is received
+** The overlay colorkey replaces black as the background color on the
+** video window; this will cause the overlay surface to be displayed
+*/
+static void OverlayDisplay( vout_thread_t *p_vout, picture_t *p_pic )
+{
+    /* get initial picture rendered on overlay surface */
+    Display(p_vout, p_pic);
+
+    IDirectDraw_WaitForVerticalBlank(p_vout->p_sys->p_ddobject,
+            DDWAITVB_BLOCKBEGIN, NULL);
+
+    /* set the colorkey as the backgound brush for the video window */
+    SetClassLong( p_vout->p_sys->hvideownd, GCL_HBRBACKGROUND,
+                  (LONG)CreateSolidBrush( p_vout->p_sys->i_rgb_colorkey ) );
+    InvalidateRect( p_vout->p_sys->hvideownd, NULL, TRUE );
+
+    /* use and restores proper display function for further pictures */
+    p_vout->pf_display = Display;
+}
+
 /* following functions are local */
 
 /*****************************************************************************
@@ -822,7 +907,7 @@ BOOL WINAPI DirectXEnumCallback( GUID* p_guid, LPTSTR psz_desc,
                 {
                     rect.left = monitor_info.rcWork.left;
                     rect.top = monitor_info.rcWork.top;
-                    msg_Dbg( p_vout, "DirectXEnumCallback: Setting window "
+                    msg_Dbg( p_vout, "DirectXEnumCallback: setting window "
                              "position to %d,%d", rect.left, rect.top );
                     SetWindowPos( p_vout->p_sys->hwnd, NULL,
                                   rect.left, rect.top, 0, 0,
@@ -1026,9 +1111,11 @@ static int DirectXCreateDisplay( vout_thread_t *p_vout )
     p_vout->p_sys->i_rgb_colorkey =
         DirectXFindColorkey( p_vout, &p_vout->p_sys->i_colorkey );
 
-    /* Create the actual brush */
+    /* use black brush as the video background color,
+       if overlay video is used, this will be replaced by the
+       colorkey when the first picture is received */
     SetClassLong( p_vout->p_sys->hvideownd, GCL_HBRBACKGROUND,
-                  (LONG)CreateSolidBrush( p_vout->p_sys->i_rgb_colorkey ) );
+                  (LONG)GetStockObject( BLACK_BRUSH ) );
     InvalidateRect( p_vout->p_sys->hvideownd, NULL, TRUE );
     E_(DirectXUpdateRects)( p_vout, VLC_TRUE );
 

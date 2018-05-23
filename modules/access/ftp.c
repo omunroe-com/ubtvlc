@@ -1,11 +1,11 @@
 /*****************************************************************************
  * ftp.c: FTP input module
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: ftp.c 12956 2005-10-25 07:02:52Z md $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: ftp.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr> - original code
- *          Rémi Denis-Courmont <rem # videolan.org> - EPSV support
+ *          RÃ©mi Denis-Courmont <rem # videolan.org> - EPSV support
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -31,13 +31,7 @@
 #include <vlc/input.h>
 
 #include "network.h"
-#if defined( UNDER_CE )
-#   include <winsock.h>
-#elif defined( WIN32 )
-#   include <winsock2.h>
-#else
-#   include <sys/socket.h>
-#endif
+#include "vlc_url.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -47,16 +41,16 @@ static void    Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for FTP streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for FTP streams. This " \
+    "value should be set in milliseconds." )
 #define USER_TEXT N_("FTP user name")
-#define USER_LONGTEXT N_("Allows you to modify the user name that will " \
+#define USER_LONGTEXT N_("User name that will " \
     "be used for the connection.")
 #define PASS_TEXT N_("FTP password")
-#define PASS_LONGTEXT N_("Allows you to modify the password that will be " \
+#define PASS_LONGTEXT N_("Password that will be " \
     "used for the connection.")
 #define ACCOUNT_TEXT N_("FTP account")
-#define ACCOUNT_LONGTEXT N_("Allows you to modify the account that will be " \
+#define ACCOUNT_LONGTEXT N_("Account that will be " \
     "used for the connection.")
 
 vlc_module_begin();
@@ -106,7 +100,7 @@ static int Connect( access_t *p_access, access_sys_t *p_sys )
 
     /* *** Open a TCP connection with server *** */
     msg_Dbg( p_access, "waiting for connection..." );
-    p_sys->fd_cmd = fd = net_OpenTCP( p_access, p_sys->url.psz_host,
+    p_sys->fd_cmd = fd = net_ConnectTCP( p_access, p_sys->url.psz_host,
                                       p_sys->url.i_port );
     if( fd < 0 )
     {
@@ -270,12 +264,12 @@ static int Open( vlc_object_t *p_this )
         p_sys->fd_cmd = -1;
         *p_sys->sz_epsv_ip = '\0';
 
+        msg_Info( p_access, "FTP Extended passive mode disabled" );
+
         if( ( p_sys->fd_cmd = Connect( p_access, p_sys ) ) < 0 )
            goto exit_error;
-
-        msg_Info( p_access, "FTP Extended passive mode disabled" );
     }
-    
+
     /* binary mode */
     if( ftp_SendCommand( p_access, "TYPE I" ) < 0 ||
         ftp_ReadCommand( p_access, &i_answer, NULL ) != 2 )
@@ -617,7 +611,7 @@ static int ftp_StartStream( access_t *p_access, off_t i_start )
     }
 
     msg_Dbg( p_access, "waiting for data connection..." );
-    p_sys->fd_data = net_OpenTCP( p_access, psz_ip, i_port );
+    p_sys->fd_data = net_ConnectTCP( p_access, psz_ip, i_port );
     if( p_sys->fd_data < 0 )
     {
         msg_Err( p_access, "failed to connect with server" );

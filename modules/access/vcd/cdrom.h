@@ -2,7 +2,7 @@
  * cdrom.h: cdrom tools header
  *****************************************************************************
  * Copyright (C) 1998-2001 the VideoLAN team
- * $Id: cdrom.h 11709 2005-07-11 16:20:33Z massiot $
+ * $Id: cdrom.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define CDDA_TYPE 0

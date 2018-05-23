@@ -2,7 +2,7 @@
  * avi.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: avi.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: avi.c 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -64,7 +64,7 @@ typedef struct avi_stream_s
 
     char fcc[4];
 
-    mtime_t i_duration;       // in µs
+    mtime_t i_duration;       // in Âµs
 
     int     i_frames;        // total frame count
     int64_t i_totalsize;    // total stream size

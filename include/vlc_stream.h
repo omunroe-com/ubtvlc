@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc_stream.h
+ * vlc_stream.h: Stream (between access and demux) descriptor and methods
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: vlc_stream.h 12465 2005-09-03 15:55:52Z robux4 $
+ * $Id: vlc_stream.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_STREAM_H
@@ -72,6 +72,11 @@ struct stream_t
     void     (*pf_destroy)( stream_t *);
 
     stream_sys_t *p_sys;
+
+    /* UTF-16 and UTF-32 file reading */
+    vlc_iconv_t     conv;
+    int             i_char_width;
+    vlc_bool_t      b_little_endian;
 };
 
 /**

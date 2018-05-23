@@ -2,7 +2,7 @@
  * dvdnav.c: DVD module using the dvdnav library.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: dvdnav.c 12835 2005-10-15 12:15:06Z jpsaman $
+ * $Id: dvdnav.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -58,16 +58,16 @@
  *****************************************************************************/
 #define ANGLE_TEXT N_("DVD angle")
 #define ANGLE_LONGTEXT N_( \
-    "Allows you to select the default DVD angle." )
+     "Default DVD angle." )
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for DVDnav streams. This "\
-    "value should be set in millisecond units." )
+    "Caching value for DVDs. This "\
+    "value should be set in milliseconds." )
 #define MENU_TEXT N_("Start directly in menu")
 #define MENU_LONGTEXT N_( \
-    "Allows you to start the DVD directly in the main menu. This "\
-    "will try to skip all the useless warnings introductions." )
+    "Start the DVD directly in the main menu. This "\
+    "will try to skip all the useless warning introductions." )
 
 #define LANGUAGE_DEFAULT ("en")
 
@@ -536,6 +536,22 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             *pi64 = (int64_t)var_GetInteger( p_demux, "dvdnav-caching" ) *1000;
             return VLC_SUCCESS;
 
+        case DEMUX_GET_META:
+        {
+            const char *title_name = NULL;
+
+            dvdnav_get_title_string(p_sys->dvdnav, &title_name);
+            if( (NULL != title_name) && ('\0' != title_name[0]) )
+            {
+                vlc_meta_t **pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
+                vlc_meta_t *meta;
+                *pp_meta = meta = vlc_meta_New();
+                vlc_meta_Add( meta, VLC_META_TITLE, title_name );
+                return VLC_SUCCESS;
+            }
+            return VLC_EGENERIC;
+        }
+
         /* TODO implement others */
         default:
             return VLC_EGENERIC;
@@ -708,11 +724,11 @@ static int Demux( demux_t *p_demux )
         msg_Dbg( p_demux, "DVDNAV_CELL_CHANGE" );
         msg_Dbg( p_demux, "     - cellN=%d", event->cellN );
         msg_Dbg( p_demux, "     - pgN=%d", event->pgN );
-        msg_Dbg( p_demux, "     - cell_length=%lld", event->cell_length );
-        msg_Dbg( p_demux, "     - pg_length=%lld", event->pg_length );
-        msg_Dbg( p_demux, "     - pgc_length=%lld", event->pgc_length );
-        msg_Dbg( p_demux, "     - cell_start=%lld", event->cell_start );
-        msg_Dbg( p_demux, "     - pg_start=%lld", event->pg_start );
+        msg_Dbg( p_demux, "     - cell_length="I64Fd, event->cell_length );
+        msg_Dbg( p_demux, "     - pg_length="I64Fd, event->pg_length );
+        msg_Dbg( p_demux, "     - pgc_length="I64Fd, event->pgc_length );
+        msg_Dbg( p_demux, "     - cell_start="I64Fd, event->cell_start );
+        msg_Dbg( p_demux, "     - pg_start="I64Fd, event->pg_start );
 
         /* Store the lenght in time of the current PGC */
         p_sys->i_pgc_length = event->pgc_length / 90 * 1000;

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: intf.h 12756 2005-10-02 19:47:03Z fkuehne $
+ * Copyright (C) 2002-2006 the VideoLAN team
+ * $Id: intf.h 15247 2006-04-16 16:06:16Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <vlc/vlc.h>
@@ -71,6 +71,7 @@ struct intf_sys_t
     vlc_bool_t b_current_title_update;
     vlc_bool_t b_fullscreen_update;
     vlc_bool_t b_volume_update;
+    vlc_bool_t b_intf_show;
 
     /* menus handlers */
     vlc_bool_t b_input_update;
@@ -79,6 +80,7 @@ struct intf_sys_t
 
     /* The messages window */
     msg_subscription_t * p_sub;
+
 };
 
 /*****************************************************************************
@@ -93,20 +95,23 @@ struct intf_sys_t
     id o_wizard;                /* VLCWizard      */
     id o_extended;              /* VLCExtended    */
     id o_bookmarks;             /* VLCBookmarks   */
-    /*id o_update;                 VLCUpdate      */
+    id o_embedded_list;         /* VLCEmbeddedList*/
+    id o_interaction_list;      /* VLCInteractionList*/
+    id o_update;                /* VLCUpdate      */
     BOOL nib_main_loaded;       /* reference to the main-nib */
     BOOL nib_open_loaded;       /* reference to the open-nib */
     BOOL nib_about_loaded;      /* reference to the about-nib */
     BOOL nib_wizard_loaded;     /* reference to the wizard-nib */
     BOOL nib_extended_loaded;   /* reference to the extended-nib */
-    BOOL nib_bookmarks_loaded;  /* reference to the bookmarks-nib */ 
-    /*BOOL nib_update_loaded;      reference to the update-nib */
+    BOOL nib_bookmarks_loaded;  /* reference to the bookmarks-nib */
+    BOOL nib_update_loaded;     /* reference to the update-nib */
 
     IBOutlet id o_window;       /* main window    */
     IBOutlet id o_playlist_view;/* playlist view  */
     IBOutlet id o_scrollfield;  /* info field     */
     IBOutlet id o_timefield;    /* time field     */
     IBOutlet id o_timeslider;   /* time slider    */
+    IBOutlet id o_embedded_window; /* Embedded Vout Window */
     float f_slider;             /* slider value   */
     float f_slider_old;         /* old slider val */
     IBOutlet id o_volumeslider; /* volume slider  */
@@ -149,7 +154,7 @@ struct intf_sys_t
 
     IBOutlet id o_mi_about;
     IBOutlet id o_mi_prefs;
-    /*IBOutlet id o_mi_checkForUpdate;*/
+    IBOutlet id o_mi_checkForUpdate;
     IBOutlet id o_mi_add_intf;
     IBOutlet id o_mu_add_intf;
     IBOutlet id o_mi_services;
@@ -222,6 +227,10 @@ struct intf_sys_t
     IBOutlet id o_mu_videotrack;
     IBOutlet id o_mi_screen;
     IBOutlet id o_mu_screen;
+    IBOutlet id o_mi_aspect_ratio;
+    IBOutlet id o_mu_aspect_ratio;
+    IBOutlet id o_mi_crop;
+    IBOutlet id o_mu_crop;
     IBOutlet id o_mi_subtitle;
     IBOutlet id o_mu_subtitle;
     IBOutlet id o_mi_deinterlace;
@@ -276,6 +285,8 @@ struct intf_sys_t
 - (id)getInfo;
 - (id)getWizard;
 - (id)getBookmarks;
+- (id)getEmbeddedList;
+- (id)getInteractionList;
 - (void)terminate;
 - (NSString *)localizedString:(char *)psz;
 - (char *)delocalizeString:(NSString *)psz;
@@ -310,7 +321,7 @@ struct intf_sys_t
 
 - (IBAction)viewAbout:(id)sender;
 - (IBAction)viewPreferences:(id)sender;
-/*- (IBAction)checkForUpdate:(id)sender;*/
+- (IBAction)checkForUpdate:(id)sender;
 - (IBAction)closeError:(id)sender;
 - (IBAction)openReadMe:(id)sender;
 - (IBAction)openDocumentation:(id)sender;

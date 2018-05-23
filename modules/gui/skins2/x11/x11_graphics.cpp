@@ -2,10 +2,10 @@
  * x11_graphics.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: x11_graphics.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: x11_graphics.cpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef X11_SKINS
@@ -49,7 +49,7 @@ X11Graphics::X11Graphics( intf_thread_t *pIntf, X11Display &rDisplay,
     {
         // Avoid a X11 Bad Value error
         width = height = 1;
-        msg_Err( getIntf(), "Invalid image size (null width or height)" );
+        msg_Err( getIntf(), "invalid image size (null width or height)" );
     }
 
     // Create a pixmap
@@ -138,7 +138,7 @@ void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
     }
     else if( width > rBitmap.getWidth() )
     {
-        msg_Dbg( getIntf(), "Bitmap width too small!" );
+        msg_Dbg( getIntf(), "bitmap width too small (%i)", rBitmap.getWidth() );
         width = rBitmap.getWidth();
     }
     if( height == -1 )
@@ -147,7 +147,8 @@ void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
     }
     else if( height > rBitmap.getHeight() )
     {
-        msg_Dbg( getIntf(), "Bitmap height too small!" );
+        msg_Dbg( getIntf(), "bitmap height too small (%i)", rBitmap.getHeight()
+                                 );
         height = rBitmap.getHeight();
     }
 
@@ -160,7 +161,7 @@ void X11Graphics::drawBitmap( const GenericBitmap &rBitmap, int xSrc,
     // Safety check for debugging purpose
     if( xDest + width > m_width || yDest + height > m_height )
     {
-        msg_Dbg( getIntf(), "Bitmap too large !" );
+        msg_Dbg( getIntf(), "bitmap too large" );
         return;
     }
 

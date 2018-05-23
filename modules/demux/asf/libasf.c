@@ -2,7 +2,7 @@
  * libasf.c : asf stream demux module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: libasf.c 12087 2005-08-09 14:43:04Z jpsaman $
+ * $Id: libasf.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>                                      /* malloc(), free() */
@@ -407,7 +407,7 @@ static int ASF_ReadObject_metadata( stream_t *s, asf_object_t *p_obj )
     for( j = 0; j < p_meta->i_record_entries_count; j++ )
     {
         asf_metadata_record_t *p_rec = &p_meta->record[j];
-        
+
         if( p_rec->i_type == ASF_METADATA_TYPE_STRING )
             msg_Dbg( s, "  - %s=%s",
                      p_rec->psz_name, p_rec->p_data );
@@ -673,17 +673,27 @@ static int ASF_ReadObject_content_description(stream_t *s, asf_object_t *p_obj)
     asf_object_content_description_t *p_cd =
         (asf_object_content_description_t *)p_obj;
     uint8_t *p_peek, *p_data;
-    int i_peek;
-    int i_len, i_title, i_author, i_copyright, i_description, i_rating;
+    int i_peek, i_title, i_author, i_copyright, i_description, i_rating;
+    vlc_iconv_t cd = (vlc_iconv_t)-1;
+    char *ib = NULL;
+    char *ob = NULL;
+    size_t i_ibl, i_obl, i_len;
 
+    cd = vlc_iconv_open("UTF-8", "UTF-16LE");
+    if ( cd == (vlc_iconv_t)-1 ) {
+        msg_Err( s, "vlc_iconv_open failed" );
+        return VLC_EGENERIC;
+    }
+
+/* FIXME i_size*3 is the worst case. */
 #define GETSTRINGW( psz_str, i_size ) \
-   psz_str = calloc( i_size/2 + 1, sizeof( char ) ); \
-   for( i_len = 0; i_len < i_size/2; i_len++ ) \
-   { \
-       psz_str[i_len] = GetWLE( p_data + 2*i_len ); \
-   } \
-   psz_str[i_size/2] = '\0'; \
-   p_data += i_size;
+    psz_str = (char *)calloc( i_size*3+1, sizeof( char ) ); \
+    ib = (char *)p_data; \
+    ob = psz_str; \
+    i_ibl = i_size; \
+    i_obl = i_size*3; \
+    i_len = vlc_iconv(cd, &ib, &i_ibl, &ob, &i_obl); \
+    p_data += i_size;
 
     if( ( i_peek = stream_Peek( s, &p_peek, p_cd->i_object_size ) ) < 34 )
     {
@@ -707,13 +717,15 @@ static int ASF_ReadObject_content_description(stream_t *s, asf_object_t *p_obj)
 
 #ifdef ASF_DEBUG
     msg_Dbg( s,
-             "Read \"content description object\" title:\"%s\" author:\"%s\" copyright:\"%s\" description:\"%s\" rating:\"%s\"",
+             "read \"content description object\" title:\"%s\" author:\"%s\" copyright:\"%s\" description:\"%s\" rating:\"%s\"",
              p_cd->psz_title,
              p_cd->psz_author,
              p_cd->psz_copyright,
              p_cd->psz_description,
              p_cd->psz_rating );
 #endif
+
+    vlc_iconv_close(cd);
     return VLC_SUCCESS;
 }
 
@@ -767,7 +779,7 @@ static int ASF_ReadObject_language_list(stream_t *s, asf_object_t *p_obj)
     }
 
 #ifdef ASF_DEBUG
-    msg_Dbg( s, "Read \"language list object\" %d entries", 
+    msg_Dbg( s, "read \"language list object\" %d entries", 
              p_ll->i_language );
     for( i = 0; i < p_ll->i_language; i++ )
         msg_Dbg( s, "  - '%s'", 
@@ -808,12 +820,12 @@ static int ASF_ReadObject_stream_bitrate_properties( stream_t *s,
     {
         p_sb->bitrate[i].i_stream_number = GetWLE( &p_data[0] )& 0x7f;
         p_sb->bitrate[i].i_avg_bitrate = GetDWLE( &p_data[2] );
-       
+
         p_data += 2+4;
     }
 
 #ifdef ASF_DEBUG
-    msg_Dbg( s,"Read \"stream bitrate properties object\"" );
+    msg_Dbg( s,"read \"stream bitrate properties object\"" );
     for( i = 0; i < p_sb->i_bitrate; i++ )
     {
         msg_Dbg( s,"  - stream=%d bitrate=%d",
@@ -854,7 +866,7 @@ static int ASF_ReadObject_extended_stream_properties( stream_t *s,
     p_esp->i_language_index = GetWLE( &p_data[50] );
     p_esp->i_average_time_per_frame= GetQWLE( &p_data[52] );
     p_esp->i_stream_name_count = GetWLE( &p_data[60] );
-    p_esp->i_payload_extention_system_count = GetWLE( &p_data[62] );
+    p_esp->i_payload_extension_system_count = GetWLE( &p_data[62] );
 
     p_data += 64;
 
@@ -871,7 +883,7 @@ static int ASF_ReadObject_extended_stream_properties( stream_t *s,
         p_esp->pi_stream_name_language[i] = GetWLE( &p_data[0] );
         i_size = GetWLE( &p_data[2] );
         p_data += 2;
-        
+ 
         psz = calloc( i_size/2 + 1, sizeof( char ) );
         for( i_len = 0; i_len < i_size/2; i_len++ )
         {
@@ -883,7 +895,7 @@ static int ASF_ReadObject_extended_stream_properties( stream_t *s,
         p_esp->ppsz_stream_name[i] = psz;
     }
 
-    for( i = 0; i < p_esp->i_payload_extention_system_count; i++ )
+    for( i = 0; i < p_esp->i_payload_extension_system_count; i++ )
     {
         /* Skip them */
         int i_size = GetDWLE( &p_data[16 + 2] );
@@ -912,7 +924,7 @@ static int ASF_ReadObject_extended_stream_properties( stream_t *s,
     }
 
 #ifdef ASF_DEBUG
-    msg_Dbg( s, "Read \"extended stream properties object\":" );
+    msg_Dbg( s, "read \"extended stream properties object\":" );
     msg_Dbg( s, "  - start="I64Fd" end="I64Fd,
              p_esp->i_start_time, p_esp->i_end_time );
     msg_Dbg( s, "  - data bitrate=%d buffer=%d initial fullness=%d",
@@ -934,8 +946,8 @@ static int ASF_ReadObject_extended_stream_properties( stream_t *s,
         msg_Dbg( s, "     - lang id=%d name=%s",
                  p_esp->pi_stream_name_language[i],
                  p_esp->ppsz_stream_name[i] );
-    msg_Dbg( s, "  - payload extention system count=%d",
-             p_esp->i_payload_extention_system_count );
+    msg_Dbg( s, "  - payload extension system count=%d",
+             p_esp->i_payload_extension_system_count );
 #endif
     return VLC_SUCCESS;
 }
@@ -979,7 +991,7 @@ static int ASF_ReadObject_advanced_mutual_exclusion( stream_t *s,
     }
         
 #ifdef ASF_DEBUG
-    msg_Dbg( s, "Read \"advanced mutual exclusion object\"" );
+    msg_Dbg( s, "read \"advanced mutual exclusion object\"" );
     for( i = 0; i < p_ae->i_stream_number_count; i++ )
         msg_Dbg( s, "  - stream=%d", p_ae->pi_stream_number[i] );
 #endif
@@ -1021,7 +1033,7 @@ static int ASF_ReadObject_stream_prioritization( stream_t *s,
         p_sp->pi_priority_flag[i] = GetWLE( p_data ); p_data += 2;
     }
 #ifdef ASF_DEBUG
-    msg_Dbg( s, "Read \"stream prioritization object\"" );
+    msg_Dbg( s, "read \"stream prioritization object\"" );
     for( i = 0; i < p_sp->i_priority_count; i++ )
         msg_Dbg( s, "  - Stream:%d flags=0x%x",
                  p_sp->pi_priority_stream_number[i],
@@ -1125,7 +1137,7 @@ static int ASF_ReadObject_extended_content_description( stream_t *s,
     }
 
 #ifdef ASF_DEBUG
-    msg_Dbg( s, "Read \"extended content description object\"" );
+    msg_Dbg( s, "read \"extended content description object\"" );
     for( i = 0; i < p_ec->i_count; i++ )
         msg_Dbg( s, "  - '%s' = '%s'",
                  p_ec->ppsz_name[i],
@@ -1359,7 +1371,7 @@ static const struct
     { &asf_object_file_properties_guid, "File Properties" },
     { &asf_object_stream_properties_guid, "Stream Properties" },
     { &asf_object_content_description_guid, "Content Description" },
-    { &asf_object_header_extension_guid, "Header Extention" },
+    { &asf_object_header_extension_guid, "Header Extension" },
     { &asf_object_metadata_guid, "Metadata" },
     { &asf_object_codec_list_guid, "Codec List" },
     { &asf_object_marker_guid, "Marker" },

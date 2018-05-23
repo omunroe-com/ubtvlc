@@ -2,7 +2,7 @@
  * preset.c:
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: preset.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: preset.c 14798 2006-03-18 12:38:38Z zorglub $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          code from projectM http://xmms-projectm.sourceforge.net
@@ -19,9 +19,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
+#include <vlc/vlc.h>
 
 
 #include <stdio.h>
@@ -886,15 +887,19 @@ void write_init(init_cond_t * init_cond) {
     sprintf(s, "%s=%d\n", init_cond->param->name, init_cond->init_val.int_val);
 
   else if (init_cond->param->type == P_TYPE_DOUBLE)
-    sprintf(s, "%s=%f\n", init_cond->param->name, init_cond->init_val.double_val);
+  {
+    lldiv_t div = lldiv( init_cond->init_val.double_val * 1000000,1000000 );
+    sprintf(s, "%s="I64Fd".%06u\n", init_cond->param->name, div.quot,
+                    (unsigned int) div.rem );
+  }
 
   else { printf("write_init: unknown parameter type!\n"); return; }
-  
+
   len = strlen(s);
 
   if ((fwrite(s, 1, len, write_stream)) != len)
     printf("write_init: failed writing to file stream! Out of disk space?\n");
-  
+
 }
 
 

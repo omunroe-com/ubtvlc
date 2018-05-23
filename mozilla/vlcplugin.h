@@ -2,7 +2,7 @@
  * vlcplugin.h: a VLC plugin for Mozilla
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcplugin.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlcplugin.h 15273 2006-04-19 09:13:26Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,12 +18,38 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*******************************************************************************
  * Instance state information about the plugin.
  ******************************************************************************/
+#ifndef __VLCPLUGIN_H__
+#define __VLCPLUGIN_H__
+
+#include "vlcpeer.h"
+
+#if !defined(XP_MACOSX) && !defined(XP_UNIX) && !defined(XP_WIN)
+#define XP_UNIX 1
+#elif defined(XP_MACOSX)
+#undef XP_UNIX
+#endif
+
+#ifdef XP_WIN
+    /* Windows stuff */
+#endif
+
+#ifdef XP_MACOSX
+    /* Mac OS X stuff */
+#   include <Quickdraw.h>
+#endif
+
+#ifdef XP_UNIX
+    /* X11 stuff */
+#   include <X11/Xlib.h>
+#   include <X11/Intrinsic.h>
+#   include <X11/StringDefs.h>
+#endif
 
 class VlcPlugin
 {
@@ -34,8 +60,6 @@ public:
     void     SetInstance( NPP );
     NPP      GetInstance();
     VlcIntf* GetPeer();
-
-    void     SetFileName( const char* );
 
     /* Window settings */
     NPWindow* p_npwin;
@@ -100,6 +124,7 @@ private:
     "video/quicktime:mov,qt:QuickTime video;" \
     /* Ogg */ \
     "application/x-ogg:ogg:Ogg stream;" \
+    "application/ogg:ogg:Ogg stream;" \
     /* explicit plugin call */ \
     "application/x-vlc-plugin::VLC plugin;" \
     /* windows media */ \
@@ -109,4 +134,8 @@ private:
     "video/x-ms-wmv:wmv:Windows Media;" \
     /* Google VLC mime */ \
     "application/x-google-vlc-plugin::Google VLC plugin" \
+    /* Misc */ \
+    "audio/wav::WAV audio" \
+    "audio/x-wav::WAV audio" \
 
+#endif

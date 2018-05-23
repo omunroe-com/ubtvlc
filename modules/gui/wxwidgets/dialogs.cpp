@@ -2,7 +2,7 @@
  * dialogs.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: dialogs.cpp 12796 2005-10-09 16:36:17Z gbazin $
+ * $Id: dialogs.cpp 14545 2006-02-28 23:23:42Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,9 +32,21 @@
 #include <vlc/vlc.h>
 #include <vlc/aout.h>
 #include <vlc/intf.h>
+
 #include "charset.h"
 
-#include "wxwidgets.h"
+#include "dialogs/vlm/vlm_panel.hpp"
+#include "dialogs/bookmarks.hpp"
+#include "dialogs/wizard.hpp"
+#include "dialogs/playlist.hpp"
+#include "dialogs/open.hpp"
+#include "dialogs/updatevlc.hpp"
+#include "dialogs/fileinfo.hpp"
+#include "dialogs/iteminfo.hpp"
+#include "dialogs/preferences.hpp"
+#include "dialogs/messages.hpp"
+#include "dialogs/interaction.hpp"
+#include "interface.hpp"
 
 /* include the icon graphic */
 #include "../../../share/vlc32x32.xpm"
@@ -52,6 +64,8 @@ private:
 
     /* Event handlers (these functions should _not_ be virtual) */
     void OnUpdateVLC( wxCommandEvent& event );
+    void OnVLM( wxCommandEvent& event );
+    void OnInteraction( wxCommandEvent& event );
     void OnExit( wxCommandEvent& event );
     void OnPlaylist( wxCommandEvent& event );
     void OnMessages( wxCommandEvent& event );
@@ -92,6 +106,7 @@ public:
     wxFrame             *p_bookmarks_dialog;
     wxFileDialog        *p_file_generic_dialog;
     UpdateVLC           *p_updatevlc_dialog;
+    VLMFrame            *p_vlm_dialog;
 };
 
 DEFINE_LOCAL_EVENT_TYPE( wxEVT_DIALOG );
@@ -131,6 +146,10 @@ BEGIN_EVENT_TABLE(DialogsProvider, wxFrame)
                 DialogsProvider::OnExitThread)
     EVT_COMMAND(INTF_DIALOG_UPDATEVLC, wxEVT_DIALOG,
                 DialogsProvider::OnUpdateVLC)
+    EVT_COMMAND(INTF_DIALOG_VLM, wxEVT_DIALOG,
+                DialogsProvider::OnVLM)
+    EVT_COMMAND( INTF_DIALOG_INTERACTION, wxEVT_DIALOG,
+                DialogsProvider::OnInteraction )
 END_EVENT_TABLE()
 
 wxWindow *CreateDialogsProvider( intf_thread_t *p_intf, wxWindow *p_parent )
@@ -157,6 +176,7 @@ DialogsProvider::DialogsProvider( intf_thread_t *_p_intf, wxWindow *p_parent )
     p_bookmarks_dialog = NULL;
     p_dir_dialog = NULL;
     p_updatevlc_dialog = NULL;
+    p_vlm_dialog = NULL;
 
     /* Give our interface a nice little icon */
     p_intf->p_sys->p_icon = new wxIcon( vlc_xpm );
@@ -191,7 +211,7 @@ DialogsProvider::DialogsProvider( intf_thread_t *_p_intf, wxWindow *p_parent )
     INIT( ID_PLAYLIST, p_playlist_dialog, new Playlist(p_intf,this), ShowPlaylist );
     INIT( ID_MESSAGES, p_messages_dialog, new Messages(p_intf,this), Show );
     INIT( ID_FILE_INFO, p_fileinfo_dialog, new FileInfo(p_intf,this), Show );
-    INIT( ID_BOOKMARKS, p_bookmarks_dialog, BookmarksDialog(p_intf,this), Show);
+    INIT( ID_BOOKMARKS, p_bookmarks_dialog, new BookmarksDialog(p_intf,this), Show);
 #undef INIT
 }
 
@@ -215,7 +235,7 @@ DialogsProvider::~DialogsProvider()
 
 #undef UPDATE
 
-	PopEventHandler(true);
+    PopEventHandler(true);
 
     /* Clean up */
     if( p_open_dialog )     delete p_open_dialog;
@@ -228,6 +248,7 @@ DialogsProvider::~DialogsProvider()
     if( p_wizard_dialog ) delete p_wizard_dialog;
     if( p_bookmarks_dialog ) delete p_bookmarks_dialog;
     if( p_updatevlc_dialog ) delete p_updatevlc_dialog;
+    if( p_vlm_dialog ) delete p_vlm_dialog;
 
 
     if( p_intf->p_sys->p_icon ) delete p_intf->p_sys->p_icon;
@@ -251,7 +272,7 @@ void DialogsProvider::OnIdle( wxIdleEvent& WXUNUSED(event) )
 
     /* Update the fileinfo windows */
     if( p_fileinfo_dialog )
-        p_fileinfo_dialog->UpdateFileInfo();
+        p_fileinfo_dialog->Update();
 }
 
 void DialogsProvider::OnPlaylist( wxCommandEvent& WXUNUSED(event) )
@@ -319,7 +340,7 @@ void DialogsProvider::OnBookmarks( wxCommandEvent& WXUNUSED(event) )
 {
     /* Show/hide the open dialog */
     if( !p_bookmarks_dialog )
-        p_bookmarks_dialog = BookmarksDialog( p_intf, this );
+        p_bookmarks_dialog = new BookmarksDialog( p_intf, this );
 
     if( p_bookmarks_dialog )
     {
@@ -409,11 +430,12 @@ void DialogsProvider::OnOpenFileSimple( wxCommandEvent& event )
             char *psz_utf8 = wxFromLocale( paths[i] );
             if( event.GetInt() )
                 playlist_Add( p_playlist, psz_utf8, psz_utf8,
-                              PLAYLIST_APPEND | (i ? 0 : PLAYLIST_GO),
+                              PLAYLIST_APPEND | (i ? 0 : PLAYLIST_GO) |
+                              (i ? PLAYLIST_PREPARSE : 0 ),
                               PLAYLIST_END );
             else
                 playlist_Add( p_playlist, psz_utf8, psz_utf8,
-                              PLAYLIST_APPEND, PLAYLIST_END );
+                              PLAYLIST_APPEND | PLAYLIST_PREPARSE , PLAYLIST_END );
             wxLocaleFree( psz_utf8 );
         }
     }
@@ -500,5 +522,60 @@ void DialogsProvider::OnUpdateVLC( wxCommandEvent& WXUNUSED(event) )
     if( p_updatevlc_dialog )
     {
         p_updatevlc_dialog->Show( !p_updatevlc_dialog->IsShown() );
+    }
+}
+
+void DialogsProvider::OnVLM( wxCommandEvent& WXUNUSED(event) )
+{
+    /* Show/hide the file info window */
+    if( !p_vlm_dialog )
+        p_vlm_dialog = new VLMFrame( p_intf, this );
+
+    if( p_vlm_dialog )
+    {
+        p_vlm_dialog->Show( !p_vlm_dialog->IsShown() );
+    }
+}
+
+void DialogsProvider::OnInteraction( wxCommandEvent& event )
+{
+    intf_dialog_args_t *p_arg = (intf_dialog_args_t *)event.GetClientData();
+    interaction_dialog_t *p_dialog;
+    InteractionDialog *p_wxdialog;
+
+    if( p_arg == NULL )
+    {
+        msg_Dbg( p_intf, "OnInteraction() called with NULL arg" );
+        return;
+    }
+    p_dialog = p_arg->p_dialog;
+
+    /** \bug We store the interface object for the dialog in the p_private
+     * field of the core dialog object. This is not safe if we change
+     * interface while a dialog is loaded */
+
+    switch( p_dialog->i_action )
+    {
+    case INTERACT_NEW:
+        p_wxdialog = new InteractionDialog( p_intf, this, p_dialog );
+        p_dialog->p_private = (void*)p_wxdialog;
+        p_wxdialog->Show();
+        break;
+    case INTERACT_UPDATE:
+        p_wxdialog = (InteractionDialog*)(p_dialog->p_private);
+        if( p_wxdialog)
+            p_wxdialog->Update();
+        break;
+    case INTERACT_HIDE:
+        p_wxdialog = (InteractionDialog*)(p_dialog->p_private);
+        if( p_wxdialog )
+            p_wxdialog->Hide();
+        p_dialog->i_status = HIDDEN_DIALOG;
+        break;
+    case INTERACT_DESTROY:
+        p_wxdialog = (InteractionDialog*)(p_dialog->p_private);
+        /// \todo
+        p_dialog->i_status = DESTROYED_DIALOG;
+        break;
     }
 }

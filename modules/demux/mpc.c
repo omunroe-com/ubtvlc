@@ -2,7 +2,7 @@
  * mpc.c : MPC stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: a52.c 11699 2005-07-11 08:52:14Z sam $
+ * $Id: mpc.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,7 +44,9 @@
  * Module descriptor
  *****************************************************************************/
 #define REPLAYGAIN_TYPE_TEXT N_("Replay Gain type" )
-#define REPLAYGAIN_TYPE_LONGTEXT N_( "Replay Gain type" )
+#define REPLAYGAIN_TYPE_LONGTEXT N_( "Musepack can have a title-specific " \
+              "replay gain (volume control) or an album-specific one. "  \
+              "Choose which type you want to use" )
 
 static int  Open  ( vlc_object_t * );
 static void Close ( vlc_object_t * );
@@ -54,7 +56,7 @@ static char *ppsz_replaygain_type[] = { N_("None"), N_("Title"), N_("Album") };
 
 vlc_module_begin();
     set_shortname( "MPC" );
-    set_description( _("MPC demuxer") );
+    set_description( _("MusePack demuxer") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 145 );
@@ -111,7 +113,7 @@ static int Open( vlc_object_t * p_this )
 
     if( memcmp( p_peek, "MP+", 3 ) )
     {
-        /* for v4..6 we check extention file */
+        /* for v4..6 we check extension file */
         const int i_version = (GetDWLE( p_peek ) >> 11)&0x3ff;
 
         if( i_version  < 4 || i_version > 6 )

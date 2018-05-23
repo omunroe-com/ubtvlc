@@ -2,7 +2,7 @@
  * common.h : DirectShow access module for vlc
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: common.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: common.h 13909 2006-01-14 09:36:16Z jpsaman $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -90,4 +90,5 @@ struct access_sys_t
     int            i_width;
     int            i_height;
     int            i_chroma;
+    vlc_bool_t     b_chroma; /* Force a specific chroma on the dshow input */
 };

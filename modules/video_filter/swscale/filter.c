@@ -2,7 +2,7 @@
  * filter.c: video scaling module using the swscale library
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: filter.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: filter.c 14977 2006-03-30 08:40:51Z zorglub $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -61,7 +61,7 @@ static int GetSwscaleChroma( vlc_fourcc_t );
  * Module descriptor
  *****************************************************************************/
 #define MODE_TEXT N_("Scaling mode")
-#define MODE_LONGTEXT N_("You can choose the default scaling mode.")
+#define MODE_LONGTEXT N_("Scaling mode to use.")
 
 static int pi_mode_values[] = { 0, 1, 2, 4, 8, 5, 6, 9, 10 };
 static char *ppsz_mode_descriptions[] =

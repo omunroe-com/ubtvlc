@@ -1,8 +1,8 @@
 /*****************************************************************************
  * http.c : HTTP/HTTPS Remote control interface
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12449 2005-09-02 17:11:23Z massiot $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: http.c 15102 2006-04-05 09:58:20Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "http.h"
@@ -33,7 +33,10 @@ static void Close( vlc_object_t * );
 
 #define HOST_TEXT N_( "Host address" )
 #define HOST_LONGTEXT N_( \
-    "You can set the address and port the http interface will bind to." )
+    "Address and port the HTTP interface will listen on. It defaults to " \
+    "all network interfaces (0.0.0.0)." \
+    " If you want the HTTP interface to be available only on the local " \
+    "machine, enter 127.0.0.1" )
 #define SRC_TEXT N_( "Source directory" )
 #define SRC_LONGTEXT N_( "Source directory" )
 #define CHARSET_TEXT N_( "Charset" )
@@ -41,24 +44,24 @@ static void Close( vlc_object_t * );
         "Charset declared in Content-Type header (default UTF-8)." )
 #define HANDLERS_TEXT N_( "Handlers" )
 #define HANDLERS_LONGTEXT N_( \
-        "List of extensions and executable paths (for instance: " \
+        "List of handler extensions and executable paths (for instance: " \
         "php=/usr/bin/php,pl=/usr/bin/perl)." )
 #define CERT_TEXT N_( "Certificate file" )
 #define CERT_LONGTEXT N_( "HTTP interface x509 PEM certificate file " \
-                          "(enables SSL)" )
+                          "(enables SSL)." )
 #define KEY_TEXT N_( "Private key file" )
-#define KEY_LONGTEXT N_( "HTTP interface x509 PEM private key file" )
+#define KEY_LONGTEXT N_( "HTTP interface x509 PEM private key file." )
 #define CA_TEXT N_( "Root CA file" )
 #define CA_LONGTEXT N_( "HTTP interface x509 PEM trusted root CA " \
-                        "certificates file" )
+                        "certificates file." )
 #define CRL_TEXT N_( "CRL file" )
-#define CRL_LONGTEXT N_( "HTTP interace Certificates Revocation List file" )
+#define CRL_LONGTEXT N_( "HTTP interace Certificates Revocation List file." )
 
 vlc_module_begin();
     set_shortname( _("HTTP"));
     set_description( _("HTTP remote control interface") );
     set_category( CAT_INTERFACE );
-    set_subcategory( SUBCAT_INTERFACE_GENERAL );
+    set_subcategory( SUBCAT_INTERFACE_MAIN );
         add_string ( "http-host", NULL, NULL, HOST_TEXT, HOST_LONGTEXT, VLC_TRUE );
         add_string ( "http-src",  NULL, NULL, SRC_TEXT,  SRC_LONGTEXT,  VLC_TRUE );
         add_string ( "http-charset", "UTF-8", NULL, CHARSET_TEXT, CHARSET_LONGTEXT, VLC_TRUE );
@@ -83,21 +86,22 @@ static void Run          ( intf_thread_t *p_intf );
 /*****************************************************************************
  * Local functions
  *****************************************************************************/
-#if !defined(SYS_DARWIN) && !defined(SYS_BEOS) && !defined(WIN32)
-static int DirectoryCheck( char *psz_dir )
+#if !defined(__APPLE__) && !defined(SYS_BEOS) && !defined(WIN32)
+static int DirectoryCheck( const char *psz_dir )
 {
     DIR           *p_dir;
 
 #ifdef HAVE_SYS_STAT_H
     struct stat   stat_info;
 
-    if( stat( psz_dir, &stat_info ) == -1 || !S_ISDIR( stat_info.st_mode ) )
+    if( ( utf8_stat( psz_dir, &stat_info ) == -1 )
+      || !S_ISDIR( stat_info.st_mode ) )
     {
         return VLC_EGENERIC;
     }
 #endif
 
-    if( ( p_dir = opendir( psz_dir ) ) == NULL )
+    if( ( p_dir = utf8_opendir( psz_dir ) ) == NULL )
     {
         return VLC_EGENERIC;
     }
@@ -167,10 +171,13 @@ static int Open( vlc_object_t *p_this )
 
     if( strcmp( psz_src, "UTF-8" ) )
     {
-        p_sys->iconv_from_utf8 = vlc_iconv_open( psz_src, "UTF-8" );
+        char psz_encoding[strlen( psz_src ) + sizeof( "//translit")];
+        sprintf( psz_encoding, "%s//translit", psz_src);
+
+        p_sys->iconv_from_utf8 = vlc_iconv_open( psz_encoding, "UTF-8" );
         if( p_sys->iconv_from_utf8 == (vlc_iconv_t)-1 )
             msg_Warn( p_intf, "unable to perform charset conversion to %s",
-                      psz_src );
+                      psz_encoding );
         else
         {
             p_sys->iconv_to_utf8 = vlc_iconv_open( "UTF-8", psz_src );
@@ -185,7 +192,8 @@ static int Open( vlc_object_t *p_this )
         p_sys->iconv_from_utf8 = p_sys->iconv_to_utf8 = (vlc_iconv_t)-1;
     }
 
-    free( psz_src );
+    p_sys->psz_charset = psz_src;
+    psz_src = NULL;
 
     /* determine file handler associations */
     p_sys->i_handlers = 0;
@@ -271,7 +279,7 @@ static int Open( vlc_object_t *p_this )
     p_sys->i_files  = 0;
     p_sys->pp_files = NULL;
 
-#if defined(SYS_DARWIN) || defined(SYS_BEOS) || defined(WIN32)
+#if defined(__APPLE__) || defined(SYS_BEOS) || defined(WIN32)
     if ( ( psz_src = config_GetPsz( p_intf, "http-src" )) == NULL )
     {
         char * psz_vlcpath = p_intf->p_libvlc->psz_vlcpath;
@@ -286,22 +294,34 @@ static int Open( vlc_object_t *p_this )
 #else
     psz_src = config_GetPsz( p_intf, "http-src" );
 
-    if( !psz_src || *psz_src == '\0' )
+    if( ( psz_src == NULL ) || ( *psz_src == '\0' ) )
     {
-        if( !DirectoryCheck( "share/http" ) )
+        static char const* ppsz_paths[] = {
+            "share/http",
+            "../share/http",
+            DATA_PATH"/http",
+            NULL
+        };
+        unsigned i;
+
+        if( psz_src != NULL )
         {
-            psz_src = strdup( "share/http" );
+            free( psz_src );
+            psz_src = NULL;
         }
-        else if( !DirectoryCheck( DATA_PATH "/http" ) )
-        {
-            psz_src = strdup( DATA_PATH "/http" );
-        }
+
+        for( i = 0; ppsz_paths[i] != NULL; i++ )
+            if( !DirectoryCheck( ppsz_paths[i] ) )
+            {
+                psz_src = strdup( ppsz_paths[i] );
+                break;
+            }
     }
 #endif
 
     if( !psz_src || *psz_src == '\0' )
     {
-        msg_Err( p_intf, "invalid src dir" );
+        msg_Err( p_intf, "invalid web interface source directory" );
         goto failed;
     }
 
@@ -317,7 +337,7 @@ static int Open( vlc_object_t *p_this )
 
     if( p_sys->i_files <= 0 )
     {
-        msg_Err( p_intf, "cannot find any files (%s)", psz_src );
+        msg_Err( p_intf, "cannot find any file in directory %s", psz_src );
         goto failed;
     }
     p_intf->pf_run = Run;
@@ -333,7 +353,7 @@ failed:
     }
     httpd_HostDelete( p_sys->p_httpd_host );
     free( p_sys->psz_address );
-    free( p_sys->psz_html_type ); 
+    free( p_sys->psz_html_type );
     if( p_sys->iconv_from_utf8 != (vlc_iconv_t)-1 )
         vlc_iconv_close( p_sys->iconv_from_utf8 );
     if( p_sys->iconv_to_utf8 != (vlc_iconv_t)-1 )
@@ -419,15 +439,11 @@ static void Run( intf_thread_t *p_intf )
         {
             if( p_sys->p_playlist )
             {
-                p_sys->p_input =
-                    vlc_object_find( p_sys->p_playlist,
-                                     VLC_OBJECT_INPUT,
-                                     FIND_CHILD );
+                p_sys->p_input = p_sys->p_playlist->p_input;
             }
         }
-        else if( p_sys->p_input->b_dead )
+        else if( p_sys->p_input->b_dead || p_sys->p_input->b_die )
         {
-            vlc_object_release( p_sys->p_input );
             p_sys->p_input = NULL;
         }
 
@@ -489,6 +505,7 @@ static void ParseExecute( httpd_file_sys_t *p_args, char *p_buffer,
     audio_volume_t i_volume;
     char volume[5];
     char state[8];
+    char stats[20];
 
 #define p_sys p_args->p_intf->p_sys
     if( p_sys->p_input )
@@ -538,12 +555,47 @@ static void ParseExecute( httpd_file_sys_t *p_args, char *p_buffer,
     E_(mvar_AppendNewVar)( p_args->vars, "vlc_compile_domain",
                            VLC_CompileDomain() );
     E_(mvar_AppendNewVar)( p_args->vars, "vlc_compiler", VLC_Compiler() );
+#ifndef HAVE_SHARED_LIBVLC
     E_(mvar_AppendNewVar)( p_args->vars, "vlc_changeset", VLC_Changeset() );
+#endif
     E_(mvar_AppendNewVar)( p_args->vars, "stream_position", position );
     E_(mvar_AppendNewVar)( p_args->vars, "stream_time", time );
     E_(mvar_AppendNewVar)( p_args->vars, "stream_length", length );
     E_(mvar_AppendNewVar)( p_args->vars, "volume", volume );
     E_(mvar_AppendNewVar)( p_args->vars, "stream_state", state );
+    E_(mvar_AppendNewVar)( p_args->vars, "charset", ((intf_sys_t *)p_args->p_intf->p_sys)->psz_charset );
+
+    /* Stats */
+#define p_sys p_args->p_intf->p_sys
+    if( p_sys->p_input )
+    {
+        input_item_t *p_item = p_sys->p_input->input.p_item;
+        if( p_item )
+        {
+            vlc_mutex_lock( &p_item->p_stats->lock );
+#define STATS_INT( n ) sprintf( stats, "%d", p_item->p_stats->i_ ## n ); \
+                       E_(mvar_AppendNewVar)( p_args->vars, #n, stats );
+#define STATS_FLOAT( n ) sprintf( stats, "%f", p_item->p_stats->f_ ## n ); \
+                       E_(mvar_AppendNewVar)( p_args->vars, #n, stats );
+            STATS_INT( read_bytes )
+            STATS_FLOAT( input_bitrate )
+            STATS_INT( demux_read_bytes )
+            STATS_FLOAT( demux_bitrate )
+            STATS_INT( decoded_video )
+            STATS_INT( displayed_pictures )
+            STATS_INT( lost_pictures )
+            STATS_INT( decoded_audio )
+            STATS_INT( played_abuffers )
+            STATS_INT( lost_abuffers )
+            STATS_INT( sent_packets )
+            STATS_INT( sent_bytes )
+            STATS_FLOAT( send_bitrate )
+#undef STATS_INT
+#undef STATS_FLOAT
+            vlc_mutex_unlock( &p_item->p_stats->lock );
+        }
+    }
+#undef p_sys
 
     E_(SSInit)( &p_args->stack );
 
@@ -571,6 +623,7 @@ int  E_(HttpCallback)( httpd_file_sys_t *p_args,
     char **pp_data = (char **)_pp_data;
     FILE *f;
 
+    /* FIXME: do we need character encoding translation here? */
     if( ( f = fopen( p_args->file, "r" ) ) == NULL )
     {
         Callback404( p_args, pp_data, pi_data );
@@ -605,7 +658,7 @@ int  E_(HttpCallback)( httpd_file_sys_t *p_args,
  * call the external handler and parse vlc macros if Content-Type is HTML
  ****************************************************************************/
 int  E_(HandlerCallback)( httpd_handler_sys_t *p_args,
-                          httpd_handler_t *p_handler, uint8_t *_p_url,
+                          httpd_handler_t *p_handler, char *_p_url,
                           uint8_t *_p_request, int i_type,
                           uint8_t *_p_in, int i_in,
                           char *psz_remote_addr, char *psz_remote_host,
@@ -721,7 +774,7 @@ int  E_(HandlerCallback)( httpd_handler_sys_t *p_args,
         p = p_in;
         for ( ; ; )
         {
-            if( !strncmp( p, "Content-Type: ", strlen("Content-Type: ") ) )
+            if( !strncasecmp( p, "Content-Type: ", strlen("Content-Type: ") ) )
             {
                 char *end = strchr( p, '\r' );
                 if( end == NULL )
@@ -732,7 +785,8 @@ int  E_(HandlerCallback)( httpd_handler_sys_t *p_args,
                 TAB_APPEND( i_env, ppsz_env, psz_tmp );
                 *end = '\r';
             }
-            if( !strncmp( p, "Content-Length: ", strlen("Content-Length: ") ) )
+            if( !strncasecmp( p, "Content-Length: ",
+                              strlen("Content-Length: ") ) )
             {
                 char *end = strchr( p, '\r' );
                 if( end == NULL )
@@ -802,8 +856,8 @@ int  E_(HandlerCallback)( httpd_handler_sys_t *p_args,
         return VLC_SUCCESS;
     }
     p = p_buffer;
-    while( strncmp( p, "Content-Type: text/html",
-                    strlen("Content-Type: text/html") ) )
+    while( strncasecmp( p, "Content-Type: text/html",
+                        strlen("Content-Type: text/html") ) )
     {
         p = strchr( p, '\n' );
         if( p == NULL || p[1] == '\r' )

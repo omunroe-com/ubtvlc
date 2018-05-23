@@ -16,6 +16,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
   cat >> vlc-config.in << BLAH
     access_file) list="\${list} access/libaccess_file" ;;
     access_directory) list="\${list} access/libaccess_directory" ;;
+    access_dv) list="\${list} access/libaccess_dv" ;;
     access_udp) list="\${list} access/libaccess_udp" ;;
     access_tcp) list="\${list} access/libaccess_tcp" ;;
     access_http) list="\${list} access/libaccess_http" ;;
@@ -46,6 +47,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     equalizer) list="\${list} audio_filter/libequalizer" ;;
     normvol) list="\${list} audio_filter/libnormvol" ;;
     audio_format) list="\${list} audio_filter/libaudio_format" ;;
+    param_eq) list="\${list} audio_filter/libparam_eq" ;;
     trivial_channel_mixer) list="\${list} audio_filter/channel_mixer/libtrivial_channel_mixer" ;;
     simple_channel_mixer) list="\${list} audio_filter/channel_mixer/libsimple_channel_mixer" ;;
     headphone_channel_mixer) list="\${list} audio_filter/channel_mixer/libheadphone_channel_mixer" ;;
@@ -71,13 +73,11 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     ugly_resampler) list="\${list} audio_filter/resampler/libugly_resampler" ;;
     linear_resampler) list="\${list} audio_filter/resampler/liblinear_resampler" ;;
     bandlimited_resampler) list="\${list} audio_filter/resampler/libbandlimited_resampler" ;;
-    coreaudio_resampler) list="\${list} audio_filter/resampler/libcoreaudio_resampler" ;;
     trivial_mixer) list="\${list} audio_mixer/libtrivial_mixer" ;;
     float32_mixer) list="\${list} audio_mixer/libfloat32_mixer" ;;
     spdif_mixer) list="\${list} audio_mixer/libspdif_mixer" ;;
     alsa) list="\${list} audio_output/libalsa" ;;
     arts) list="\${list} audio_output/libarts" ;;
-    coreaudio) list="\${list} audio_output/libcoreaudio" ;;
     aout_directx) list="\${list} audio_output/libaout_directx" ;;
     esd) list="\${list} audio_output/libesd" ;;
     aout_file) list="\${list} audio_output/libaout_file" ;;
@@ -87,6 +87,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     hd1000a) list="\${list} audio_output/libhd1000a" ;;
     portaudio) list="\${list} audio_output/libportaudio" ;;
     auhal) list="\${list} audio_output/libauhal" ;;
+    jack) list="\${list} audio_output/libjack" ;;
     a52) list="\${list} codec/liba52" ;;
     cinepak) list="\${list} codec/libcinepak" ;;
     dts) list="\${list} codec/libdts" ;;
@@ -189,6 +190,8 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     vod_rtsp) list="\${list} misc/libvod_rtsp" ;;
     gnutls) list="\${list} misc/libgnutls" ;;
     svg) list="\${list} misc/libsvg" ;;
+    msn) list="\${list} misc/libmsn" ;;
+    growl) list="\${list} misc/libgrowl" ;;
     dummy) list="\${list} misc/dummy/libdummy" ;;
     memcpy) list="\${list} misc/memcpy/libmemcpy" ;;
     memcpymmx) list="\${list} misc/memcpy/libmemcpymmx" ;;
@@ -201,6 +204,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     test2) list="\${list} misc/testsuite/libtest2" ;;
     test3) list="\${list} misc/testsuite/libtest3" ;;
     test4) list="\${list} misc/testsuite/libtest4" ;;
+    test_playlist) list="\${list} misc/testsuite/libtest_playlist" ;;
     export) list="\${list} misc/playlist/libexport" ;;
     xtag) list="\${list} misc/xml/libxtag" ;;
     xml) list="\${list} misc/xml/libxml" ;;
@@ -213,6 +217,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     mux_mpjpeg) list="\${list} mux/libmux_mpjpeg" ;;
     mux_ps) list="\${list} mux/mpeg/libmux_ps" ;;
     mux_ts) list="\${list} mux/mpeg/libmux_ts" ;;
+    rtcp) list="\${list} mux/rtp/librtcp" ;;
     packetizer_copy) list="\${list} packetizer/libpacketizer_copy" ;;
     packetizer_mpegvideo) list="\${list} packetizer/libpacketizer_mpegvideo" ;;
     packetizer_mpeg4video) list="\${list} packetizer/libpacketizer_mpeg4video" ;;
@@ -222,8 +227,10 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     hal) list="\${list} services_discovery/libhal" ;;
     daap) list="\${list} services_discovery/libdaap" ;;
     shout) list="\${list} services_discovery/libshout" ;;
-    upnp) list="\${list} services_discovery/libupnp" ;;
+    upnp_cc) list="\${list} services_discovery/libupnp_cc" ;;
+    upnp_intel) list="\${list} services_discovery/libupnp_intel" ;;
     bonjour) list="\${list} services_discovery/libbonjour" ;;
+    podcast) list="\${list} services_discovery/libpodcast" ;;
     stream_out_dummy) list="\${list} stream_out/libstream_out_dummy" ;;
     stream_out_description) list="\${list} stream_out/libstream_out_description" ;;
     stream_out_standard) list="\${list} stream_out/libstream_out_standard" ;;
@@ -265,6 +272,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     motiondetect) list="\${list} video_filter/libmotiondetect" ;;
     rv32) list="\${list} video_filter/librv32" ;;
     osdmenu) list="\${list} video_filter/libosdmenu" ;;
+    magnify) list="\${list} video_filter/libmagnify" ;;
     swscale) list="\${list} video_filter/swscale/libswscale" ;;
     aa) list="\${list} video_output/libaa" ;;
     caca) list="\${list} video_output/libcaca" ;;
@@ -280,6 +288,7 @@ AC_DEFUN([VLC_CONFIG_HELPER], [
     snapshot) list="\${list} video_output/libsnapshot" ;;
     opengl) list="\${list} video_output/libopengl" ;;
     image) list="\${list} video_output/libimage" ;;
+    directfb) list="\${list} video_output/libdirectfb" ;;
     vout_directx) list="\${list} video_output/directx/libvout_directx" ;;
     glwin32) list="\${list} video_output/directx/libglwin32" ;;
     qte) list="\${list} video_output/qte/libqte" ;;

@@ -2,7 +2,7 @@
  * vorbis.c: vorbis decoder/encoder/packetizer module making use of libvorbis.
  *****************************************************************************
  * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: vorbis.c 12390 2005-08-25 14:09:50Z hartman $
+ * $Id: vorbis.c 15005 2006-03-31 16:28:03Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -154,19 +154,17 @@ static block_t *Encode   ( encoder_t *, aout_buffer_t * );
  *****************************************************************************/
 #define ENC_QUALITY_TEXT N_("Encoding quality")
 #define ENC_QUALITY_LONGTEXT N_( \
-  "Allows you to specify a quality between 1 (low) and 10 (high), instead " \
+  "Enforce a quality between 1 (low) and 10 (high), instead " \
   "of specifying a particular bitrate. This will produce a VBR stream." )
 #define ENC_MAXBR_TEXT N_("Maximum encoding bitrate")
 #define ENC_MAXBR_LONGTEXT N_( \
-  "Allows you to specify a maximum bitrate in kbps. " \
-  "Useful for streaming applications." )
+  "Maximum bitrate in kbps. This is useful for streaming applications." )
 #define ENC_MINBR_TEXT N_("Minimum encoding bitrate")
 #define ENC_MINBR_LONGTEXT N_( \
-  "Allows you to specify a minimum bitrate in kbps. " \
-  "Useful for encoding for a fixed-size channel." )
+  "Minimum bitrate in kbps. This is useful for encoding for a fixed-size channel." )
 #define ENC_CBR_TEXT N_("CBR encoding")
 #define ENC_CBR_LONGTEXT N_( \
-  "Allows you to force a constant bitrate encoding (CBR)." )
+  "Force a constant bitrate encoding (CBR)." )
 
 vlc_module_begin();
     set_shortname( "Vorbis" );
@@ -311,7 +309,7 @@ static void *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     if( p_sys->i_headers == 0 && p_dec->fmt_in.i_extra )
     {
         /* Headers already available as extra data */
-        msg_Dbg( p_dec, "Headers already available as extra data" );
+        msg_Dbg( p_dec, "headers already available as extra data" );
         p_sys->i_headers = 3;
     }
     else if( oggpacket.bytes && p_sys->i_headers < 3 )
@@ -617,11 +615,11 @@ static void ParseVorbisComments( decoder_t *p_dec )
             psz_value++;
             input_Control( p_input, INPUT_ADD_INFO, _("Vorbis comment"),
                            psz_name, psz_value );
-            /* HACK, we should use meta */
             if( strcasestr( psz_name, "artist" ) )
             {
-                input_Control( p_input, INPUT_ADD_INFO, _("Meta-information"),
-                               _("Artist"), psz_value );
+                vlc_input_item_AddInfo( p_input->input.p_item,
+                                        _(VLC_META_INFO_CAT), _(VLC_META_ARTIST),
+                                        "%s", psz_value );
             }
             else if( strcasestr( psz_name, "title" ) )
             {
@@ -666,14 +664,14 @@ static void ConfigureChannelOrder(int *pi_chan_table, int i_channels, uint32_t i
 
     if( b_decode )
         aout_CheckChannelReorder( pi_channels_in, pi_channels_out,
-				  i_channel_mask & AOUT_CHAN_PHYSMASK,
-				  i_channels,
-				  pi_chan_table );
+                                  i_channel_mask & AOUT_CHAN_PHYSMASK,
+                                  i_channels,
+                                  pi_chan_table );
     else
         aout_CheckChannelReorder( pi_channels_out, pi_channels_in,
-				  i_channel_mask & AOUT_CHAN_PHYSMASK,
-				  i_channels,
-				  pi_chan_table );
+                                  i_channel_mask & AOUT_CHAN_PHYSMASK,
+                                  i_channels,
+                                  pi_chan_table );
 }
 
 /*****************************************************************************
@@ -709,7 +707,7 @@ static void CloseDecoder( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t *)p_this;
     decoder_sys_t *p_sys = p_dec->p_sys;
 
-    if( !p_sys->b_packetizer && p_sys->i_headers >= 3 )
+    if( !p_sys->b_packetizer && p_sys->i_headers > 3 )
     {
         vorbis_block_clear( &p_sys->vb );
         vorbis_dsp_clear( &p_sys->vd );

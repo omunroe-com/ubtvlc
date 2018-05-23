@@ -1,8 +1,8 @@
 /*****************************************************************************
  * linear.c : linear interpolation resampler
  *****************************************************************************
- * Copyright (C) 2002 the VideoLAN team
- * $Id: linear.c 12836 2005-10-15 13:23:08Z sigmunau $
+ * Copyright (C) 2002, 2006 the VideoLAN team
+ * $Id: linear.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Sigmund Augdal Helberg <dnumgis@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -62,14 +62,14 @@ struct filter_sys_t
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( _("audio filter for linear interpolation resampling") );
+    set_description( _("Audio filter for linear interpolation resampling") );
     set_category( CAT_AUDIO );
     set_subcategory( SUBCAT_AUDIO_MISC );
     set_capability( "audio filter", 5 );
     set_callbacks( Create, Close );
 
     add_submodule();
-    set_description( _("audio filter for linear interpolation resampling") );
+    set_description( _("Audio filter for linear interpolation resampling") );
     set_capability( "audio filter2", 5 );
     set_callbacks( OpenFilter, CloseFilter );
 vlc_module_end();
@@ -137,6 +137,9 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
                     aout_buffer_t * p_in_buf, aout_buffer_t * p_out_buf )
 {
     filter_sys_t *p_sys = (filter_sys_t *)p_filter->p_sys;
+#ifndef HAVE_ALLOCA
+    float *p_in_orig;
+#endif
     float *p_in, *p_out = (float *)p_out_buf->p_buffer;
     float *p_prev_sample = (float *)p_sys->p_prev_sample;
 
@@ -188,7 +191,7 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             {
                 i_chan--;
                 p_out[i_chan] = p_prev_sample[i_chan];
-                p_out[i_chan] += ( (p_prev_sample[i_chan] - p_in[i_chan])
+                p_out[i_chan] += ( ( p_in[i_chan] - p_prev_sample[i_chan] )
                                    * p_sys->i_remainder
                                    / p_filter->output.i_rate );
             }
@@ -209,8 +212,8 @@ static void DoWork( aout_instance_t * p_aout, aout_filter_t * p_filter,
             {
                 i_chan--;
                 p_out[i_chan] = p_in[i_chan];
-                p_out[i_chan] += ( (p_in[i_chan] -
-                    p_in[i_chan + i_nb_channels])
+                p_out[i_chan] += ( ( p_in[i_chan + i_nb_channels]
+                    - p_in[i_chan] )
                     * p_sys->i_remainder / p_filter->output.i_rate );
             }
             p_out += i_nb_channels;

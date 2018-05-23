@@ -2,10 +2,10 @@
  * ctrl_list.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_list.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ctrl_list.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_LIST_HPP
@@ -35,8 +35,8 @@ class GenericBitmap;
 
 
 /// Class for control list
-class CtrlList: public CtrlGeneric, public Observer<VarList>,
-    public Observer<VarPercent>
+class CtrlList: public CtrlGeneric, public Observer<VarList, void*>,
+    public Observer<VarPercent, void *>
 {
     public:
         CtrlList( intf_thread_t *pIntf, VarList &rList,
@@ -88,10 +88,10 @@ class CtrlList: public CtrlGeneric, public Observer<VarList>,
         int m_lastPos;
 
         /// Method called when the list variable is modified
-        virtual void onUpdate( Subject<VarList> &rList );
+        virtual void onUpdate( Subject<VarList, void*> &rList, void* );
 
         /// Method called when the position variable of the list is modified
-        virtual void onUpdate( Subject<VarPercent> &rPercent );
+        virtual void onUpdate( Subject<VarPercent, void*> &rPercent, void*  );
 
         /// Called when the position is set
         virtual void onPositionChange();

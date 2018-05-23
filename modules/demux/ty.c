@@ -6,7 +6,7 @@
  * based on code by Christopher Wingert for tivo-mplayer
  * tivo(at)wingert.org, February 2003
  *
- * $Id: ty.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ty.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *
  * CODE CHANGES:
  * v1.0.0 - 24-Feb-2005 - Initial release - Series 1 support ONLY!
@@ -371,7 +371,7 @@ int TyDemux(demux_t *p_demux)
     demux_sys_t      *p_sys = p_demux->p_sys;
 
     /*msg_Dbg(p_demux, "ty demux processing" );*/
-   
+
     /* did we hit EOF earlier? */
     if (p_sys->eof) return 0;
 
@@ -386,7 +386,7 @@ int TyDemux(demux_t *p_demux)
     * - set PTS for data packets
     * - pass the data on to the proper codec via es_out_Send()
 
-    * if this is the first time or  
+    * if this is the first time or
     * if we're at the end of this chunk, start a new one
     */
     /* parse the next chunk's record headers */
@@ -784,7 +784,7 @@ static int ty_stream_seek(demux_t *p_demux, double seek_pct)
     /* seek within the chunk to get roughly to where we want */
     p_sys->i_cur_rec = (int)
       ((double) ((seek_pos % CHUNK_SIZE) / (double) (CHUNK_SIZE)) * p_sys->i_num_recs);
-    msg_Dbg(p_demux, "Seeked to file pos " I64Fd, seek_pos);
+    msg_Dbg(p_demux, "seeked to file pos " I64Fd, seek_pos);
     msg_Dbg(p_demux, " (chunk %d, record %d)",
              p_sys->i_chunk_count - 1, p_sys->i_cur_rec);
 

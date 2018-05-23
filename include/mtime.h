@@ -9,7 +9,7 @@
  * Functions prototyped are implemented in interface/mtime.c.
  *****************************************************************************
  * Copyright (C) 1996, 1997, 1998, 1999, 2000 the VideoLAN team
- * $Id: mtime.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: mtime.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -17,7 +17,7 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -25,7 +25,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

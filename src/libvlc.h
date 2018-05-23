@@ -1,8 +1,8 @@
 /*****************************************************************************
  * libvlc.h: main libvlc header
  *****************************************************************************
- * Copyright (C) 1998-2005 VideoLAN (Centrale Réseaux) and its contributors
- * $Id: libvlc.h 12887 2005-10-19 07:09:09Z md $
+ * Copyright (C) 1998-2006 the VideoLAN team
+ * $Id: libvlc.h 15450 2006-04-30 13:36:41Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -21,17 +21,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define Nothing here, this is just to prevent update-po from being stupid
 #include "vlc_keys.h"
 
 static char *ppsz_language[] =
-{ "auto", "en", "en_GB", "ca", "da", "de", "es",
-  "fr", "it", "ja", "ko", "nl", "pt_BR", "ro", "ru", "tr", "zh_CN", "zh_TW" };
+{ "auto", "en", "en_GB", "ca", "da", "de", "es", "fr", "gl", "he", "hi", "hu", "it", "ja",
+"ka","ko", "nl", "oc", "pt_BR", "ro", "ru", "sv", "tr", "zh_CN", "zh_TW" };
+
 static char *ppsz_language_text[] =
-{ N_("Auto"), N_("American English"), N_("British English"), N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"), N_("Italian"), N_("Japanese"), N_("Korean"), N_("Dutch"), N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Turkish"), N_("Simplified Chinese"), N_("Chinese Traditional") };
+{ N_("Auto"), N_("American English"), N_("British English"),
+N_("Catalan"), N_("Danish"), N_("German"), N_("Spanish"), N_("French"),
+N_("Galician"), N_("Hebrew"), N_("Hindi"), N_("Hungarian"), N_("Italian"),
+N_("Japanese"), N_("Georgian"), N_("Korean"), N_("Dutch"), N_("Occitan"),
+N_("Brazilian Portuguese"), N_("Romanian"), N_("Russian"), N_("Swedish"),
+N_("Turkish"), N_("Simplified Chinese"), N_("Chinese Traditional") };
 
 static char *ppsz_snap_formats[] =
 { "png", "jpg" };
@@ -43,73 +49,89 @@ static char *ppsz_snap_formats[] =
  * macros.
  *****************************************************************************/
 
+/*****************************************************************************
+ * Intf
+ ****************************************************************************/
+
+// DEPRECATED
 #define INTF_CAT_LONGTEXT N_( \
-    "These options allow you to configure the interfaces used by VLC.\n" \
+    "These options allow you to configure the interfaces used by VLC. " \
     "You can select the main interface, additional " \
     "interface modules, and define various related options." )
 
 #define INTF_TEXT N_("Interface module")
 #define INTF_LONGTEXT N_( \
-    "This option allows you to select the interface used by VLC.\n" \
+    "This is the main interface used by VLC. " \
     "The default behavior is to automatically select the best module " \
     "available.")
 
 #define EXTRAINTF_TEXT N_("Extra interface modules")
 #define EXTRAINTF_LONGTEXT N_( \
-    "This option allows you to select additional interfaces used by VLC. " \
+    "You can select \"additional interfaces\" for VLC. " \
     "They will be launched in the background in addition to the default " \
     "interface. Use a comma separated list of interface modules. (common " \
-    "values are logger, gestures, sap, rc, http or screensaver)")
+    "values are \"rc\" (remote control), \"http\", \"gestures\" ...)")
 
 #define CONTROL_TEXT N_("Control interfaces")
 #define CONTROL_LONGTEXT N_( \
-    "This option allows you to select control interfaces. " )
+    "You can select control interfaces for VLC.")
 
 #define VERBOSE_TEXT N_("Verbosity (0,1,2)")
 #define VERBOSE_LONGTEXT N_( \
-    "This option sets the verbosity level (0=only errors and " \
+    "This is the verbosity level (0=only errors and " \
     "standard messages, 1=warnings, 2=debug).")
 
 #define QUIET_TEXT N_("Be quiet")
 #define QUIET_LONGTEXT N_( \
-    "This option turns off all warning and information messages.")
+    "Turn off all warning and information messages.")
 
 #define OPEN_TEXT N_("Default stream")
 #define OPEN_LONGTEXT N_( \
-    "This option allows you to always open a default stream on start-up." )
+    "This stream will always be opened at VLC startup." )
 
 #define LANGUAGE_TEXT N_("Language")
-#define LANGUAGE_LONGTEXT N_( "This option allows you to set the language " \
-    "of the interface. The system language is auto-detected if \"auto\" is " \
+#define LANGUAGE_LONGTEXT N_( "You can manually select a language for the " \
+    "interface. The system language is auto-detected if \"auto\" is " \
     "specified here." )
 
 #define COLOR_TEXT N_("Color messages")
 #define COLOR_LONGTEXT N_( \
-    "When this option is turned on, the messages sent to the console will " \
-    "be colorized. Your terminal needs Linux color support for this to work.")
+    "This enables colorization of the messages sent to the console " \
+    "Your terminal needs Linux color support for this to work.")
 
 #define ADVANCED_TEXT N_("Show advanced options")
 #define ADVANCED_LONGTEXT N_( \
-    "When this option is turned on, the preferences and/or interfaces  will " \
-    "show all the available options, including those that most users should " \
+    "When this is enabled, the preferences and/or interfaces will " \
+    "show all available options, including those that most users should " \
     "never touch.")
 
+#define SHOWINTF_TEXT N_("Show interface with mouse")
+#define SHOWINTF_LONGTEXT N_( \
+    "When this is enabled, the interface is shown when you move the mouse to "\
+    "the edge of the screen in fullscreen mode." )
+
+
+/*****************************************************************************
+ * Audio
+ ****************************************************************************/
+
+// DEPRECATED
 #define AOUT_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the audio " \
     "subsystem, and to add audio filters which can be used for " \
-    "post processing or visual effects (spectrum analyzer, etc.).\n" \
+    "post processing or visual effects (spectrum analyzer, etc.). " \
     "Enable these filters here, and configure them in the \"audio filters\" " \
     "modules section.")
 
 #define AOUT_TEXT N_("Audio output module")
 #define AOUT_LONGTEXT N_( \
-    "This option allows you to select the audio output method used by VLC. " \
+    "This is the audio output method used by VLC. " \
     "The default behavior is to automatically select the best method " \
     "available.")
 
 #define AUDIO_TEXT N_("Enable audio")
 #define AUDIO_LONGTEXT N_( \
-    "You can completely disable the audio output. In this case, the audio " \
+    "You can completely disable the audio output. The audio " \
     "decoding stage will not take place, thus saving some processing power.")
 
 #define MONO_TEXT N_("Force mono audio")
@@ -122,7 +144,8 @@ static char *ppsz_snap_formats[] =
 
 #define VOLUME_SAVE_TEXT N_("Audio output saved volume")
 #define VOLUME_SAVE_LONGTEXT N_( \
-    "This saves the audio output volume when you select mute.")
+    "This saves the audio output volume when you use the mute function. " \
+    "You should not change this option manually.")
 
 #define VOLUME_STEP_TEXT N_("Audio output volume step")
 #define VOLUME_STEP_LONGTEXT N_( \
@@ -134,7 +157,7 @@ static char *ppsz_snap_formats[] =
     "You can force the audio output frequency here. Common values are " \
     "-1 (default), 48000, 44100, 32000, 22050, 16000, 11025, 8000.")
 
-#if !defined( SYS_DARWIN )
+#if !defined( __APPLE__ )
 #define AOUT_RESAMP_TEXT N_("High quality audio resampling")
 #define AOUT_RESAMP_LONGTEXT N_( \
     "This uses a high quality audio resampling algorithm. High quality "\
@@ -144,25 +167,24 @@ static char *ppsz_snap_formats[] =
 
 #define DESYNC_TEXT N_("Audio desynchronization compensation")
 #define DESYNC_LONGTEXT N_( \
-    "This option allows you to delay the audio output. You must give a " \
-    "number of milliseconds. This can be handy if you notice a lag " \
-    "between the video and the audio.")
+    "This delays the audio output. The delay must be given in milliseconds." \
+    "This can be handy if you notice a lag between the video and the audio.")
 
-#define MULTICHA_TEXT N_("Preferred audio output channels mode")
+#define MULTICHA_TEXT N_("Audio output channels mode")
 #define MULTICHA_LONGTEXT N_( \
-    "This option allows you to set the audio output channels mode that will " \
+    "This sets the audio output channels mode that will " \
     "be used by default when possible (ie. if your hardware supports it as " \
     "well as the audio stream being played).")
 
-#define SPDIF_TEXT N_("Use the S/PDIF audio output when available")
+#define SPDIF_TEXT N_("Use S/PDIF when available")
 #define SPDIF_LONGTEXT N_( \
-    "This option allows you to use the S/PDIF audio output by default when " \
+    "S/PDIF can be used by default when " \
     "your hardware supports it as well as the audio stream being played.")
 
 #define FORCE_DOLBY_TEXT N_("Force detection of Dolby Surround")
 #define FORCE_DOLBY_LONGTEXT N_( \
     "Use this when you know your stream is (or is not) encoded with Dolby "\
-    "Surround but fails to be detected as such. And even if the stream is "\
+    "Surround but fails to be detected as such. Even if the stream is "\
     "not actually encoded with Dolby Surround, turning on this option might "\
     "enhance your experience, especially when combined with the Headphone "\
     "Channel Mixer." )
@@ -172,14 +194,18 @@ static char *ppsz_force_dolby_descriptions[] = { N_("Auto"), N_("On"), N_("Off")
 
 #define AUDIO_FILTER_TEXT N_("Audio filters")
 #define AUDIO_FILTER_LONGTEXT N_( \
-    "This allows you to add audio post processing filters, to modify " \
-    "the sound" )
+    "This adds audio post processing filters, to modify " \
+    "the sound rendering." )
 
 #define AUDIO_VISUAL_TEXT N_("Audio visualizations ")
 #define AUDIO_VISUAL_LONGTEXT N_( \
-    "This allows you to add visualization modules " \
-    "(spectrum analyzer, etc.).")
+    "This adds visualization modules (spectrum analyzer, etc.).")
 
+/*****************************************************************************
+ * Video
+ ****************************************************************************/
+
+// DEPRECATED
 #define VOUT_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the video output " \
     "subsystem. You can for example enable video filters (deinterlacing, " \
@@ -189,44 +215,44 @@ static char *ppsz_force_dolby_descriptions[] = { N_("Auto"), N_("On"), N_("Off")
 
 #define VOUT_TEXT N_("Video output module")
 #define VOUT_LONGTEXT N_( \
-    "This option allows you to select the video output method used by VLC. " \
-    "The default behavior is to automatically select the best " \
-    "method available.")
+    "This is the the video output method used by VLC. " \
+    "The default behavior is to automatically select the best method available.")
 
 #define VIDEO_TEXT N_("Enable video")
 #define VIDEO_LONGTEXT N_( \
-    "You can completely disable the video output. In this case, the video " \
+    "You can completely disable the video output. The video " \
     "decoding stage will not take place, thus saving some processing power.")
 
 #define WIDTH_TEXT N_("Video width")
 #define WIDTH_LONGTEXT N_( \
-    "You can enforce the video width here. By default (-1) VLC will " \
+    "You can enforce the video width. By default (-1) VLC will " \
     "adapt to the video characteristics.")
 
 #define HEIGHT_TEXT N_("Video height")
 #define HEIGHT_LONGTEXT N_( \
-    "You can enforce the video height here. By default (-1) VLC will " \
+    "You can enforce the video height. By default (-1) VLC will " \
     "adapt to the video characteristics.")
 
-#define VIDEOX_TEXT N_("Video x coordinate")
+#define VIDEOX_TEXT N_("Video X coordinate")
 #define VIDEOX_LONGTEXT N_( \
     "You can enforce the position of the top left corner of the video window "\
-    "here (x coordinate).")
+    "(X coordinate).")
 
-#define VIDEOY_TEXT N_("Video y coordinate")
+#define VIDEOY_TEXT N_("Video Y coordinate")
 #define VIDEOY_LONGTEXT N_( \
     "You can enforce the position of the top left corner of the video window "\
-    "here (y coordinate).")
+    "(Y coordinate).")
 
 #define VIDEO_TITLE_TEXT N_("Video title")
 #define VIDEO_TITLE_LONGTEXT N_( \
-    "You can specify a custom video window title here.")
+    "Custom title for the video window (in case the video is not embedded in "\
+    "the interface).")
 
 #define ALIGN_TEXT N_("Video alignment")
 #define ALIGN_LONGTEXT N_( \
-    "You can enforce the video alignment in its window. By default (0) it " \
+    "Enforce the alignment of the video in its window. By default (0) it " \
     "will be centered (0=center, 1=left, 2=right, 4=top, 8=bottom, you can " \
-    "also use combinations of these values).")
+    "also use combinations of these values, like 6=4+2 meaning top-right).")
 static int pi_align_values[] = { 0, 1, 2, 4, 8, 5, 6, 9, 10 };
 static char *ppsz_align_descriptions[] =
 { N_("Center"), N_("Left"), N_("Right"), N_("Top"), N_("Bottom"),
@@ -238,50 +264,57 @@ static char *ppsz_align_descriptions[] =
 
 #define GRAYSCALE_TEXT N_("Grayscale video output")
 #define GRAYSCALE_LONGTEXT N_( \
-    "When enabled, the color information from the video won't be decoded " \
-    "(this can also allow you to save some processing power).")
+    "Output video in grayscale. As the color information aren't decoded, " \
+    "this can save some processing power." )
 
 #define FULLSCREEN_TEXT N_("Fullscreen video output")
 #define FULLSCREEN_LONGTEXT N_( \
-    "If this option is enabled, VLC will always start a video in fullscreen " \
-    "mode.")
+    "Start video in fullscreen mode" )
 
 #define OVERLAY_TEXT N_("Overlay video output")
 #define OVERLAY_LONGTEXT N_( \
-    "If enabled, VLC will try to take advantage of the overlay capabilities " \
-    "of your graphics card (hardware acceleration).")
+    "Overlay is the hardware acceleration capability of your video card " \
+    "(ability to render video directly). VLC will try to use it by default." )
 
 #define VIDEO_ON_TOP_TEXT N_("Always on top")
-#define VIDEO_ON_TOP_LONGTEXT N_("Always place the video window on top of " \
-    "other windows." )
+#define VIDEO_ON_TOP_LONGTEXT N_( \
+    "Always place the video window on top of other windows." )
 
 #define SS_TEXT N_("Disable screensaver")
 #define SS_LONGTEXT N_("Disable the screensaver during video playback." )
 
 #define VIDEO_DECO_TEXT N_("Window decorations")
 #define VIDEO_DECO_LONGTEXT N_( \
-    "If this option is disabled, VLC will avoid creating window caption, " \
-    "frames, etc... around the video.")
+    "VLC can avoid creating window caption, frames, etc... around the video" \
+    ", giving a \"minimal\" window.")
 
 #define FILTER_TEXT N_("Video filter module")
 #define FILTER_LONGTEXT N_( \
-    "This will allow you to add a post-processing filter to enhance the " \
+    "This adds post-processing filters to enhance the " \
     "picture quality, for instance deinterlacing, or to clone or distort " \
     "the video window.")
 
 #define SNAP_PATH_TEXT N_("Video snapshot directory")
 #define SNAP_PATH_LONGTEXT N_( \
-    "Allows you to specify the directory where the video snapshots will " \
-    "be stored.")
+    "Directory where the video snapshots will be stored.")
 
 #define SNAP_FORMAT_TEXT N_("Video snapshot format")
 #define SNAP_FORMAT_LONGTEXT N_( \
-    "Allows you to specify the image format in which the video snapshots will " \
-    "be stored.")
+    "Image format which will be used to store the video snapshots" )
+
+#define SNAP_PREVIEW_TEXT N_("Display video snapshot preview")
+#define SNAP_PREVIEW_LONGTEXT N_( \
+    "Display the snapshot preview in the screen's top-left corner.")
+
+#define CROP_TEXT N_("Video cropping")
+#define CROP_LONGTEXT N_( \
+    "This forces the cropping of the source video. " \
+    "Accepted formats are x:y (4:3, 16:9, etc.) expressing the global image " \
+    "aspect.")
 
 #define ASPECT_RATIO_TEXT N_("Source aspect ratio")
 #define ASPECT_RATIO_LONGTEXT N_( \
-    "This will force the source aspect ratio. For instance, some DVDs claim " \
+    "This forces the source aspect ratio. For instance, some DVDs claim " \
     "to be 16:9 while they are actually 4:3. This can also be used as a " \
     "hint for VLC when a movie does not have aspect ratio information. " \
     "Accepted formats are x:y (4:3, 16:9, etc.) expressing the global image " \
@@ -290,27 +323,38 @@ static char *ppsz_align_descriptions[] =
 
 #define HDTV_FIX_TEXT N_("Fix HDTV height")
 #define HDTV_FIX_LONGTEXT N_( \
-    "This option allows proper handling of HDTV-1080 video format " \
-    "even if broken encoder incorrectly set height to 1088 lines. " \
-    "Disable this option only if your video has non-standard format " \
-    "requiring all 1088 lines.")
+    "This allows proper handling of HDTV-1080 video format " \
+    "even if broken encoder incorrectly sets height to 1088 lines. " \
+    "You should only disable this option if your video has a " \
+    "non-standard format requiring all 1088 lines.")
 
-#define MASPECT_RATIO_TEXT N_("Monitor aspect ratio")
+#define MASPECT_RATIO_TEXT N_("Monitor pixel aspect ratio")
 #define MASPECT_RATIO_LONGTEXT N_( \
-    "This will force the monitor aspect ratio. Most monitors have a 4:3." \
-    "If you have a 16:9 screen, you will need to change this to 16:9 in" \
-    "order to keep proportions.")
+    "This forces the monitor aspect ratio. Most monitors have square " \
+    "pixels (1:1). If you have a 16:9 screen, you might need to change this " \
+    "to 4:3 in order to keep proportions.")
 
+/// \bug [String] Remove "this option"
 #define SKIP_FRAMES_TEXT N_("Skip frames")
 #define SKIP_FRAMES_LONGTEXT N_( \
     "This option enables framedropping on MPEG2 stream. Framedropping " \
     "occurs when your computer is not powerful enough" )
 
+#define DROP_LATE_FRAMES_TEXT N_("Drop late frames")
+#define DROP_LATE_FRAMES_LONGTEXT N_( \
+    "This drops frames that are late (arrive to the video output after " \
+    "their intended display date)." )
+
 #define QUIET_SYNCHRO_TEXT N_("Quiet synchro")
 #define QUIET_SYNCHRO_LONGTEXT N_( \
-    "Enable this option to avoid flooding the message log with debug " \
-    "output from the video output synchro.")
+    "This avoids flooding the message log with debug output from the " \
+    "video output synchronization mechanism.")
 
+/*****************************************************************************
+ * Input
+ ****************************************************************************/
+
+// Deprecated
 #define INPUT_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the input " \
     "subsystem, such as the DVD or VCD device, the network interface " \
@@ -323,8 +367,14 @@ static char *ppsz_align_descriptions[] =
 
 #define CLOCK_SYNCHRO_TEXT N_("Clock synchronisation")
 #define CLOCK_SYNCHRO_LONGTEXT N_( \
-    "Allows you to enable/disable the input clock synchronisation for " \
-    "real-time sources.")
+    "It is possible to disable the input clock synchronisation for " \
+    "real-time sources. Use this if you experience jerky playback of " \
+    "network streams.")
+
+#define NETSYNC_TEXT N_("Network synchronisation" )
+#define NETSYNC_LONGTEXT N_( "This allows you to remotely " \
+        "synchronise clocks for server and client. The detailed settings " \
+        "are available in Advanced / Network Sync." )
 
 static int pi_clock_values[] = { -1, 0, 1 };
 static char *ppsz_clock_descriptions[] =
@@ -332,75 +382,101 @@ static char *ppsz_clock_descriptions[] =
 
 #define SERVER_PORT_TEXT N_("UDP port")
 #define SERVER_PORT_LONGTEXT N_( \
-    "This is the port used for UDP streams. By default, we chose 1234.")
+    "This is the default port used for UDP streams. Default is 1234." )
 
 #define MTU_TEXT N_("MTU of the network interface")
 #define MTU_LONGTEXT N_( \
-    "This is the typical size of UDP packets that we expect. On Ethernet " \
-    "it is usually 1500.")
+    "This is the maximum packet size that can be transmitted " \
+    "over the network interface. On Ethernet it is usually 1500 bytes.")
 
-#define TTL_TEXT N_("Time To Live")
+#define TTL_TEXT N_("Hop limit (TTL)")
 #define TTL_LONGTEXT N_( \
-    "Indicate here the Time To Live of the multicast packets sent by " \
-    "the stream output.")
+    "This is the hop limit (also known as \"Time-To-Live\" or TTL) of " \
+    "the multicast packets sent by the stream output (0 = use operating "\
+    "system built-in default).")
 
-#define INPUT_PROGRAM_TEXT N_("Program to select")
+#define MIFACE_TEXT N_("IPv6 multicast output interface")
+#define MIFACE_LONGTEXT N_( \
+    "Default IPv6 multicast interface. This overrides the routing table.")
+
+#define MIFACE_ADDR_TEXT N_("IPv4 multicast output interface address")
+#define MIFACE_ADDR_LONGTEXT N_( \
+    "IPv4 adress for the default multicast interface. This overrides " \
+    "the routing table.")
+
+#define INPUT_PROGRAM_TEXT N_("Program")
 #define INPUT_PROGRAM_LONGTEXT N_( \
-    "Choose the program to select by giving its Service ID.\n" \
+    "Choose the program to select by giving its Service ID. " \
     "Only use this option if you want to read a multi-program stream " \
     "(like DVB streams for example)." )
 
-#define INPUT_PROGRAMS_TEXT N_("Programs to select")
+#define INPUT_PROGRAMS_TEXT N_("Programs")
 #define INPUT_PROGRAMS_LONGTEXT N_( \
     "Choose the programs to select by giving a comma-separated list of " \
-    "SIDs.\n" \
+    "Service IDs (SIDs). " \
     "Only use this option if you want to read a multi-program stream " \
     "(like DVB streams for example)." )
 
+/// \todo Document how to find it
 #define INPUT_AUDIOTRACK_TEXT N_("Audio track")
 #define INPUT_AUDIOTRACK_LONGTEXT N_( \
-    "Give the stream number of the audio track you want to use" \
+    "Stream number of the audio track to use " \
     "(from 0 to n).")
 
 #define INPUT_SUBTRACK_TEXT N_("Subtitles track")
 #define INPUT_SUBTRACK_LONGTEXT N_( \
-    "Give the stream number of the subtitle track you want to use " \
+    "Stream number of the subtitle track to use " \
     "(from 0 to n).")
 
 #define INPUT_AUDIOTRACK_LANG_TEXT N_("Audio language")
 #define INPUT_AUDIOTRACK_LANG_LONGTEXT N_( \
-    "Give the language of the audio track you want to use " \
-    "(comma separted, two or tree letter country code).")
+    "Language of the audio track you want to use " \
+    "(comma separated, two or three letter country code).")
 
 #define INPUT_SUBTRACK_LANG_TEXT N_("Subtitle language")
 #define INPUT_SUBTRACK_LANG_LONGTEXT N_( \
-    "Give the language of the subtitle track you want to use " \
-    "(comma separted, two or tree letter country code).")
+    "Language of the subtitle track you want to use " \
+    "(comma separated, two or tree letter country code).")
+
+/// \todo Document how to find it
+#define INPUT_AUDIOTRACK_ID_TEXT N_("Audio track ID")
+#define INPUT_AUDIOTRACK_ID_LONGTEXT N_( \
+    "Stream ID of the audio track to use.")
+
+#define INPUT_SUBTRACK_ID_TEXT N_("Subtitles track ID")
+#define INPUT_SUBTRACK_ID_LONGTEXT N_( \
+    "Stream ID of the subtitle track to use.")
 
 #define INPUT_REPEAT_TEXT N_("Input repetitions")
-#define INPUT_REPEAT_LONGTEXT N_("Number of time the same input will be " \
-                                 "repeated")
+#define INPUT_REPEAT_LONGTEXT N_( \
+    "Number of time the same input will be repeated")
 
-#define START_TIME_TEXT N_("Input start time (seconds)")
-#define START_TIME_LONGTEXT N_("Input start time (seconds)")
+#define START_TIME_TEXT N_("Start time")
+#define START_TIME_LONGTEXT N_( \
+    "The stream will start at this position (in seconds)." )
 
-#define STOP_TIME_TEXT N_("Input stop time (seconds)")
-#define STOP_TIME_LONGTEXT N_("Input stop time (seconds)")
+#define STOP_TIME_TEXT N_("Stop time")
+#define STOP_TIME_LONGTEXT N_( \
+    "The stream will stop at this position (in seconds)." )
 
 #define INPUT_LIST_TEXT N_("Input list")
-#define INPUT_LIST_LONGTEXT N_("Allows you to specify a comma-separated list " \
-    "of inputs that will be concatenated after the normal one.")
+#define INPUT_LIST_LONGTEXT N_( \
+    "You can give a comma-separated list " \
+    "of inputs that will be concatenated together after the normal one.")
 
 #define INPUT_SLAVE_TEXT N_("Input slave (experimental)")
-#define INPUT_SLAVE_LONGTEXT N_("Allows you to play from several streams at " \
+#define INPUT_SLAVE_LONGTEXT N_( \
+    "This allows you to play from several inputs at " \
     "the same time. This feature is experimental, not all formats " \
-    "are supported.")
+    "are supported. Use a '#' separated list of inputs.")
 
 #define BOOKMARKS_TEXT N_("Bookmarks list for a stream")
-#define BOOKMARKS_LONGTEXT N_("You can specify a list of bookmarks for a stream in " \
+#define BOOKMARKS_LONGTEXT N_( \
+    "You can manually give a list of bookmarks for a stream in " \
     "the form \"{name=bookmark-name,time=optional-time-offset," \
     "bytes=optional-byte-offset},{...}\"")
 
+// DEPRECATED
 #define SUB_CAT_LONGTEXT N_( \
     "These options allow you to modify the behavior of the subpictures " \
     "subsystem. You can for example enable subpictures filters (logo, etc.). " \
@@ -413,24 +489,33 @@ static char *ppsz_clock_descriptions[] =
     "You can use this option to place the subtitles under the movie, " \
     "instead of over the movie. Try several positions.")
 
+#define SPU_TEXT N_("Enable sub-pictures")
+#define SPU_LONGTEXT N_( \
+    "You can completely disable the sub-picture processing.")
+
 #define OSD_TEXT N_("On Screen Display")
 #define OSD_LONGTEXT N_( \
     "VLC can display messages on the video. This is called OSD (On Screen " \
-    "Display). You can disable this feature here.")
+    "Display).")
 
+#define TEXTRENDERER_TEXT N_("Text rendering module")
+#define TEXTRENDERER_LONGTEXT N_( \
+    "VLC normally uses Freetype for rendering, but this allows you to use svg for instance.")
+
+/// \bug typo arbitraty
 #define SUB_FILTER_TEXT N_("Subpictures filter module")
 #define SUB_FILTER_LONGTEXT N_( \
-    "This will allow you to add a subpictures filter for instance to overlay "\
-    "a logo.")
+    "This adds so-called \"subpicture filters\". These filters overlay " \
+    "some images or text over the video (like a logo, arbitraty text...)." )
 
 #define SUB_AUTO_TEXT N_("Autodetect subtitle files")
-#define SUB_AUTO_LONGTEXT \
-    N_("Automatically detect a subtitle file, if no subtitle filename is " \
-    "specified.")
+#define SUB_AUTO_LONGTEXT N_( \
+    "Automatically detect a subtitle file, if no subtitle filename is " \
+    "specified (based on the filename of the movie).")
 
 #define SUB_FUZZY_TEXT N_("Subtitle autodetection fuzziness")
-#define SUB_FUZZY_LONGTEXT \
-    N_("This determines how fuzzy subtitle and movie filename matching " \
+#define SUB_FUZZY_LONGTEXT N_( \
+    "This determines how fuzzy subtitle and movie filename matching " \
     "will be. Options are:\n" \
     "0 = no subtitles autodetected\n" \
     "1 = any subtitle file\n" \
@@ -439,13 +524,13 @@ static char *ppsz_clock_descriptions[] =
     "4 = subtitle file matching the movie name exactly")
 
 #define SUB_PATH_TEXT N_("Subtitle autodetection paths")
-#define SUB_PATH_LONGTEXT \
-    N_("Look for a subtitle file in those paths too, if your subtitle " \
+#define SUB_PATH_LONGTEXT N_( \
+    "Look for a subtitle file in those paths too, if your subtitle " \
     "file was not found in the current directory.")
 
 #define SUB_FILE_TEXT N_("Use subtitle file")
-#define SUB_FILE_LONGTEXT \
-    N_("Load this subtitle file. To be used when autodetect cannot detect " \
+#define SUB_FILE_LONGTEXT N_( \
+    "Load this subtitle file. To be used when autodetect cannot detect " \
     "your subtitle file.")
 
 #define DVD_DEV_TEXT N_("DVD device")
@@ -480,31 +565,28 @@ static char *ppsz_clock_descriptions[] =
 
 #define IPV6_TEXT N_("Force IPv6")
 #define IPV6_LONGTEXT N_( \
-    "If you check this box, IPv6 will be used by default for all UDP and " \
-    "HTTP connections.")
+    "IPv6 will be used by default for all connections.")
 
 #define IPV4_TEXT N_("Force IPv4")
 #define IPV4_LONGTEXT N_( \
-    "If you check this box, IPv4 will be used by default for all UDP and " \
-    "HTTP connections.")
+    "IPv4 will be used by default for all connections.")
 
-#define TIMEOUT_TEXT N_("TCP connection timeout in ms")
+#define TIMEOUT_TEXT N_("TCP connection timeout")
 #define TIMEOUT_LONGTEXT N_( \
-    "Allows you to modify the default TCP connection timeout. This " \
-    "value should be set in millisecond units." )
+    "Default TCP connection timeout (in milliseconds). " )
 
 #define SOCKS_SERVER_TEXT N_("SOCKS server")
 #define SOCKS_SERVER_LONGTEXT N_( \
-    "Allow you to specify a SOCKS server to use. It must be of the form " \
-    "address:port . It will be used for all TCP connections" )
+    "SOCKS proxy server to use. This must be of the form " \
+    "address:port. It will be used for all TCP connections" )
 
 #define SOCKS_USER_TEXT N_("SOCKS user name")
-#define SOCKS_USER_LONGTEXT N_("Allows you to modify the user name that will " \
-    "be used for the connection to the SOCKS server.")
+#define SOCKS_USER_LONGTEXT N_( \
+    "User name to be used for connection to the SOCKS proxy." )
 
 #define SOCKS_PASS_TEXT N_("SOCKS password")
-#define SOCKS_PASS_LONGTEXT N_("Allows you to modify the password that will " \
-    "be used for the connection to the SOCKS server.")
+#define SOCKS_PASS_LONGTEXT N_( \
+    "Password to be used for connection to the SOCKS proxy." )
 
 #define META_TITLE_TEXT N_("Title metadata")
 #define META_TITLE_LONGTEXT N_( \
@@ -538,22 +620,29 @@ static char *ppsz_clock_descriptions[] =
 #define META_URL_LONGTEXT N_( \
      "Allows you to specify a \"url\" metadata for an input.")
 
+// DEPRECATED
 #define CODEC_CAT_LONGTEXT N_( \
     "This option can be used to alter the way VLC selects " \
     "its codecs (decompression methods). Only advanced users should " \
     "alter this option as it can break playback of all your streams." )
 
-#define CODEC_TEXT N_("Preferred codecs list")
+#define CODEC_TEXT N_("Preferred decoders list")
 #define CODEC_LONGTEXT N_( \
-    "This allows you to select a list of codecs that VLC will use in " \
+    "List of codecs that VLC will use in " \
     "priority. For instance, 'dummy,a52' will try the dummy and a52 codecs " \
-    "before trying the other ones.")
+    "before trying the other ones. Only advanced users should " \
+    "alter this option as it can break playback of all your streams." )
 
 #define ENCODER_TEXT N_("Preferred encoders list")
 #define ENCODER_LONGTEXT N_( \
     "This allows you to select a list of encoders that VLC will use in " \
-    "priority")
+    "priority.")
 
+/*****************************************************************************
+ * Sout
+ ****************************************************************************/
+
+// DEPRECATED
 #define SOUT_CAT_LONGTEXT N_( \
     "These options allow you to set default global options for the " \
     "stream output subsystem." )
@@ -566,20 +655,25 @@ static char *ppsz_clock_descriptions[] =
 
 #define SOUT_ALL_TEXT N_("Enable streaming of all ES")
 #define SOUT_ALL_LONGTEXT N_( \
-    "This allows you to stream all ES (video, audio and subtitles)")
+    "Stream all elementary streams (video, audio and subtitles)")
 
 #define SOUT_DISPLAY_TEXT N_("Display while streaming")
 #define SOUT_DISPLAY_LONGTEXT N_( \
-    "This allows you to play the stream while streaming it.")
+    "Play locally the stream while streaming it.")
 
 #define SOUT_VIDEO_TEXT N_("Enable video stream output")
 #define SOUT_VIDEO_LONGTEXT N_( \
-    "This allows you to choose if the video stream should be redirected to " \
+    "Choose whether the video stream should be redirected to " \
     "the stream output facility when this last one is enabled.")
 
 #define SOUT_AUDIO_TEXT N_("Enable audio stream output")
 #define SOUT_AUDIO_LONGTEXT N_( \
-    "This allows you to choose if the audio stream should be redirected to " \
+    "Choose whether the audio stream should be redirected to " \
+    "the stream output facility when this last one is enabled.")
+
+#define SOUT_SPU_TEXT N_("Enable SPU stream output")
+#define SOUT_SPU_LONGTEXT N_( \
+    "Choose whether the SPU streams should be redirected to " \
     "the stream output facility when this last one is enabled.")
 
 #define SOUT_KEEP_TEXT N_("Keep stream output open" )
@@ -602,16 +696,24 @@ static char *ppsz_clock_descriptions[] =
     "This is a legacy entry to let you configure access output modules")
 
 #define ANN_SAPCTRL_TEXT N_("Control SAP flow")
-#define ANN_SAPCTRL_LONGTEXT N_("If this option is enabled, the flow on " \
+#define ANN_SAPCTRL_LONGTEXT N_( \
+    "If this option is enabled, the flow on " \
     "the SAP multicast address will be controlled. This is needed if you " \
-    "want to make announcements on the MBone" )
+    "want to make announcements on the MBone." )
 
 #define ANN_SAPINTV_TEXT N_("SAP announcement interval")
-#define ANN_SAPINTV_LONGTEXT N_("When the SAP flow control is disabled, " \
-    "this lets you set the fixed interval between SAP announcements" )
+#define ANN_SAPINTV_LONGTEXT N_( \
+    "When the SAP flow control is disabled, " \
+    "this lets you set the fixed interval between SAP announcements." )
 
+
+/*****************************************************************************
+ * Advanced
+ ****************************************************************************/
+
+// DEPRECATED
 #define CPU_CAT_LONGTEXT N_( \
-    "These options allow you to enable special CPU optimizations.\n" \
+    "These options allow you to enable special CPU optimizations. " \
     "You should always leave all these enabled." )
 
 #define FPU_TEXT N_("Enable FPU support")
@@ -649,34 +751,7 @@ static char *ppsz_clock_descriptions[] =
     "If your processor supports the AltiVec instructions set, VLC can take " \
     "advantage of them.")
 
-#define PLAYLIST_CAT_LONGTEXT N_( \
-     "These options define the behavior of the playlist. Some " \
-     "of them can be overridden in the playlist dialog box." )
-
-#define SD_TEXT N_( "Services discovery modules")
-#define SD_LONGTEXT N_( \
-     "Specifies the services discovery modules to load, separated by " \
-     "semi-colons. Typical values are sap, hal, ..." )
-
-#define RANDOM_TEXT N_("Play files randomly forever")
-#define RANDOM_LONGTEXT N_( \
-    "When selected, VLC will randomly play files in the playlist until " \
-    "interrupted.")
-
-#define LOOP_TEXT N_("Repeat all")
-#define LOOP_LONGTEXT N_( \
-    "If you want VLC to keep playing the playlist indefinitely then enable " \
-    "this option.")
-
-#define REPEAT_TEXT N_("Repeat current item")
-#define REPEAT_LONGTEXT N_( \
-    "When this is active, VLC will keep playing the current playlist item " \
-    "over and over again.")
-
-#define PAS_TEXT N_("Play and stop")
-#define PAS_LONGTEXT N_( \
-    "Stop the playlist after each played playlist item. " )
-
+// DEPRECATED
 #define MISC_CAT_LONGTEXT N_( \
     "These options allow you to select default modules. Leave these " \
     "alone unless you really know what you are doing." )
@@ -694,11 +769,15 @@ static char *ppsz_clock_descriptions[] =
 
 #define ACCESS_FILTER_TEXT N_("Access filter module")
 #define ACCESS_FILTER_LONGTEXT N_( \
-    "This is a legacy entry to let you configure access filter modules.")
+    "Access filters are used to modify the stream that is being read. " \
+    "This is used for instance for timeshifting.")
 
 #define DEMUX_TEXT N_("Demux module")
 #define DEMUX_LONGTEXT N_( \
-    "This is a legacy entry to let you configure demux modules.")
+    "Demultiplexers are used to separate the \"elementary\" streams " \
+    "(like audio and video streams). You can use it if " \
+    "the correct demuxer is not automatically detected. You should not "\
+    "set this as a global option unless you really know what you are doing." )
 
 #define RT_PRIORITY_TEXT N_("Allow real-time priority")
 #define RT_PRIORITY_LONGTEXT N_( \
@@ -716,46 +795,58 @@ static char *ppsz_clock_descriptions[] =
 
 #define MINIMIZE_THREADS_TEXT N_("Minimize number of threads")
 #define MINIMIZE_THREADS_LONGTEXT N_( \
-     "This option minimizes the number of threads needed to run VLC")
+     "This option minimizes the number of threads needed to run VLC.")
 
 #define PLUGIN_PATH_TEXT N_("Modules search path")
 #define PLUGIN_PATH_LONGTEXT N_( \
-    "This option allows you to specify an additional path for VLC to look " \
-    "for its modules.")
+    "Additional path for VLC to look for its modules.")
 
 #define VLM_CONF_TEXT N_("VLM configuration file")
 #define VLM_CONF_LONGTEXT N_( \
-    "This option allows you to specify a VLM configuration file that will " \
-    "be read when VLM is launched.")
+    "Read a VLM configuration file as soon as VLM is started." )
 
 #define PLUGINS_CACHE_TEXT N_("Use a plugins cache")
 #define PLUGINS_CACHE_LONGTEXT N_( \
-    "This option allows you to use a plugins cache which will greatly " \
-    "improve the start time of VLC.")
+    "Use a plugins cache which will greatly improve the startup time of VLC.")
+
+#define STATS_TEXT N_("Collect statistics")
+#define STATS_LONGTEXT N_( \
+     "Collect miscellaneous statistics.")
 
 #define DAEMON_TEXT N_("Run as daemon process")
 #define DAEMON_LONGTEXT N_( \
      "Runs VLC as a background daemon process.")
 
+#define FILE_LOG_TEXT N_( "Log to file" )
+#define FILE_LOG_LONGTEXT N_( \
+    "Log all VLC messages to a text file." )
+
+#define SYSLOG_TEXT N_( "Log to syslog" )
+#define SYSLOG_LONGTEXT N_( \
+    "Log all VLC messages to syslog (UNIX systems)." )
+
 #define ONEINSTANCE_TEXT N_("Allow only one running instance")
 #define ONEINSTANCE_LONGTEXT N_( \
     "Allowing only one running instance of VLC can sometimes be useful, " \
-    "for instance if you associated VLC with some media types and you " \
+    "for example if you associated VLC with some media types and you " \
     "don't want a new instance of VLC to be opened each time you " \
     "double-click on a file in the explorer. This option will allow you " \
     "to play the file with the already running instance or enqueue it.")
 
-#define PLAYLISTENQUEUE_TEXT N_( \
-    "Enqueue items to playlist when in one instance mode")
-#define PLAYLISTENQUEUE_LONGTEXT N_( \
-    "When using the one instance only option, enqueue items to playlist " \
-    "and keep playing current item.")
+#define STARTEDFROMFILE_TEXT N_("VLC is started from file association")
+#define STARTEDFROMFILE_LONGTEXT N_( \
+    "Tell VLC that it is being launched due to a file association in the OS" )
+
+#define ONEINSTANCEWHENSTARTEDFROMFILE_TEXT N_( \
+    "Allow only on running instance when started from file")
+#define ONEINSTANCEWHENSTARTEDFROMFILE_LONGTEXT N_( \
+    "Allow only on running instance when started from file")
 
 #define HPRIORITY_TEXT N_("Increase the priority of the process")
 #define HPRIORITY_LONGTEXT N_( \
     "Increasing the priority of the process will very likely improve your " \
     "playing experience as it allows VLC not to be disturbed by other " \
-    "applications that could otherwise take too much processor time.\n" \
+    "applications that could otherwise take too much processor time. " \
     "However be advised that in certain circumstances (bugs) VLC could take " \
     "all the processor time and render the whole system unresponsive which " \
     "might require a reboot of your machine.")
@@ -778,6 +869,52 @@ static char *ppsz_clock_descriptions[] =
     "Currently you can choose between implementation 0 (which is the " \
     "fastest but slightly incorrect), 1 (default) and 2.")
 
+#define PLAYLISTENQUEUE_TEXT N_( \
+    "Enqueue items to playlist when in one instance mode")
+#define PLAYLISTENQUEUE_LONGTEXT N_( \
+    "When using the one instance only option, enqueue items to playlist " \
+    "and keep playing current item.")
+
+/*****************************************************************************
+ * Playlist
+ ****************************************************************************/
+
+// DEPRECATED
+#define PLAYLIST_CAT_LONGTEXT N_( \
+     "These options define the behavior of the playlist. Some " \
+     "of them can be overridden in the playlist dialog box." )
+
+#define PREPARSE_TEXT N_( "Automatically preparse files")
+#define PREPARSE_LONGTEXT N_( \
+    "Automatically preparse files added to the playlist " \
+    "(to retrieve some metadata)." )
+
+#define SD_TEXT N_( "Services discovery modules")
+#define SD_LONGTEXT N_( \
+     "Specifies the services discovery modules to load, separated by " \
+     "semi-colons. Typical values are sap, hal, ..." )
+
+#define RANDOM_TEXT N_("Play files randomly forever")
+#define RANDOM_LONGTEXT N_( \
+    "VLC will randomly play files in the playlist until interrupted.")
+
+#define LOOP_TEXT N_("Repeat all")
+#define LOOP_LONGTEXT N_( \
+    "VLC will keep playing the playlist indefinitely." )
+
+#define REPEAT_TEXT N_("Repeat current item")
+#define REPEAT_LONGTEXT N_( \
+    "VLC will keep playing the current playlist item." )
+
+#define PAS_TEXT N_("Play and stop")
+#define PAS_LONGTEXT N_( \
+    "Stop the playlist after each played playlist item." )
+
+/*****************************************************************************
+ * Hotkeys
+ ****************************************************************************/
+
+// DEPRECATED
 #define HOTKEY_CAT_LONGTEXT N_( "These settings are the global VLC key " \
     "bindings, known as \"hotkeys\"." )
 
@@ -798,29 +935,44 @@ static char *ppsz_clock_descriptions[] =
 #define PREV_KEY_TEXT N_("Previous")
 #define PREV_KEY_LONGTEXT N_("Select the hotkey to use to skip to the previous item in the playlist.")
 #define STOP_KEY_TEXT N_("Stop")
-#define STOP_KEY_LONGTEXT N_("Select the hotkey to stop the playback.")
+#define STOP_KEY_LONGTEXT N_("Select the hotkey to stop playback.")
 #define POSITION_KEY_TEXT N_("Position")
 #define POSITION_KEY_LONGTEXT N_("Select the hotkey to display the position.")
 
-#define JB3SEC_KEY_TEXT N_("Jump 3 seconds backwards")
-#define JB3SEC_KEY_LONGTEXT N_("Select the hotkey to jump 3 seconds backwards.")
-#define JB10SEC_KEY_TEXT N_("Jump 10 seconds backwards")
-#define JB10SEC_KEY_LONGTEXT N_("Select the hotkey to jump 10 seconds backwards.")
+#define JBEXTRASHORT_KEY_TEXT N_("Very short backwards jump")
+#define JBEXTRASHORT_KEY_LONGTEXT \
+    N_("Select the hotkey to make a very short backwards jump.")
+#define JBSHORT_KEY_TEXT N_("Short backwards jump")
+#define JBSHORT_KEY_LONGTEXT \
+    N_("Select the hotkey to make a short backwards jump.")
+#define JBMEDIUM_KEY_TEXT N_("Medium backwards jump")
+#define JBMEDIUM_KEY_LONGTEXT \
+    N_("Select the hotkey to make a medium backwards jump.")
+#define JBLONG_KEY_TEXT N_("Long backwards jump")
+#define JBLONG_KEY_LONGTEXT \
+    N_("Select the hotkey to make a long backwards jump.")
 
-#define JB1MIN_KEY_TEXT N_("Jump 1 minute backwards")
-#define JB1MIN_KEY_LONGTEXT N_("Select the hotkey to jump 1 minute backwards.")
-#define JB5MIN_KEY_TEXT N_("Jump 5 minutes backwards")
-#define JB5MIN_KEY_LONGTEXT N_("Select the hotkey to jump 5 minutes backwards.")
+#define JFEXTRASHORT_KEY_TEXT N_("Very short forward jump")
+#define JFEXTRASHORT_KEY_LONGTEXT \
+    N_("Select the hotkey to make a very short forward jump.")
+#define JFSHORT_KEY_TEXT N_("Short forward jump")
+#define JFSHORT_KEY_LONGTEXT \
+    N_("Select the hotkey to make a short forward jump.")
+#define JFMEDIUM_KEY_TEXT N_("Medium forward jump")
+#define JFMEDIUM_KEY_LONGTEXT \
+    N_("Select the hotkey to make a medium forward jump.")
+#define JFLONG_KEY_TEXT N_("Long forward jump")
+#define JFLONG_KEY_LONGTEXT \
+    N_("Select the hotkey to make a long forward jump.")
 
-#define JF3SEC_KEY_TEXT N_("Jump 3 seconds forward")
-#define JF3SEC_KEY_LONGTEXT N_("Select the hotkey to jump 3 seconds forward.")
-#define JF10SEC_KEY_TEXT N_("Jump 10 seconds forward")
-#define JF10SEC_KEY_LONGTEXT N_("Select the hotkey to jump 10 seconds forward.")
-
-#define JF1MIN_KEY_TEXT N_("Jump 1 minute forward")
-#define JF1MIN_KEY_LONGTEXT N_("Select the hotkey to jump 1 minute forward.")
-#define JF5MIN_KEY_TEXT N_("Jump 5 minutes forward")
-#define JF5MIN_KEY_LONGTEXT N_("Select the hotkey to jump 5 minutes forward.")
+#define JIEXTRASHORT_TEXT N_("Very short jump length")
+#define JIEXTRASHORT_LONGTEXT N_("Very short jump length, in seconds.")
+#define JISHORT_TEXT N_("Short jump length")
+#define JISHORT_LONGTEXT N_("Short jump length, in seconds.")
+#define JIMEDIUM_TEXT N_("Medium jump length")
+#define JIMEDIUM_LONGTEXT N_("Medium jump length, in seconds.")
+#define JILONG_TEXT N_("Long jump length")
+#define JILONG_LONGTEXT N_("Long jump length, in seconds.")
 
 #define QUIT_KEY_TEXT N_("Quit")
 #define QUIT_KEY_LONGTEXT N_("Select the hotkey to quit the application.")
@@ -834,20 +986,22 @@ static char *ppsz_clock_descriptions[] =
 #define NAV_RIGHT_KEY_LONGTEXT N_("Select the key to move the selector right in DVD menus.")
 #define NAV_ACTIVATE_KEY_TEXT N_("Activate")
 #define NAV_ACTIVATE_KEY_LONGTEXT N_("Select the key to activate selected item in DVD menus.")
+#define DISC_MENU_TEXT N_("Go to the DVD menu")
+#define DISC_MENU_LONGTEXT N_("Select the key to take you to the DVD menu")
 #define TITLE_PREV_TEXT N_("Select previous DVD title")
 #define TITLE_PREV_LONGTEXT N_("Select the key to choose the previous title from the DVD")
 #define TITLE_NEXT_TEXT N_("Select next DVD title")
 #define TITLE_NEXT_LONGTEXT N_("Select the key to choose the next title from the DVD")
 #define CHAPTER_PREV_TEXT N_("Select prev DVD chapter")
 #define CHAPTER_PREV_LONGTEXT N_("Select the key to choose the previous chapter from the DVD")
-#define CHAPTER_NEXT_TEXT N_("Select prev DVD chapter")
+#define CHAPTER_NEXT_TEXT N_("Select next DVD chapter")
 #define CHAPTER_NEXT_LONGTEXT N_("Select the key to choose the next chapter from the DVD")
 #define VOL_UP_KEY_TEXT N_("Volume up")
 #define VOL_UP_KEY_LONGTEXT N_("Select the key to increase audio volume.")
 #define VOL_DOWN_KEY_TEXT N_("Volume down")
 #define VOL_DOWN_KEY_LONGTEXT N_("Select the key to decrease audio volume.")
 #define VOL_MUTE_KEY_TEXT N_("Mute")
-#define VOL_MUTE_KEY_LONGTEXT N_("Select the key to turn off audio volume.")
+#define VOL_MUTE_KEY_LONGTEXT N_("Select the key to mute audio.")
 #define SUBDELAY_UP_KEY_TEXT N_("Subtitle delay up")
 #define SUBDELAY_UP_KEY_LONGTEXT N_("Select the key to increase the subtitle delay.")
 #define SUBDELAY_DOWN_KEY_TEXT N_("Subtitle delay down")
@@ -879,19 +1033,38 @@ static char *ppsz_clock_descriptions[] =
 #define SET_BOOKMARK10_KEY_TEXT N_("Set playlist bookmark 10")
 #define SET_BOOKMARK_KEY_LONGTEXT N_("Select the key to set this playlist bookmark.")
 
+#define BOOKMARK1_TEXT N_("Playlist bookmark 1")
+#define BOOKMARK2_TEXT N_("Playlist bookmark 2")
+#define BOOKMARK3_TEXT N_("Playlist bookmark 3")
+#define BOOKMARK4_TEXT N_("Playlist bookmark 4")
+#define BOOKMARK5_TEXT N_("Playlist bookmark 5")
+#define BOOKMARK6_TEXT N_("Playlist bookmark 6")
+#define BOOKMARK7_TEXT N_("Playlist bookmark 7")
+#define BOOKMARK8_TEXT N_("Playlist bookmark 8")
+#define BOOKMARK9_TEXT N_("Playlist bookmark 9")
+#define BOOKMARK10_TEXT N_("Playlist bookmark 10")
+#define BOOKMARK_LONGTEXT N_( \
+      "This allows you to define playlist bookmarks.")
+
 #define HISTORY_BACK_TEXT N_("Go back in browsing history")
 #define HISTORY_BACK_LONGTEXT N_("Select the key to go back (to the previous media item) in the browsing history.")
 #define HISTORY_FORWARD_TEXT N_("Go forward in browsing history")
 #define HISTORY_FORWARD_LONGTEXT N_("Select the key to go forward (to the next media item) in the browsing history.")
 
 #define AUDIO_TRACK_KEY_TEXT N_("Cycle audio track")
-#define AUDIO_TRACK_KEY_LONGTEXT N_("Cycle through the available audio tracks(languages)")
+#define AUDIO_TRACK_KEY_LONGTEXT N_("Cycle through the available audio tracks(languages).")
 #define SUBTITLE_TRACK_KEY_TEXT N_("Cycle subtitle track")
-#define SUBTITLE_TRACK_KEY_LONGTEXT N_("Cycle through the available subtitle tracks")
+#define SUBTITLE_TRACK_KEY_LONGTEXT N_("Cycle through the available subtitle tracks.")
+#define ASPECT_RATIO_KEY_TEXT N_("Cycle source aspect ratio")
+#define ASPECT_RATIO_KEY_LONGTEXT N_("Cycle through a predefined list of source aspect ratios.")
+#define CROP_KEY_TEXT N_("Cycle video crop")
+#define CROP_KEY_LONGTEXT N_("Cycle through a predefined list of crop formats.")
+#define DEINTERLACE_KEY_TEXT N_("Cycle deinterlace modes")
+#define DEINTERLACE_KEY_LONGTEXT N_("Cycle through deinterlace modes.")
 #define INTF_SHOW_KEY_TEXT N_("Show interface")
-#define INTF_SHOW_KEY_LONGTEXT N_("Raise the interface above all other windows")
+#define INTF_SHOW_KEY_LONGTEXT N_("Raise the interface above all other windows.")
 #define INTF_HIDE_KEY_TEXT N_("Hide interface")
-#define INTF_HIDE_KEY_LONGTEXT N_("Lower the interface below all other windows")
+#define INTF_HIDE_KEY_LONGTEXT N_("Lower the interface below all other windows.")
 #define SNAP_KEY_TEXT N_("Take video snapshot")
 #define SNAP_KEY_LONGTEXT N_("Takes a video snapshot and writes it to disk.")
 
@@ -900,17 +1073,17 @@ static char *ppsz_clock_descriptions[] =
 
 
 #define VLC_USAGE N_( \
-    "Usage: %s [options] [playlistitems] ..." \
-    "\nYou can specify multiple playlistitems on the commandline. They will be enqueued in the playlist." \
+    "Usage: %s [options] [stream] ..." \
+    "\nYou can specify multiple streams on the commandline. They will be enqueued in the playlist." \
     "\nThe first item specified will be played first." \
     "\n" \
     "\nOptions-styles:" \
     "\n  --option  A global option that is set for the duration of the program." \
     "\n   -option  A single letter version of a global --option." \
-    "\n   :option  An option that only applies to the playlistitem directly before it" \
+    "\n   :option  An option that only applies to the stream directly before it" \
     "\n            and that overrides previous settings." \
     "\n" \
-    "\nPlaylistitem MRL syntax:" \
+    "\nStream MRL syntax:" \
     "\n  [[access][/demux]://]URL[@[title][:chapter][-[title][:chapter]]] [:option=value ...]" \
     "\n" \
     "\n  Many of the global --options can also be used as MRL specific :options." \
@@ -930,7 +1103,6 @@ static char *ppsz_clock_descriptions[] =
     "\n  vlc:pause:<seconds>            Special item to pause the playlist for a certain time" \
     "\n  vlc:quit                       Special item to quit VLC" \
     "\n")
-
 
 /*
  * Quick usage guide for the configuration options:
@@ -964,7 +1136,7 @@ vlc_module_begin();
                             VOLUME_STEP_LONGTEXT, VLC_TRUE );
     add_integer( "aout-rate", -1, NULL, AOUT_RATE_TEXT,
                  AOUT_RATE_LONGTEXT, VLC_TRUE );
-#if !defined( SYS_DARWIN )
+#if !defined( __APPLE__ )
     add_bool( "hq-resampling", 1, NULL, AOUT_RESAMP_TEXT,
               AOUT_RESAMP_LONGTEXT, VLC_TRUE );
 #endif
@@ -992,16 +1164,19 @@ vlc_module_begin();
 
     add_bool( "video", 1, NULL, VIDEO_TEXT, VIDEO_LONGTEXT, VLC_TRUE );
     add_bool( "grayscale", 0, NULL, GRAYSCALE_TEXT,
-              GRAYSCALE_LONGTEXT, VLC_FALSE );
+              GRAYSCALE_LONGTEXT, VLC_TRUE );
     add_bool( "fullscreen", 0, NULL, FULLSCREEN_TEXT,
               FULLSCREEN_LONGTEXT, VLC_FALSE );
         change_short('f');
+    add_bool( "drop-late-frames", 1, NULL, DROP_LATE_FRAMES_TEXT,
+              DROP_LATE_FRAMES_LONGTEXT, VLC_TRUE );
+    /* Used in vout_synchro */
     add_bool( "skip-frames", 1, NULL, SKIP_FRAMES_TEXT,
               SKIP_FRAMES_LONGTEXT, VLC_TRUE );
     add_bool( "quiet-synchro", 0, NULL, QUIET_SYNCHRO_TEXT,
               QUIET_SYNCHRO_LONGTEXT, VLC_TRUE );
-#ifndef SYS_DARWIN
-    add_bool( "overlay", 1, NULL, OVERLAY_TEXT, OVERLAY_LONGTEXT, VLC_TRUE );
+#ifndef __APPLE__
+    add_bool( "overlay", 1, NULL, OVERLAY_TEXT, OVERLAY_LONGTEXT, VLC_FALSE );
 #endif
     add_bool( "video-on-top", 0, NULL, VIDEO_ON_TOP_TEXT,
               VIDEO_ON_TOP_LONGTEXT, VLC_FALSE );
@@ -1014,16 +1189,19 @@ vlc_module_begin();
     add_string( "snapshot-format", "png", NULL, SNAP_FORMAT_TEXT,
                    SNAP_FORMAT_LONGTEXT, VLC_FALSE );
         change_string_list( ppsz_snap_formats, NULL, 0 );
+    add_bool( "snapshot-preview", VLC_TRUE, NULL, SNAP_PREVIEW_TEXT,
+              SNAP_PREVIEW_LONGTEXT, VLC_FALSE );
 
     set_section( N_("Window properties" ), NULL );
     add_integer( "width", -1, NULL, WIDTH_TEXT, WIDTH_LONGTEXT, VLC_TRUE );
     add_integer( "height", -1, NULL, HEIGHT_TEXT, HEIGHT_LONGTEXT, VLC_TRUE );
     add_integer( "video-x", -1, NULL, VIDEOX_TEXT, VIDEOX_LONGTEXT, VLC_TRUE );
     add_integer( "video-y", -1, NULL, VIDEOY_TEXT, VIDEOY_LONGTEXT, VLC_TRUE );
-    add_string( "aspect-ratio", "", NULL,
-               ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
-    add_string( "monitor-aspect-ratio", "4:3", NULL,
-               MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_FALSE );
+    add_string( "crop", NULL, NULL, CROP_TEXT, CROP_LONGTEXT, VLC_FALSE );
+    add_string( "aspect-ratio", NULL, NULL,
+                ASPECT_RATIO_TEXT, ASPECT_RATIO_LONGTEXT, VLC_FALSE );
+    add_string( "monitor-par", NULL, NULL,
+                MASPECT_RATIO_TEXT, MASPECT_RATIO_LONGTEXT, VLC_TRUE );
     add_bool( "hdtv-fix", 1, NULL, HDTV_FIX_TEXT, HDTV_FIX_LONGTEXT, VLC_TRUE );
     add_bool( "video-deco", 1, NULL, VIDEO_DECO_TEXT,
               VIDEO_DECO_LONGTEXT, VLC_TRUE );
@@ -1051,7 +1229,11 @@ vlc_module_begin();
     set_subcategory( SUBCAT_VIDEO_SUBPIC );
     set_section( N_("On Screen Display") , NULL );
     add_category_hint( N_("Subpictures"), SUB_CAT_LONGTEXT , VLC_FALSE );
+
+    add_bool( "spu", 1, NULL, SPU_TEXT, SPU_LONGTEXT, VLC_TRUE );
     add_bool( "osd", 1, NULL, OSD_TEXT, OSD_LONGTEXT, VLC_FALSE );
+    add_module( "text-renderer", "text renderer", NULL, NULL, TEXTRENDERER_TEXT,
+                TEXTRENDERER_LONGTEXT, VLC_TRUE );
 
     set_section( N_("Subtitles") , NULL );
     add_file( "sub-file", NULL, NULL, SUB_FILE_TEXT,
@@ -1067,7 +1249,7 @@ vlc_module_begin();
 #endif
     add_string( "sub-autodetect-path", SUB_PATH, NULL,
                  SUB_PATH_TEXT, SUB_PATH_LONGTEXT, VLC_TRUE );
-    add_integer( "sub-margin", -1, NULL, SUB_MARGIN_TEXT,
+    add_integer( "sub-margin", 0, NULL, SUB_MARGIN_TEXT,
                  SUB_MARGIN_LONGTEXT, VLC_TRUE );
         add_deprecated( "spu-margin", VLC_FALSE ); /*Deprecated since 0.8.2 */
     set_section( N_( "Overlays" ) , NULL );
@@ -1095,6 +1277,10 @@ vlc_module_begin();
     add_string( "sub-language", "", NULL,
                  INPUT_SUBTRACK_LANG_TEXT, INPUT_SUBTRACK_LANG_LONGTEXT,
                   VLC_FALSE );
+    add_integer( "audio-track-id", -1, NULL, INPUT_AUDIOTRACK_ID_TEXT,
+                 INPUT_AUDIOTRACK_ID_LONGTEXT, VLC_TRUE );
+    add_integer( "sub-track-id", -1, NULL,
+                 INPUT_SUBTRACK_ID_TEXT, INPUT_SUBTRACK_ID_LONGTEXT, VLC_TRUE );
 
     set_section( N_( "Playback control" ) , NULL);
     add_integer( "input-repeat", 0, NULL,
@@ -1111,7 +1297,7 @@ vlc_module_begin();
     add_string( "bookmarks", NULL, NULL,
                  BOOKMARKS_TEXT, BOOKMARKS_LONGTEXT, VLC_TRUE );
 
-    set_section( N_( "Default devices") , NULL )
+    set_section( N_( "Default devices") , NULL );
 
     add_file( "dvd", NULL, NULL, DVD_DEV_TEXT, DVD_DEV_LONGTEXT,
               VLC_FALSE );
@@ -1132,7 +1318,7 @@ vlc_module_begin();
     add_integer( "ipv4-timeout", 5 * 1000, NULL, TIMEOUT_TEXT,
                  TIMEOUT_LONGTEXT, VLC_TRUE );
 
-    set_section( N_( "Socks proxy") , NULL )
+    set_section( N_( "Socks proxy") , NULL );
     add_string( "socks", NULL, NULL,
                  SOCKS_SERVER_TEXT, SOCKS_SERVER_LONGTEXT, VLC_TRUE );
     add_string( "socks-user", NULL, NULL,
@@ -1141,7 +1327,7 @@ vlc_module_begin();
                  SOCKS_PASS_TEXT, SOCKS_PASS_LONGTEXT, VLC_TRUE );
 
 
-    set_section( N_("Metadata" ) , NULL )
+    set_section( N_("Metadata" ) , NULL );
     add_string( "meta-title", NULL, NULL, META_TITLE_TEXT,
                 META_TITLE_LONGTEXT, VLC_TRUE );
     add_string( "meta-author", NULL, NULL, META_AUTHOR_TEXT,
@@ -1166,6 +1352,9 @@ vlc_module_begin();
     add_integer( "clock-synchro", -1, NULL, CLOCK_SYNCHRO_TEXT,
                  CLOCK_SYNCHRO_LONGTEXT, VLC_TRUE );
         change_integer_list( pi_clock_values, ppsz_clock_descriptions, 0 );
+
+    add_bool( "network-synchronisation", VLC_FALSE, NULL, NETSYNC_TEXT,
+              NETSYNC_LONGTEXT, VLC_TRUE );
 
 /* Decoder options */
     add_category_hint( N_("Decoders"), CODEC_CAT_LONGTEXT , VLC_TRUE );
@@ -1208,7 +1397,14 @@ vlc_module_begin();
                                 SOUT_AUDIO_LONGTEXT, VLC_TRUE );
     add_bool( "sout-video", 1, NULL, SOUT_VIDEO_TEXT,
                                 SOUT_VIDEO_LONGTEXT, VLC_TRUE );
-    add_integer( "ttl", 1, NULL, TTL_TEXT, TTL_LONGTEXT, VLC_TRUE );
+    add_bool( "sout-spu", 1, NULL, SOUT_SPU_TEXT,
+                                SOUT_SPU_LONGTEXT, VLC_TRUE );
+
+    set_section( N_("VLM"), NULL );
+    add_string( "vlm-conf", NULL, NULL, VLM_CONF_TEXT,
+                    VLM_CONF_LONGTEXT, VLC_TRUE );
+
+
 
     set_subcategory( SUBCAT_SOUT_STREAM );
     set_subcategory( SUBCAT_SOUT_MUX );
@@ -1217,6 +1413,10 @@ vlc_module_begin();
     set_subcategory( SUBCAT_SOUT_ACO );
     add_module( "access_output", "sout access", NULL, NULL,
                 ACCESS_OUTPUT_TEXT, ACCESS_OUTPUT_LONGTEXT, VLC_TRUE );
+    add_integer( "ttl", 0, NULL, TTL_TEXT, TTL_LONGTEXT, VLC_TRUE );
+    add_string( "miface", NULL, NULL, MIFACE_TEXT, MIFACE_LONGTEXT, VLC_TRUE );
+    add_string( "miface-addr", NULL, NULL, MIFACE_ADDR_TEXT, MIFACE_ADDR_LONGTEXT, VLC_TRUE );
+
     set_subcategory( SUBCAT_SOUT_PACKETIZER );
     add_module( "packetizer","packetizer", NULL, NULL,
                 PACKETIZER_TEXT, PACKETIZER_LONGTEXT, VLC_TRUE );
@@ -1240,7 +1440,7 @@ vlc_module_begin();
     add_bool( "sse", 1, NULL, SSE_TEXT, SSE_LONGTEXT, VLC_TRUE );
     add_bool( "sse2", 1, NULL, SSE2_TEXT, SSE2_LONGTEXT, VLC_TRUE );
 #endif
-#if defined( __powerpc__ ) || defined( SYS_DARWIN )
+#if defined( __powerpc__ ) || defined( __ppc__ ) || defined( __ppc64__ )
     add_bool( "altivec", 1, NULL, ALTIVEC_TEXT, ALTIVEC_LONGTEXT, VLC_TRUE );
 #endif
 
@@ -1262,7 +1462,7 @@ vlc_module_begin();
     add_bool( "minimize-threads", 0, NULL, MINIMIZE_THREADS_TEXT,
               MINIMIZE_THREADS_LONGTEXT, VLC_TRUE );
 
-#if !defined(SYS_DARWIN) && !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
+#if !defined(__APPLE__) && !defined(SYS_BEOS) && defined(PTHREAD_COND_T_IN_PTHREAD_H)
     add_bool( "rt-priority", VLC_FALSE, NULL, RT_PRIORITY_TEXT,
               RT_PRIORITY_LONGTEXT, VLC_TRUE );
 #endif
@@ -1275,6 +1475,11 @@ vlc_module_begin();
 #if defined(WIN32)
     add_bool( "one-instance", 0, NULL, ONEINSTANCE_TEXT,
               ONEINSTANCE_LONGTEXT, VLC_TRUE );
+    add_bool( "started-from-file", 0, NULL, STARTEDFROMFILE_TEXT,
+              STARTEDFROMFILE_LONGTEXT, VLC_TRUE );
+    add_bool( "one-instance-when-started-from-file", 1, NULL,
+              ONEINSTANCEWHENSTARTEDFROMFILE_TEXT,
+              ONEINSTANCEWHENSTARTEDFROMFILE_LONGTEXT, VLC_TRUE );
     add_bool( "playlist-enqueue", 0, NULL, PLAYLISTENQUEUE_TEXT,
               PLAYLISTENQUEUE_LONGTEXT, VLC_TRUE );
     add_bool( "high-priority", 0, NULL, HPRIORITY_TEXT,
@@ -1283,15 +1488,6 @@ vlc_module_begin();
               FAST_MUTEX_LONGTEXT, VLC_TRUE );
     add_integer( "win9x-cv-method", 1, NULL, WIN9X_CV_TEXT,
                   WIN9X_CV_LONGTEXT, VLC_TRUE );
-#endif
-
-    set_section( N_("Miscellaneous" ), NULL );
-    add_string( "vlm-conf", NULL, NULL, VLM_CONF_TEXT,
-                    VLM_CONF_LONGTEXT, VLC_TRUE );
-
-#if !defined(WIN32)
-    add_bool( "daemon", 0, NULL, DAEMON_TEXT, DAEMON_LONGTEXT, VLC_TRUE );
-        change_short('d');
 #endif
 
 /* Playlist options */
@@ -1308,6 +1504,8 @@ vlc_module_begin();
 
     add_string( "open", "", NULL, OPEN_TEXT, OPEN_LONGTEXT, VLC_FALSE );
 
+    add_bool( "auto-preparse", VLC_TRUE, NULL, PREPARSE_TEXT, PREPARSE_LONGTEXT, VLC_FALSE );
+
     set_subcategory( SUBCAT_PLAYLIST_SD );
     add_module_list_cat( "services-discovery", SUBCAT_PLAYLIST_SD, NULL,
                           NULL, SD_TEXT, SD_LONGTEXT, VLC_FALSE );
@@ -1316,29 +1514,44 @@ vlc_module_begin();
 /* Interface options */
     set_category( CAT_INTERFACE );
     set_subcategory( SUBCAT_INTERFACE_GENERAL );
-    add_category_hint( N_("Interface"), INTF_CAT_LONGTEXT , VLC_FALSE );
-    set_section ( N_("Interface module" ), NULL );
-    add_module_cat( "intf", SUBCAT_INTERFACE_GENERAL, NULL, NULL, INTF_TEXT,
-                INTF_LONGTEXT, VLC_FALSE );
-        change_short('I');
-
-    set_section ( N_("Extra interface modules" ),  NULL );
-    add_module_list_cat( "extraintf", SUBCAT_INTERFACE_GENERAL,
-                         NULL, NULL, EXTRAINTF_TEXT,
-                         EXTRAINTF_LONGTEXT, VLC_FALSE );
-
-    set_section ( N_("Miscellaneous"), NULL );
     add_integer( "verbose", 0, NULL, VERBOSE_TEXT, VERBOSE_LONGTEXT,
                  VLC_FALSE );
         change_short('v');
     add_bool( "quiet", 0, NULL, QUIET_TEXT, QUIET_LONGTEXT, VLC_TRUE );
         change_short('q');
+
+#if !defined(WIN32)
+    add_bool( "daemon", 0, NULL, DAEMON_TEXT, DAEMON_LONGTEXT, VLC_TRUE );
+        change_short('d');
+#endif
+
+    add_bool( "file-logging", VLC_FALSE, NULL, FILE_LOG_TEXT, FILE_LOG_LONGTEXT,
+              VLC_TRUE );
+#if HAVE_SYSLOG_H
+    add_bool ( "syslog", VLC_FALSE, NULL, SYSLOG_TEXT, SYSLOG_LONGTEXT,
+               VLC_TRUE );
+#endif
+
     add_string( "language", "auto", NULL, LANGUAGE_TEXT, LANGUAGE_LONGTEXT,
                 VLC_FALSE );
         change_string_list( ppsz_language, ppsz_language_text, 0 );
     add_bool( "color", 0, NULL, COLOR_TEXT, COLOR_LONGTEXT, VLC_TRUE );
     add_bool( "advanced", 0, NULL, ADVANCED_TEXT, ADVANCED_LONGTEXT,
                     VLC_FALSE );
+
+    add_bool( "show-intf", VLC_FALSE, NULL, SHOWINTF_TEXT, SHOWINTF_LONGTEXT,
+              VLC_FALSE );
+
+    add_bool ( "stats", VLC_TRUE, NULL, STATS_TEXT, STATS_LONGTEXT, VLC_TRUE );
+
+    set_subcategory( SUBCAT_INTERFACE_MAIN );
+    add_module_cat( "intf", SUBCAT_INTERFACE_MAIN, NULL, NULL, INTF_TEXT,
+                INTF_LONGTEXT, VLC_FALSE );
+        change_short('I');
+    add_module_list_cat( "extraintf", SUBCAT_INTERFACE_MAIN,
+                         NULL, NULL, EXTRAINTF_TEXT,
+                         EXTRAINTF_LONGTEXT, VLC_FALSE );
+
 
     set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_module_list_cat( "control", SUBCAT_INTERFACE_CONTROL, NULL, NULL,
@@ -1348,7 +1561,7 @@ vlc_module_begin();
     set_subcategory( SUBCAT_INTERFACE_HOTKEYS );
     add_category_hint( N_("Hot keys"), HOTKEY_CAT_LONGTEXT , VLC_FALSE );
 
-#if defined(SYS_DARWIN)
+#if defined(__APPLE__)
 /* Don't use the following combo's */
 
 /*  copy                          KEY_MODIFIER_COMMAND|'c'
@@ -1387,14 +1600,14 @@ vlc_module_begin();
 #   define KEY_PREV               KEY_MODIFIER_COMMAND|KEY_LEFT
 #   define KEY_STOP               KEY_MODIFIER_COMMAND|'.'
 #   define KEY_POSITION           't'
-#   define KEY_JUMP_M3SEC         KEY_MODIFIER_COMMAND|KEY_MODIFIER_CTRL|KEY_LEFT
-#   define KEY_JUMP_P3SEC         KEY_MODIFIER_COMMAND|KEY_MODIFIER_CTRL|KEY_RIGHT
-#   define KEY_JUMP_M10SEC        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_LEFT
-#   define KEY_JUMP_P10SEC        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_RIGHT
-#   define KEY_JUMP_M1MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_LEFT
-#   define KEY_JUMP_P1MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_RIGHT
-#   define KEY_JUMP_M5MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_LEFT
-#   define KEY_JUMP_P5MIN         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_JUMP_MEXTRASHORT   KEY_MODIFIER_COMMAND|KEY_MODIFIER_CTRL|KEY_LEFT
+#   define KEY_JUMP_PEXTRASHORT   KEY_MODIFIER_COMMAND|KEY_MODIFIER_CTRL|KEY_RIGHT
+#   define KEY_JUMP_MSHORT        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_PSHORT        KEY_MODIFIER_COMMAND|KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_JUMP_MMEDIUM       KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_LEFT
+#   define KEY_JUMP_PMEDIUM       KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_RIGHT
+#   define KEY_JUMP_MLONG         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_PLONG         KEY_MODIFIER_COMMAND|KEY_MODIFIER_SHIFT|KEY_MODIFIER_ALT|KEY_RIGHT
 #   define KEY_NAV_ACTIVATE       KEY_ENTER
 #   define KEY_NAV_UP             KEY_UP
 #   define KEY_NAV_DOWN           KEY_DOWN
@@ -1410,8 +1623,12 @@ vlc_module_begin();
 #   define KEY_AUDIODELAY_DOWN    'f'
 #   define KEY_AUDIO_TRACK        'l'
 #   define KEY_SUBTITLE_TRACK     's'
+#   define KEY_ASPECT_RATIO       'a'
+#   define KEY_CROP               'c'
+#   define KEY_DEINTERLACE        'd'
 #   define KEY_INTF_SHOW          'i'
 #   define KEY_INTF_HIDE          'I'
+#   define KEY_DISC_MENU          KEY_MODIFIER_CTRL|'m'
 #   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
 #   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
 #   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
@@ -1453,14 +1670,14 @@ vlc_module_begin();
 #   define KEY_PREV               'p'
 #   define KEY_STOP               's'
 #   define KEY_POSITION           't'
-#   define KEY_JUMP_M3SEC         KEY_MODIFIER_SHIFT|KEY_LEFT
-#   define KEY_JUMP_P3SEC         KEY_MODIFIER_SHIFT|KEY_RIGHT
-#   define KEY_JUMP_M10SEC        KEY_MODIFIER_ALT|KEY_LEFT
-#   define KEY_JUMP_P10SEC        KEY_MODIFIER_ALT|KEY_RIGHT
-#   define KEY_JUMP_M1MIN         KEY_MODIFIER_CTRL|KEY_LEFT
-#   define KEY_JUMP_P1MIN         KEY_MODIFIER_CTRL|KEY_RIGHT
-#   define KEY_JUMP_M5MIN         KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_LEFT
-#   define KEY_JUMP_P5MIN         KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_JUMP_MEXTRASHORT   KEY_MODIFIER_SHIFT|KEY_LEFT
+#   define KEY_JUMP_PEXTRASHORT   KEY_MODIFIER_SHIFT|KEY_RIGHT
+#   define KEY_JUMP_MSHORT        KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_PSHORT        KEY_MODIFIER_ALT|KEY_RIGHT
+#   define KEY_JUMP_MMEDIUM       KEY_MODIFIER_CTRL|KEY_LEFT
+#   define KEY_JUMP_PMEDIUM       KEY_MODIFIER_CTRL|KEY_RIGHT
+#   define KEY_JUMP_MLONG         KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_LEFT
+#   define KEY_JUMP_PLONG         KEY_MODIFIER_CTRL|KEY_MODIFIER_ALT|KEY_RIGHT
 #   define KEY_NAV_ACTIVATE       KEY_ENTER
 #   define KEY_NAV_UP             KEY_UP
 #   define KEY_NAV_DOWN           KEY_DOWN
@@ -1477,8 +1694,12 @@ vlc_module_begin();
 
 #   define KEY_AUDIO_TRACK        'l'
 #   define KEY_SUBTITLE_TRACK     'k'
+#   define KEY_ASPECT_RATIO       'a'
+#   define KEY_CROP               'c'
+#   define KEY_DEINTERLACE        'd'
 #   define KEY_INTF_SHOW          'i'
 #   define KEY_INTF_HIDE          'I'
+#   define KEY_DISC_MENU          KEY_MODIFIER_CTRL|'m'
 #   define KEY_TITLE_PREV         KEY_MODIFIER_CTRL|'p'
 #   define KEY_TITLE_NEXT         KEY_MODIFIER_CTRL|'n'
 #   define KEY_CHAPTER_PREV       KEY_MODIFIER_CTRL|'u'
@@ -1530,23 +1751,22 @@ vlc_module_begin();
              STOP_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-position", KEY_POSITION, NULL, POSITION_KEY_TEXT,
              POSITION_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-jump-3sec", KEY_JUMP_M3SEC, NULL, JB3SEC_KEY_TEXT,
-             JB3SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+3sec", KEY_JUMP_P3SEC, NULL, JF3SEC_KEY_TEXT,
-             JF3SEC_KEY_LONGTEXT, VLC_FALSE );             
-    add_key( "key-jump-10sec", KEY_JUMP_M10SEC, NULL, JB10SEC_KEY_TEXT,
-             JB10SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+10sec", KEY_JUMP_P10SEC, NULL, JF10SEC_KEY_TEXT,
-             JF10SEC_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump-1min", KEY_JUMP_M1MIN, NULL, JB1MIN_KEY_TEXT,
-             JB1MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+1min", KEY_JUMP_P1MIN, NULL, JF1MIN_KEY_TEXT,
-             JF1MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump-5min", KEY_JUMP_M5MIN, NULL, JB5MIN_KEY_TEXT,
-             JB5MIN_KEY_LONGTEXT, VLC_FALSE );
-    add_key( "key-jump+5min", KEY_JUMP_P5MIN, NULL, JF5MIN_KEY_TEXT,
-             JF5MIN_KEY_LONGTEXT, VLC_FALSE );
-
+    add_key( "key-jump-extrashort", KEY_JUMP_MEXTRASHORT, NULL,
+             JBEXTRASHORT_KEY_TEXT, JBEXTRASHORT_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+extrashort", KEY_JUMP_PEXTRASHORT, NULL,
+             JFEXTRASHORT_KEY_TEXT, JFEXTRASHORT_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump-short", KEY_JUMP_MSHORT, NULL, JBSHORT_KEY_TEXT,
+             JBSHORT_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+short", KEY_JUMP_PSHORT, NULL, JFSHORT_KEY_TEXT,
+             JFSHORT_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump-medium", KEY_JUMP_MMEDIUM, NULL, JBMEDIUM_KEY_TEXT,
+             JBMEDIUM_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+medium", KEY_JUMP_PMEDIUM, NULL, JFMEDIUM_KEY_TEXT,
+             JFMEDIUM_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump-long", KEY_JUMP_MLONG, NULL, JBLONG_KEY_TEXT,
+             JBLONG_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-jump+long", KEY_JUMP_PLONG, NULL, JFLONG_KEY_TEXT,
+             JFLONG_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-nav-activate", KEY_NAV_ACTIVATE, NULL, NAV_ACTIVATE_KEY_TEXT,
              NAV_ACTIVATE_KEY_LONGTEXT, VLC_TRUE );
     add_key( "key-nav-up", KEY_NAV_UP, NULL, NAV_UP_KEY_TEXT,
@@ -1558,6 +1778,8 @@ vlc_module_begin();
     add_key( "key-nav-right", KEY_NAV_RIGHT, NULL, NAV_RIGHT_KEY_TEXT,
              NAV_RIGHT_KEY_LONGTEXT, VLC_TRUE );
 
+    add_key( "key-disc-menu", KEY_DISC_MENU, NULL, DISC_MENU_TEXT,
+             DISC_MENU_LONGTEXT, VLC_TRUE );
     add_key( "key-title-prev", KEY_TITLE_PREV, NULL, TITLE_PREV_TEXT,
              TITLE_PREV_LONGTEXT, VLC_TRUE );
     add_key( "key-title-next", KEY_TITLE_NEXT, NULL, TITLE_NEXT_TEXT,
@@ -1566,7 +1788,6 @@ vlc_module_begin();
              CHAPTER_PREV_LONGTEXT, VLC_TRUE );
     add_key( "key-chapter-next", KEY_CHAPTER_NEXT, NULL, CHAPTER_NEXT_TEXT,
              CHAPTER_NEXT_LONGTEXT, VLC_TRUE );
-                          
     add_key( "key-quit", KEY_QUIT, NULL, QUIT_KEY_TEXT,
              QUIT_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-vol-up", KEY_VOL_UP, NULL, VOL_UP_KEY_TEXT,
@@ -1587,13 +1808,38 @@ vlc_module_begin();
              AUDIO_TRACK_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-subtitle-track", KEY_SUBTITLE_TRACK, NULL,
              SUBTITLE_TRACK_KEY_TEXT, SUBTITLE_TRACK_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-aspect-ratio", KEY_ASPECT_RATIO, NULL,
+             ASPECT_RATIO_KEY_TEXT, ASPECT_RATIO_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-crop", KEY_CROP, NULL,
+             CROP_KEY_TEXT, CROP_KEY_LONGTEXT, VLC_FALSE );
+    add_key( "key-deinterlace", KEY_DEINTERLACE, NULL,
+             DEINTERLACE_KEY_TEXT, DEINTERLACE_KEY_LONGTEXT, VLC_FALSE );
     add_key( "key-intf-show", KEY_INTF_SHOW, NULL,
              INTF_SHOW_KEY_TEXT, INTF_SHOW_KEY_LONGTEXT, VLC_TRUE );
     add_key( "key-intf-hide", KEY_INTF_HIDE, NULL,
-             INTF_HIDE_KEY_TEXT, INTF_HIDE_KEY_LONGTEXT, VLC_TRUE );             
+             INTF_HIDE_KEY_TEXT, INTF_HIDE_KEY_LONGTEXT, VLC_TRUE );
     add_key( "key-snapshot", KEY_SNAPSHOT, NULL,
-             SNAP_KEY_TEXT, SNAP_KEY_LONGTEXT, VLC_TRUE );
+        SNAP_KEY_TEXT, SNAP_KEY_LONGTEXT, VLC_TRUE );
+    add_key( "key-history-back", KEY_HISTORY_BACK, NULL, HISTORY_BACK_TEXT,
+             HISTORY_BACK_LONGTEXT, VLC_TRUE );
+    add_key( "key-history-forward", KEY_HISTORY_FORWARD, NULL,
+             HISTORY_FORWARD_TEXT, HISTORY_FORWARD_LONGTEXT, VLC_TRUE );
+    add_key( "key-record", KEY_RECORD, NULL,
+             RECORD_KEY_TEXT, RECORD_KEY_LONGTEXT, VLC_TRUE );
 
+    set_section ( N_("Jump sizes" ), NULL );
+    add_integer( "extrashort-jump-size", 3, NULL, JIEXTRASHORT_TEXT,
+                                    JIEXTRASHORT_LONGTEXT, VLC_FALSE );
+    add_integer( "short-jump-size", 10, NULL, JISHORT_TEXT,
+                                    JISHORT_LONGTEXT, VLC_FALSE );
+    add_integer( "medium-jump-size", 60, NULL, JIMEDIUM_TEXT,
+                                    JIMEDIUM_LONGTEXT, VLC_FALSE );
+    add_integer( "long-jump-size", 300, NULL, JILONG_TEXT,
+                                    JILONG_LONGTEXT, VLC_FALSE );
+
+    /* HACK so these don't get displayed */
+    set_category( -1 );
+    set_subcategory( -1 );
     add_key( "key-set-bookmark1", KEY_SET_BOOKMARK1, NULL,
              SET_BOOKMARK1_KEY_TEXT, SET_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
     add_key( "key-set-bookmark2", KEY_SET_BOOKMARK2, NULL,
@@ -1634,12 +1880,28 @@ vlc_module_begin();
              PLAY_BOOKMARK9_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
     add_key( "key-play-bookmark10", KEY_PLAY_BOOKMARK10, NULL,
              PLAY_BOOKMARK10_KEY_TEXT, PLAY_BOOKMARK_KEY_LONGTEXT, VLC_TRUE );
-    add_key( "key-history-back", KEY_HISTORY_BACK, NULL, HISTORY_BACK_TEXT,
-             HISTORY_BACK_LONGTEXT, VLC_TRUE );
-    add_key( "key-history-forward", KEY_HISTORY_FORWARD, NULL,
-             HISTORY_FORWARD_TEXT, HISTORY_FORWARD_LONGTEXT, VLC_TRUE );
-    add_key( "key-record", KEY_RECORD, NULL,
-             RECORD_KEY_TEXT, RECORD_KEY_LONGTEXT, VLC_TRUE );
+
+
+    add_string( "bookmark1", NULL, NULL,
+             BOOKMARK1_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark2", NULL, NULL,
+             BOOKMARK2_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark3", NULL, NULL,
+             BOOKMARK3_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark4", NULL, NULL,
+             BOOKMARK4_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark5", NULL, NULL,
+             BOOKMARK5_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark6", NULL, NULL,
+             BOOKMARK6_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark7", NULL, NULL,
+             BOOKMARK7_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark8", NULL, NULL,
+             BOOKMARK8_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark9", NULL, NULL,
+             BOOKMARK9_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
+    add_string( "bookmark10", NULL, NULL,
+              BOOKMARK10_TEXT, BOOKMARK_LONGTEXT, VLC_FALSE );
 
     /* Usage (mainly useful for cmd line stuff) */
     /* add_usage_hint( PLAYLIST_USAGE ); */
@@ -1690,14 +1952,14 @@ static struct hotkey p_hotkeys[] =
     { "key-pause", ACTIONID_PAUSE, 0, 0, 0, 0 },
     { "key-stop", ACTIONID_STOP, 0, 0, 0, 0 },
     { "key-position", ACTIONID_POSITION, 0, 0, 0, 0 },
-    { "key-jump-3sec", ACTIONID_JUMP_BACKWARD_3SEC, 0, 1000000, 0, 0 },
-    { "key-jump+3sec", ACTIONID_JUMP_FORWARD_3SEC, 0, 1000000, 0, 0 },
-    { "key-jump-10sec", ACTIONID_JUMP_BACKWARD_10SEC, 0, 1000000, 0, 0 },
-    { "key-jump+10sec", ACTIONID_JUMP_FORWARD_10SEC, 0, 1000000, 0, 0 },
-    { "key-jump-1min", ACTIONID_JUMP_BACKWARD_1MIN, 0, 1000000, 0, 0 },
-    { "key-jump+1min", ACTIONID_JUMP_FORWARD_1MIN, 0, 1000000, 0, 0 },
-    { "key-jump-5min", ACTIONID_JUMP_BACKWARD_5MIN, 0, 1000000, 0, 0 },
-    { "key-jump+5min", ACTIONID_JUMP_FORWARD_5MIN, 0, 1000000, 0, 0 },
+    { "key-jump-extrashort", ACTIONID_JUMP_BACKWARD_EXTRASHORT, 0, 1000000, 0, 0 },
+    { "key-jump+extrashort", ACTIONID_JUMP_FORWARD_EXTRASHORT, 0, 1000000, 0, 0 },
+    { "key-jump-short", ACTIONID_JUMP_BACKWARD_SHORT, 0, 1000000, 0, 0 },
+    { "key-jump+short", ACTIONID_JUMP_FORWARD_SHORT, 0, 1000000, 0, 0 },
+    { "key-jump-medium", ACTIONID_JUMP_BACKWARD_MEDIUM, 0, 1000000, 0, 0 },
+    { "key-jump+medium", ACTIONID_JUMP_FORWARD_MEDIUM, 0, 1000000, 0, 0 },
+    { "key-jump-long", ACTIONID_JUMP_BACKWARD_LONG, 0, 1000000, 0, 0 },
+    { "key-jump+long", ACTIONID_JUMP_FORWARD_LONG, 0, 1000000, 0, 0 },
     { "key-prev", ACTIONID_PREV, 0, 0, 0, 0 },
     { "key-next", ACTIONID_NEXT, 0, 0, 0, 0 },
     { "key-faster", ACTIONID_FASTER, 0, 0, 0, 0 },
@@ -1712,6 +1974,9 @@ static struct hotkey p_hotkeys[] =
     { "key-audiodelay-up", ACTIONID_AUDIODELAY_UP, 0, 0, 0, 0 },
     { "key-audio-track", ACTIONID_AUDIO_TRACK, 0, 0, 0, 0 },
     { "key-subtitle-track", ACTIONID_SUBTITLE_TRACK, 0, 0, 0, 0 },
+    { "key-aspect-ratio", ACTIONID_ASPECT_RATIO, 0, 0, 0, 0 },
+    { "key-crop", ACTIONID_CROP, 0, 0, 0, 0 },
+    { "key-deinterlace", ACTIONID_DEINTERLACE, 0, 0, 0, 0 },
     { "key-intf-show", ACTIONID_INTF_SHOW, 0, 0, 0, 0 },
     { "key-intf-hide", ACTIONID_INTF_HIDE, 0, 0, 0, 0 },
     { "key-snapshot", ACTIONID_SNAPSHOT, 0, 0, 0, 0 },
@@ -1720,6 +1985,7 @@ static struct hotkey p_hotkeys[] =
     { "key-nav-down", ACTIONID_NAV_DOWN, 0, 0, 0, 0 },
     { "key-nav-left", ACTIONID_NAV_LEFT, 0, 0, 0, 0 },
     { "key-nav-right", ACTIONID_NAV_RIGHT, 0, 0, 0, 0 },
+    { "key-disc-menu", ACTIONID_DISC_MENU, 0, 0, 0, 0 },
     { "key-title-prev", ACTIONID_TITLE_PREV, 0, 0, 0, 0 },
     { "key-title-next", ACTIONID_TITLE_NEXT, 0, 0, 0, 0 },
     { "key-chapter-prev", ACTIONID_CHAPTER_PREV, 0, 0, 0, 0 },

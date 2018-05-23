@@ -2,7 +2,7 @@
  * aout_internal.h : internal defines for audio output
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: aout_internal.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: aout_internal.h 14351 2006-02-17 16:15:50Z hartman $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,6 +33,10 @@ typedef struct aout_alloc_t
 #define AOUT_ALLOC_NONE     0
 #define AOUT_ALLOC_STACK    1
 #define AOUT_ALLOC_HEAP     2
+
+#if defined( __APPLE__ ) || defined( SYS_BSD )
+#undef HAVE_ALLOCA
+#endif
 
 #ifdef HAVE_ALLOCA
 #   define ALLOCA_TEST( p_alloc, p_new_buffer )                             \
@@ -81,10 +85,11 @@ typedef struct aout_alloc_t
     }
 
 #define aout_BufferFree( p_buffer )                                         \
-    if ( (p_buffer)->i_alloc_type == AOUT_ALLOC_HEAP )                      \
+    if( p_buffer != NULL && (p_buffer)->i_alloc_type == AOUT_ALLOC_HEAP )   \
     {                                                                       \
         free( p_buffer );                                                   \
-    }
+    }                                                                       \
+    p_buffer = NULL;
 
 /*****************************************************************************
  * aout_fifo_t : audio output buffer FIFO
@@ -149,6 +154,9 @@ struct aout_input_t
     /* When this lock is taken, the pipeline cannot be changed by a
      * third-party. */
     vlc_mutex_t             lock;
+
+    /* The input thread that spawned this input */
+    input_thread_t         *p_input_thread;
 
     audio_sample_format_t   input;
     aout_alloc_t            input_alloc;

@@ -6,7 +6,7 @@
  * thread, and destroy a previously oppened video output thread.
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: video_output.c 12927 2005-10-23 10:00:58Z gbazin $
+ * $Id: video_output.c 15328 2006-04-23 13:56:24Z bigben $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -23,7 +23,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -43,7 +43,7 @@
 #include <vlc/input.h>                 /* for input_thread_t and i_pts_delay */
 #include "vlc_playlist.h"
 
-#if defined( SYS_DARWIN )
+#if defined( __APPLE__ )
 #include "darwin_specific.h"
 #endif
 
@@ -59,7 +59,6 @@ static void     DestroyThread     ( vout_thread_t * );
 static void     AspectRatio       ( int, int *, int * );
 static int      BinaryLog         ( uint32_t );
 static void     MaskToShift       ( int *, int *, uint32_t );
-static void     InitWindowSize    ( vout_thread_t *, unsigned *, unsigned * );
 
 /* Object variables callbacks */
 static int DeinterlaceCallback( vlc_object_t *, char const *,
@@ -174,8 +173,7 @@ vout_thread_t *__vout_Request( vlc_object_t *p_this, vout_thread_t *p_vout,
         if( ( p_vout->fmt_render.i_width != p_fmt->i_width ) ||
             ( p_vout->fmt_render.i_height != p_fmt->i_height ) ||
             ( p_vout->fmt_render.i_chroma != p_fmt->i_chroma ) ||
-            ( p_vout->fmt_render.i_aspect != p_fmt->i_aspect
-                    && !p_vout->b_override_aspect ) ||
+            ( p_vout->fmt_render.i_aspect != p_fmt->i_aspect ) ||
             p_vout->b_filter_change )
         {
             /* We are not interested in this format, close this vout */
@@ -216,7 +214,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     input_thread_t * p_input_thread;
     int              i_index;                               /* loop variable */
     char           * psz_plugin;
-    vlc_value_t      val, val2, text;
+    vlc_value_t      val, text;
 
     unsigned int i_width = p_fmt->i_width;
     unsigned int i_height = p_fmt->i_height;
@@ -230,6 +228,11 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
         msg_Err( p_parent, "out of memory" );
         return NULL;
     }
+
+    stats_Create( p_vout, "displayed_pictures",STATS_DISPLAYED_PICTURES,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
+    stats_Create( p_vout, "lost_pictures", STATS_LOST_PICTURES,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
 
     /* Initialize pictures - translation tables and functions
      * will be initialized later in InitThread */
@@ -247,8 +250,12 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
 
     /* Initialize the rendering heap */
     I_RENDERPICTURES = 0;
+
+    vlc_ureduce( &p_fmt->i_sar_num, &p_fmt->i_sar_den,
+                 p_fmt->i_sar_num, p_fmt->i_sar_den, 50000 );
     p_vout->fmt_render        = *p_fmt;   /* FIXME palette */
     p_vout->fmt_in            = *p_fmt;   /* FIXME palette */
+
     p_vout->render.i_width    = i_width;
     p_vout->render.i_height   = i_height;
     p_vout->render.i_chroma   = i_chroma;
@@ -286,6 +293,7 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     p_vout->b_filter_change = 0;
     p_vout->pf_control = 0;
     p_vout->p_parent_intf = 0;
+    p_vout->i_par_num = p_vout->i_par_den = 1;
 
     /* Initialize locks */
     vlc_mutex_init( p_vout, &p_vout->picture_lock );
@@ -310,73 +318,10 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
     /* Take care of some "interface/control" related initialisations */
     vout_IntfInit( p_vout );
 
-    p_vout->b_override_aspect = VLC_FALSE;
-
     /* If the parent is not a VOUT object, that means we are at the start of
      * the video output pipe */
     if( p_parent->i_object_type != VLC_OBJECT_VOUT )
     {
-        int i_monitor_aspect_x = 4 , i_monitor_aspect_y = 3;
-        var_Get( p_vout, "aspect-ratio", &val );
-        var_Get( p_vout, "monitor-aspect-ratio", &val2 );
-
-        if( val2.psz_string )
-        {
-            char *psz_parser = strchr( val2.psz_string, ':' );
-            if( psz_parser )
-            {
-                *psz_parser++ = '\0';
-                i_monitor_aspect_x = atoi( val2.psz_string );
-                i_monitor_aspect_y = atoi( psz_parser );
-            } else {
-                AspectRatio( VOUT_ASPECT_FACTOR * atof( val2.psz_string ),
-                                 &i_monitor_aspect_x, &i_monitor_aspect_y );
-            }
-
-            free( val2.psz_string );
-        }
-
-        /* Check whether the user tried to override aspect ratio */
-        if( val.psz_string )
-        {
-            unsigned int i_new_aspect = i_aspect;
-            char *psz_parser = strchr( val.psz_string, ':' );
-                int i_aspect_x, i_aspect_y;
-                AspectRatio( i_aspect, &i_aspect_x, &i_aspect_y );
-
-            if( psz_parser )
-            {
-                *psz_parser++ = '\0';
-                i_new_aspect = atoi( val.psz_string )
-                               * VOUT_ASPECT_FACTOR / atoi( psz_parser );
-            }
-            else
-            {
-                if( atof( val.psz_string ) != 0 )
-                {
-                i_new_aspect = VOUT_ASPECT_FACTOR * atof( val.psz_string );
-                }
-            }
-            i_new_aspect = (int)((float)i_new_aspect
-                * (float)i_monitor_aspect_y*4.0/((float)i_monitor_aspect_x*3.0));
-
-            free( val.psz_string );
-
-            if( i_new_aspect && i_new_aspect != i_aspect )
-            {
-                int i_aspect_x, i_aspect_y;
-
-                AspectRatio( i_new_aspect, &i_aspect_x, &i_aspect_y );
-
-                msg_Dbg( p_vout, "overriding source aspect ratio to %i:%i",
-                         i_aspect_x, i_aspect_y );
-
-                p_vout->render.i_aspect = i_new_aspect;
-
-                p_vout->b_override_aspect = VLC_TRUE;
-            }
-        }
-
         /* Look for the default filter configuration */
         var_Create( p_vout, "vout-filter", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
         var_Get( p_vout, "vout-filter", &val );
@@ -412,10 +357,6 @@ vout_thread_t * __vout_Create( vlc_object_t *p_parent, video_format_t *p_fmt )
                                   psz_end - p_vout->psz_filter_chain );
         else psz_plugin = strdup( p_vout->psz_filter_chain );
     }
-
-    /* Initialize the dimensions of the video window */
-    InitWindowSize( p_vout, &p_vout->i_window_width,
-                    &p_vout->i_window_height );
 
     /* Create the vout thread */
     p_vout->p_module = module_Need( p_vout,
@@ -850,9 +791,12 @@ static void RunThread( vout_thread_t *p_vout)
             p_vout->p_fps_sample[ p_vout->c_fps_samples++ % VOUT_FPS_SAMPLES ]
                 = display_date;
 
+            /* XXX: config_GetInt is slow, but this kind of frame dropping
+             * should not happen that often. */
             if( !p_picture->b_force &&
                 p_picture != p_last_picture &&
-                display_date < current_date + p_vout->render_time )
+                display_date < current_date + p_vout->render_time &&
+                config_GetInt( p_vout, "drop-late-frames" ) )
             {
                 /* Picture is late: it will be destroyed and the thread
                  * will directly choose the next picture */
@@ -871,6 +815,7 @@ static void RunThread( vout_thread_t *p_vout)
                 }
                 msg_Warn( p_vout, "late picture skipped ("I64Fd")",
                                   current_date - display_date );
+                stats_UpdateInteger( p_vout, STATS_LOST_PICTURES, 1 , NULL);
                 vlc_mutex_unlock( &p_vout->picture_lock );
 
                 continue;
@@ -893,6 +838,7 @@ static void RunThread( vout_thread_t *p_vout)
                     p_picture->i_status = DESTROYED_PICTURE;
                     p_vout->i_heap_size--;
                 }
+                stats_UpdateInteger( p_vout, STATS_LOST_PICTURES, 1, NULL );
                 msg_Warn( p_vout, "vout warning: early picture skipped "
                           "("I64Fd")", display_date - current_date
                           - p_vout->i_pts_delay );
@@ -950,6 +896,7 @@ static void RunThread( vout_thread_t *p_vout)
         /*
          * Perform rendering
          */
+        stats_UpdateInteger( p_vout, STATS_DISPLAYED_PICTURES, 1, NULL );
         p_directbuffer = vout_RenderPicture( p_vout, p_picture, p_subpic );
 
         /*
@@ -1269,79 +1216,19 @@ static void MaskToShift( int *pi_left, int *pi_right, uint32_t i_mask )
     }
 
     /* Get bits */
-    i_low =  i_mask & (- (int32_t)i_mask);          /* lower bit of the mask */
-    i_high = i_mask + i_low;                       /* higher bit of the mask */
+    i_low = i_high = i_mask;
 
-    /* Transform bits into an index */
+    i_low &= - (int32_t)i_low;          /* lower bit of the mask */
+    i_high += i_low;                    /* higher bit of the mask */
+
+    /* Transform bits into an index. Also deal with i_high overflow, which
+     * is faster than changing the BinaryLog code to handle 64 bit integers. */
     i_low =  BinaryLog (i_low);
-    i_high = BinaryLog (i_high);
+    i_high = i_high ? BinaryLog (i_high) : 32;
 
     /* Update pointers and return */
     *pi_left =   i_low;
     *pi_right = (8 - i_high + i_low);
-}
-
-/*****************************************************************************
- * InitWindowSize: find the initial dimensions the video window should have.
- *****************************************************************************
- * This function will check the "width", "height" and "zoom" config options and
- * will calculate the size that the video window should have.
- *****************************************************************************/
-static void InitWindowSize( vout_thread_t *p_vout, unsigned *pi_width,
-                            unsigned *pi_height )
-{
-    vlc_value_t val;
-    int i_width, i_height;
-    uint64_t ll_zoom;
-
-#define FP_FACTOR 1000                             /* our fixed point factor */
-
-    var_Get( p_vout, "align", &val );
-    p_vout->i_alignment = val.i_int;
-
-    var_Get( p_vout, "width", &val );
-    i_width = val.i_int;
-    var_Get( p_vout, "height", &val );
-    i_height = val.i_int;
-    var_Get( p_vout, "zoom", &val );
-    ll_zoom = (uint64_t)( FP_FACTOR * val.f_float );
-
-    if( i_width > 0 && i_height > 0)
-    {
-        *pi_width = (int)( i_width * ll_zoom / FP_FACTOR );
-        *pi_height = (int)( i_height * ll_zoom / FP_FACTOR );
-        return;
-    }
-    else if( i_width > 0 )
-    {
-        *pi_width = (int)( i_width * ll_zoom / FP_FACTOR );
-        *pi_height = (int)( i_width * ll_zoom * VOUT_ASPECT_FACTOR /
-                            p_vout->render.i_aspect / FP_FACTOR );
-        return;
-    }
-    else if( i_height > 0 )
-    {
-        *pi_height = (int)( i_height * ll_zoom / FP_FACTOR );
-        *pi_width = (int)( i_height * ll_zoom * p_vout->render.i_aspect /
-                           VOUT_ASPECT_FACTOR / FP_FACTOR );
-        return;
-    }
-
-    if( p_vout->render.i_height * p_vout->render.i_aspect
-        >= p_vout->render.i_width * VOUT_ASPECT_FACTOR )
-    {
-        *pi_width = (int)( p_vout->render.i_height * ll_zoom
-          * p_vout->render.i_aspect / VOUT_ASPECT_FACTOR / FP_FACTOR );
-        *pi_height = (int)( p_vout->render.i_height * ll_zoom / FP_FACTOR );
-    }
-    else
-    {
-        *pi_width = (int)( p_vout->render.i_width * ll_zoom / FP_FACTOR );
-        *pi_height = (int)( p_vout->render.i_width * ll_zoom
-          * VOUT_ASPECT_FACTOR / p_vout->render.i_aspect / FP_FACTOR );
-    }
-
-#undef FP_FACTOR
 }
 
 /*****************************************************************************

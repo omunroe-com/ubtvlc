@@ -2,7 +2,7 @@
  * playlist.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: playlist.h 12325 2005-08-21 23:33:58Z hartman $
+ * $Id: playlist.h 14335 2006-02-16 20:05:18Z fkuehne $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -105,6 +105,10 @@
     BOOL b_selected_item_met;
     BOOL b_isSortDescending;
     id o_tc_sortColumn;
+    
+    /* "add node" button and menu entry */
+    IBOutlet id o_mi_addNode;
+    IBOutlet id o_btn_addNode;
 }
 
 - (void)searchfieldChanged:(NSNotification *)o_notification;
@@ -127,6 +131,8 @@
 - (IBAction)sortNodeByName:(id)sender;
 - (IBAction)sortNodeByAuthor:(id)sender;
 - (IBAction)recursiveExpandNode:(id)sender;
+
+- (IBAction)addNode:(id)sender;
 
 - (void)appendArray:(NSArray*)o_array atPos:(int)i_position enqueue:(BOOL)b_enqueue;
 - (void)appendNodeArray:(NSArray*)o_array inNode:(playlist_item_t *)p_node atPos:(int)i_position inView:(int)i_view enqueue:(BOOL)b_enqueue;

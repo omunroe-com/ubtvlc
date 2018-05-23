@@ -2,7 +2,7 @@
  * wxwidgets.cpp : wxWidgets plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: wxwidgets.cpp 12768 2005-10-06 17:45:57Z zorglub $
+ * $Id: wxwidgets.cpp 15044 2006-04-02 07:58:36Z zorglub $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,7 +36,7 @@
 #   include <locale.h>
 #endif
 
-#include "wxwidgets.h"
+#include "interface.hpp"
 
 /* Temporary hack */
 #if defined(WIN32) && defined(_WX_INIT_H_)
@@ -86,19 +86,33 @@ private:
 #define EMBED_TEXT N_("Embed video in interface")
 #define EMBED_LONGTEXT N_("Embed the video inside the interface instead " \
     "of having it in a separate window.")
-#define BOOKMARKS_TEXT N_("Show bookmarks dialog")
-#define BOOKMARKS_LONGTEXT N_("Show bookmarks dialog when the interface " \
-    "starts.")
-#define EXTENDED_TEXT N_("Show extended GUI")
-#define EXTENDED_LONGTEXT N_("Show extended GUI")
-#define TASKBAR_TEXT N_("Show taskbar entry")
-#define TASKBAR_LONGTEXT N_("Show taskbar entry")
+#define BOOKMARKS_TEXT N_("Bookmarks dialog")
+#define BOOKMARKS_LONGTEXT N_("Show bookmarks dialog at startup" )
+#define EXTENDED_TEXT N_("Extended GUI")
+#define EXTENDED_LONGTEXT N_("Show extended GUI (equalizer, image adjust, "  \
+              "video filters...) at startup"  )
+#define TASKBAR_TEXT N_("Taskbar")
+#define TASKBAR_LONGTEXT N_("Show VLC on the taskbar")
 #define MINIMAL_TEXT N_("Minimal interface")
-#define MINIMAL_LONGTEXT N_("Use minimal interface, no toolbar, few menus")
+#define MINIMAL_LONGTEXT N_("Use minimal interface, with no toolbar and " \
+                "fewer menus.")
 #define SIZE_TO_VIDEO_TEXT N_("Size to video")
-#define SIZE_TO_VIDEO_LONGTEXT N_("Resize VLC to match the video resolution")
-#define SYSTRAY_TEXT N_("Show systray icon")
-#define SYSTRAY_LONGTEXT N_("Show systray icon")
+#define SIZE_TO_VIDEO_LONGTEXT N_("Resize VLC to match the video resolution.")
+#define SYSTRAY_TEXT N_("Systray icon")
+#define SYSTRAY_LONGTEXT N_("Show a systray icon for VLC")
+#define LABEL_TEXT N_("Show labels in toolbar")
+#define LABEL_LONGTEXT N_("Show labels below the icons in the toolbar.")
+
+#define PLAYLIST_TEXT N_("Playlist view" )
+#define PLAYLIST_LONGTEXT N_("There are two possible playlist views in the " \
+                "interface : the normal playlist (separate window), or an " \
+                "embedded playlist (within the main interface, but with " \
+                "less features). You can select which one will be available " \
+                "on the toolbar (or both)." )
+
+static int pi_playlist_views[] = { 0,1,2 };
+static char *psz_playlist_views[] = { N_("Normal" ), N_("Embedded" ) ,
+                                      N_("Both") };
 
 vlc_module_begin();
 #ifdef WIN32
@@ -109,7 +123,7 @@ vlc_module_begin();
     set_shortname( (char*) "wxWidgets" );
     set_description( (char *) _("wxWidgets interface module") );
     set_category( CAT_INTERFACE );
-    set_subcategory( SUBCAT_INTERFACE_GENERAL );
+    set_subcategory( SUBCAT_INTERFACE_MAIN );
     set_capability( "interface", i_score );
     set_callbacks( Open, Close );
     add_shortcut( "wxwindows" );
@@ -134,12 +148,19 @@ vlc_module_begin();
     add_deprecated( "wxwin-minimal", VLC_FALSE); /*Deprecated since 0.8.4*/
     add_bool( "wx-autosize", 1, NULL,
               SIZE_TO_VIDEO_TEXT, SIZE_TO_VIDEO_LONGTEXT, VLC_TRUE );
+    add_integer( "wx-playlist-view", 0, NULL, PLAYLIST_TEXT, PLAYLIST_LONGTEXT,
+             VLC_FALSE );
+        change_integer_list( pi_playlist_views, psz_playlist_views, 0 );
     add_deprecated( "wxwin-autosize", VLC_FALSE); /*Deprecated since 0.8.4*/
+/* wxCocoa pretends to support this, but at least 2.6.x doesn't */
+#ifndef __APPLE__
 #ifdef wxHAS_TASK_BAR_ICON
     add_bool( "wx-systray", 0, NULL,
               SYSTRAY_TEXT, SYSTRAY_LONGTEXT, VLC_FALSE );
     add_deprecated( "wxwin-systray", VLC_FALSE); /*Deprecated since 0.8.4*/
 #endif
+#endif
+    add_bool( "wx-labels", 0, NULL, LABEL_TEXT, LABEL_LONGTEXT, VLC_TRUE);
     add_string( "wx-config-last", NULL, NULL,
                 "last config", "last config", VLC_TRUE );
         change_autosave();
@@ -173,15 +194,13 @@ static int Open( vlc_object_t *p_this )
 
     p_intf->pf_run = Run;
 
-    p_intf->p_sys->p_sub = msg_Subscribe( p_intf );
+    p_intf->p_sys->p_sub = msg_Subscribe( p_intf, MSG_QUEUE_NORMAL );
 
     /* Initialize wxWidgets thread */
     p_intf->p_sys->b_playing = 0;
 
     p_intf->p_sys->p_input = NULL;
     p_intf->p_sys->i_playing = -1;
-    p_intf->p_sys->b_slider_free = 1;
-    p_intf->p_sys->i_slider_pos = p_intf->p_sys->i_slider_oldpos = 0;
 
     p_intf->p_sys->p_popup_menu = NULL;
     p_intf->p_sys->p_video_window = NULL;
@@ -303,6 +322,7 @@ static void Init( intf_thread_t *p_intf )
 #else
     wxEntry( i_args, p_args );
 #endif
+    setlocale( LC_NUMERIC, "C" );
 }
 
 /* following functions are local */
@@ -333,7 +353,8 @@ bool Instance::OnInit()
     /* Initialization of i18n stuff.
      * Usefull for things we don't have any control over, like wxWidgets
      * provided facilities (eg. open file dialog) */
-    locale.Init( wxLANGUAGE_DEFAULT );
+    locale.Init( wxLANGUAGE_DEFAULT, wxLOCALE_LOAD_DEFAULT );
+    setlocale( LC_NUMERIC, "C" );
 
     /* Load saved window settings */
     p_intf->p_sys->p_window_settings = new WindowSettings( p_intf );
@@ -472,7 +493,9 @@ WindowSettings::WindowSettings( intf_thread_t *_p_intf )
 
         id = strtol( psz, &psz, 0 );
         if( *psz != ',' ) /* broken cfg */
+        {
             goto invalid;
+        }
         psz++;
 
         for( i = 0; i < 4; i++ )
@@ -482,13 +505,17 @@ WindowSettings::WindowSettings( intf_thread_t *_p_intf )
             if( i < 3 )
             {
                 if( *psz != ',' )
+                {
                     goto invalid;
+                }
                 psz++;
             }
             else
             {
                 if( *psz != ')' )
+                {
                     goto invalid;
+                }
             }
         }
         if( id == ID_SCREEN )
@@ -513,16 +540,22 @@ WindowSettings::WindowSettings( intf_thread_t *_p_intf )
     }
 
     if( i_screen_w <= 0 || i_screen_h <= 0 )
+    {
         goto invalid;
+    }
 
     for( i = 0; i < ID_MAX; i++ )
     {
         if( !b_valid[i] )
             continue;
         if( position[i].x < 0 || position[i].y < 0 )
+        {
             goto invalid;
-        if( size[i].x <= 0 || size[i].y <= 0 )
+        }
+        if( i != ID_SMALL_PLAYLIST && (size[i].x <= 0 || size[i].y <= 0)  )
+        {
             goto invalid;
+        }
     }
 
     if( psz_org ) free( psz_org );

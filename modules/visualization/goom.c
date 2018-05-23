@@ -2,7 +2,7 @@
  * goom.c: based on libgoom (see http://ios.free.fr/?page=projet&quoi=1)
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: goom.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: goom.c 14903 2006-03-24 11:05:28Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -57,12 +57,12 @@ static void Close        ( vlc_object_t * );
 
 #define WIDTH_TEXT N_("Goom display width")
 #define HEIGHT_TEXT N_("Goom display height")
-#define RES_LONGTEXT N_("Allows you to change the resolution of the " \
+#define RES_LONGTEXT N_("This allows you to set the resolution of the " \
   "Goom display (bigger resolution will be prettier but more CPU intensive).")
 
 #define SPEED_TEXT N_("Goom animation speed")
-#define SPEED_LONGTEXT N_("Allows you to reduce the speed of the animation " \
-  "(default 6, max 10).")
+#define SPEED_LONGTEXT N_("This allows you to set the animation speed " \
+  "(between 1 and 10, defaults to 6).")
 
 #define MAX_SPEED 10
 
@@ -136,7 +136,7 @@ static int Open( vlc_object_t *p_this )
     if ( p_filter->input.i_format != VLC_FOURCC('f','l','3','2' )
          || p_filter->output.i_format != VLC_FOURCC('f','l','3','2') )
     {
-        msg_Warn( p_filter, "Bad input or output format" );
+        msg_Warn( p_filter, "bad input or output format" );
         return VLC_EGENERIC;
     }
     if ( !AOUT_FMTS_SIMILAR( &p_filter->input, &p_filter->output ) )

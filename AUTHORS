@@ -1,4 +1,4 @@
-# $Id: AUTHORS 12836 2005-10-15 13:23:08Z sigmunau $
+# $Id: AUTHORS 15276 2006-04-19 10:19:13Z damienf $
 # 
 # The format of this file was inspired by the Linux kernel CREDITS file.
 # Authors are listed alphabetically.
@@ -100,6 +100,11 @@ C: bozo
 D: SDL video output
 S: France
 
+N: Filippo Carone 
+E: filippo[dontspam]@carone.org
+D: Java bindings
+S: Italy
+
 N: Tony Castley
 E: tony@castley.net
 C: tcastley
@@ -109,7 +114,9 @@ S: Australia
 N: Antoine Cellerier
 E: dionoea@videolan.org
 C: dionoea
-D: mosaic
+D: Video Filters: mosaic, gradient and edge detection, magnify, rss
+D: Podcast demux
+D: HTTP interface pages
 S: France
 
 N: Renaud Dartus
@@ -124,6 +131,7 @@ C: asmax
 D: Audio output
 D: skins module (X11 port)
 D: skins2 module (core and X11 port)
+D: JACK audio output
 S: France
 
 N: Rémi Denis-Courmont
@@ -144,7 +152,8 @@ E: babal(at)via.ecp.fr
 C: babal
 D: Win32 network input
 D: Win32 interface
-D: Headphone channel mixer
+D: Headphone channel mixer, Dolby Surround decoder
+D: Audio output core enhancements
 S: France
 
 N: Jean-Marc Dressler
@@ -171,6 +180,7 @@ N: Damien Fouilleul
 E: Damien.Fouilleul@laposte.net
 C: Quovodis
 D: ActiveX control
+D: Safari/Firefox plugin for MacOS X
 S: Ireland
 
 N: Alexis Guillard
@@ -331,6 +341,7 @@ D: Dutch Translation
 D: DVB-S/C/T on v4l2 API
 D: HD1000 port 
 D: OSD menu
+D: Digital Video (Firewire/IEEE1394/I-Link)
 S: Netherlands
 
 N: Arnaud Schauly

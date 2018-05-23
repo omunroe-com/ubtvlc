@@ -2,7 +2,7 @@
  * showintf.c: control the display of the interface in fullscreen mode
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id:$
+ * $Id: showintf.c 14985 2006-03-30 15:46:31Z zorglub $
  *
  * Authors: Olivier Teuliere <ipkiss@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -60,14 +60,12 @@ static int  MouseEvent( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define THRESHOLD_TEXT N_( "Threshold" )
-#define THRESHOLD_LONGTEXT N_( "Height of the zone triggering the interface" )
+#define THRESHOLD_LONGTEXT N_( "Height of the zone triggering the interface." )
 
 vlc_module_begin();
     set_shortname( "Showintf" );
-    set_category( CAT_INTERFACE );
-    set_subcategory( SUBCAT_INTERFACE_CONTROL );
     add_integer( "showintf-threshold", 10, NULL, THRESHOLD_TEXT, THRESHOLD_LONGTEXT, VLC_TRUE );
-    set_description( _("Interface showing control interface") );
+    set_description( _("Show interface with mouse") );
 
     set_capability( "interface", 0 );
     set_callbacks( E_(Open), E_(Close) );
@@ -113,7 +111,7 @@ static void RunIntf( intf_thread_t *p_intf )
 
     if( InitThread( p_intf ) < 0 )
     {
-        msg_Err( p_intf, "cannot initialize intf" );
+        msg_Err( p_intf, "cannot initialize interface" );
         return;
     }
 

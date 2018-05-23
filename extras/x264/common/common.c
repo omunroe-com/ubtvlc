@@ -21,7 +21,6 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -53,10 +52,16 @@ void    x264_param_default( x264_param_t *param )
     param->i_height        = 0;
     param->vui.i_sar_width = 0;
     param->vui.i_sar_height= 0;
+    param->vui.i_overscan  = 0;  /* undef */
+    param->vui.i_vidformat = 5;  /* undef */
+    param->vui.b_fullrange = 0;  /* off */
+    param->vui.i_colorprim = 2;  /* undef */
+    param->vui.i_transfer  = 2;  /* undef */
+    param->vui.i_colmatrix = 2;  /* undef */
+    param->vui.i_chroma_loc= 0;  /* left center */
     param->i_fps_num       = 25;
     param->i_fps_den       = 1;
-    param->i_level_idc     = 40; /* level 4.0 is sufficient for 720x576 with 
-                                    16 reference frames */
+    param->i_level_idc     = 51; /* as close to "unrestricted" as we can get */
 
     /* Encoder parameters */
     param->i_frame_reference = 1;
@@ -76,12 +81,13 @@ void    x264_param_default( x264_param_t *param )
     param->i_cabac_init_idc = 0;
 
     param->rc.b_cbr = 0;
-    param->rc.i_bitrate = 1000;
+    param->rc.i_bitrate = 0;
     param->rc.f_rate_tolerance = 1.0;
     param->rc.i_vbv_max_bitrate = 0;
     param->rc.i_vbv_buffer_size = 0;
     param->rc.f_vbv_buffer_init = 0.9;
     param->rc.i_qp_constant = 26;
+    param->rc.i_rf_constant = 0;
     param->rc.i_qp_min = 10;
     param->rc.i_qp_max = 51;
     param->rc.i_qp_step = 4;
@@ -107,13 +113,15 @@ void    x264_param_default( x264_param_t *param )
     param->analyse.intra = X264_ANALYSE_I4x4 | X264_ANALYSE_I8x8;
     param->analyse.inter = X264_ANALYSE_I4x4 | X264_ANALYSE_I8x8
                          | X264_ANALYSE_PSUB16x16 | X264_ANALYSE_BSUB16x16;
-    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_TEMPORAL;
+    param->analyse.i_direct_mv_pred = X264_DIRECT_PRED_SPATIAL;
     param->analyse.i_me_method = X264_ME_HEX;
     param->analyse.i_me_range = 16;
     param->analyse.i_subpel_refine = 5;
     param->analyse.b_chroma_me = 1;
-    param->analyse.i_mv_range = 512;
+    param->analyse.i_mv_range = -1; // set from level_idc
     param->analyse.i_chroma_qp_offset = 0;
+    param->analyse.b_fast_pskip = 1;
+    param->analyse.b_dct_decimate = 1;
     param->analyse.b_psnr = 1;
 
     param->i_cqm_preset = X264_CQM_FLAT;
@@ -124,6 +132,7 @@ void    x264_param_default( x264_param_t *param )
     memset( param->cqm_8iy, 16, 64 );
     memset( param->cqm_8py, 16, 64 );
 
+    param->b_repeat_headers = 1;
     param->b_aud = 0;
 }
 
@@ -388,6 +397,27 @@ void *x264_realloc( void *p, int i_size )
 }
 
 /****************************************************************************
+ * x264_reduce_fraction:
+ ****************************************************************************/
+void x264_reduce_fraction( int *n, int *d )
+{
+    int a = *n;
+    int b = *d;
+    int c;
+    if( !a || !b )
+        return;
+    c = a % b;
+    while(c)
+    {
+	a = b;
+	b = c;
+	c = a % b;
+    }
+    *n /= b;
+    *d /= b;
+}
+
+/****************************************************************************
  * x264_slurp_file:
  ****************************************************************************/
 char *x264_slurp_file( const char *filename )
@@ -418,3 +448,83 @@ char *x264_slurp_file( const char *filename )
     }
     return buf;
 }
+
+/****************************************************************************
+ * x264_param2string:
+ ****************************************************************************/
+char *x264_param2string( x264_param_t *p, int b_res )
+{
+    char *buf = x264_malloc( 1000 );
+    char *s = buf;
+
+    if( b_res )
+    {
+        s += sprintf( s, "%dx%d ", p->i_width, p->i_height );
+        s += sprintf( s, "fps=%d/%d ", p->i_fps_num, p->i_fps_den );
+    }
+
+    s += sprintf( s, "cabac=%d", p->b_cabac );
+    s += sprintf( s, " ref=%d", p->i_frame_reference );
+    s += sprintf( s, " deblock=%d:%d:%d", p->b_deblocking_filter,
+                  p->i_deblocking_filter_alphac0, p->i_deblocking_filter_beta );
+    s += sprintf( s, " analyse=%#x:%#x", p->analyse.intra, p->analyse.inter );
+    s += sprintf( s, " me=%s", x264_motion_est_names[ p->analyse.i_me_method ] );
+    s += sprintf( s, " subme=%d", p->analyse.i_subpel_refine );
+    s += sprintf( s, " brdo=%d", p->analyse.b_bframe_rdo );
+    s += sprintf( s, " mixed_ref=%d", p->analyse.b_mixed_references );
+    s += sprintf( s, " me_range=%d", p->analyse.i_me_range );
+    s += sprintf( s, " chroma_me=%d", p->analyse.b_chroma_me );
+    s += sprintf( s, " trellis=%d", p->analyse.i_trellis );
+    s += sprintf( s, " 8x8dct=%d", p->analyse.b_transform_8x8 );
+    s += sprintf( s, " cqm=%d", p->i_cqm_preset );
+    s += sprintf( s, " chroma_qp_offset=%d", p->analyse.i_chroma_qp_offset );
+    s += sprintf( s, " slices=%d", p->i_threads );
+    s += sprintf( s, " nr=%d", p->analyse.i_noise_reduction );
+    s += sprintf( s, " decimate=%d", p->analyse.b_dct_decimate );
+
+    s += sprintf( s, " bframes=%d", p->i_bframe );
+    if( p->i_bframe )
+    {
+        s += sprintf( s, " b_pyramid=%d b_adapt=%d b_bias=%d direct=%d wpredb=%d bime=%d",
+                      p->b_bframe_pyramid, p->b_bframe_adaptive, p->i_bframe_bias,
+                      p->analyse.i_direct_mv_pred, p->analyse.b_weighted_bipred,
+                      p->analyse.b_bidir_me );
+    }
+
+    s += sprintf( s, " keyint=%d keyint_min=%d scenecut=%d",
+                  p->i_keyint_max, p->i_keyint_min, p->i_scenecut_threshold );
+
+    s += sprintf( s, " rc=%s", p->rc.b_stat_read && p->rc.b_cbr ? "2pass" :
+                               p->rc.b_cbr ? p->rc.i_vbv_buffer_size ? "cbr" : "abr" :
+                               p->rc.i_rf_constant ? "crf" : "cqp" );
+    if( p->rc.b_cbr || p->rc.i_rf_constant )
+    {
+        if( p->rc.i_rf_constant )
+            s += sprintf( s, " crf=%d", p->rc.i_rf_constant );
+        else
+            s += sprintf( s, " bitrate=%d ratetol=%.1f",
+                          p->rc.i_bitrate, p->rc.f_rate_tolerance );
+        s += sprintf( s, " rceq='%s' qcomp=%.2f qpmin=%d qpmax=%d qpstep=%d",
+                      p->rc.psz_rc_eq, p->rc.f_qcompress,
+                      p->rc.i_qp_min, p->rc.i_qp_max, p->rc.i_qp_step );
+        if( p->rc.b_stat_read )
+            s += sprintf( s, " cplxblur=%.1f qblur=%.1f",
+                          p->rc.f_complexity_blur, p->rc.f_qblur );
+        if( p->rc.i_vbv_buffer_size )
+            s += sprintf( s, " vbv_maxrate=%d vbv_bufsize=%d",
+                          p->rc.i_vbv_max_bitrate, p->rc.i_vbv_buffer_size );
+    }
+    else
+        s += sprintf( s, " qp=%d", p->rc.i_qp_constant );
+    if( p->rc.b_cbr || p->rc.i_qp_constant != 0 )
+    {
+        s += sprintf( s, " ip_ratio=%.2f", p->rc.f_ip_factor );
+        if( p->i_bframe )
+            s += sprintf( s, " pb_ratio=%.2f", p->rc.f_pb_factor );
+        if( p->rc.i_zones )
+            s += sprintf( s, " zones" );
+    }
+
+    return buf;
+}
+

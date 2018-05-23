@@ -2,7 +2,7 @@
  * input.c: input thread
  *****************************************************************************
  * Copyright (C) 1998-2004 the VideoLAN team
- * $Id: input.c 12888 2005-10-19 09:12:12Z gbazin $
+ * $Id: input.c 15241 2006-04-15 16:29:24Z asmax $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -38,15 +38,20 @@
 #include "stream_output.h"
 #include "vlc_playlist.h"
 #include "vlc_interface.h"
+#include "vlc_interaction.h"
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
 static  int Run  ( input_thread_t *p_input );
+static  int RunAndClean  ( input_thread_t *p_input );
 
-static  int Init ( input_thread_t *p_input, vlc_bool_t b_quick );
-static void Error( input_thread_t *p_input );
-static void End  ( input_thread_t *p_input );
+static input_thread_t * Create  ( vlc_object_t *, input_item_t *, char *,
+                                  vlc_bool_t );
+static  int             Init    ( input_thread_t *p_input, vlc_bool_t b_quick );
+static void             Error   ( input_thread_t *p_input );
+static void             End     ( input_thread_t *p_input );
+static void             MainLoop( input_thread_t *p_input );
 
 static inline int ControlPopNoLock( input_thread_t *, int *, vlc_value_t * );
 static void       ControlReduce( input_thread_t * );
@@ -58,8 +63,6 @@ static int  UpdateFromDemux( input_thread_t * );
 static int  UpdateMeta( input_thread_t *, vlc_bool_t );
 
 static void UpdateItemLength( input_thread_t *, int64_t i_length, vlc_bool_t );
-
-static void ParseOption( input_thread_t *p_input, const char *psz_option );
 
 static void DecodeUrl( char * );
 static void MRLSections( input_thread_t *, char *, int *, int *, int *, int *);
@@ -76,8 +79,6 @@ static void SlaveSeek( input_thread_t *p_input );
 static vlc_meta_t *InputMetaUser( input_thread_t *p_input );
 
 /*****************************************************************************
- * input_CreateThread: creates a new input thread
- *****************************************************************************
  * This function creates a new input, and returns a pointer
  * to its description. On error, it returns NULL.
  *
@@ -101,11 +102,10 @@ static vlc_meta_t *InputMetaUser( input_thread_t *p_input );
  * TODO explain when Callback is called
  * TODO complete this list (?)
  *****************************************************************************/
-input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
-                                      input_item_t *p_item )
-
+static input_thread_t *Create( vlc_object_t *p_parent, input_item_t *p_item,
+                               char *psz_header, vlc_bool_t b_quick )
 {
-    input_thread_t *p_input;                        /* thread descriptor */
+    input_thread_t *p_input = NULL;                 /* thread descriptor */
     vlc_value_t val;
     int i;
 
@@ -116,6 +116,7 @@ input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
         msg_Err( p_parent, "out of memory" );
         return NULL;
     }
+    p_input->psz_header = psz_header ? strdup( psz_header ) : NULL;
 
     /* Init Common fields */
     p_input->b_eof = VLC_FALSE;
@@ -149,6 +150,8 @@ input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
     p_input->input.b_eof = VLC_FALSE;
     p_input->input.i_cr_average = 0;
 
+    stats_ReinitInputStats( p_item->p_stats );
+
     /* No slave */
     p_input->i_slave = 0;
     p_input->slave   = NULL;
@@ -161,7 +164,7 @@ input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
     vlc_mutex_lock( &p_item->lock );
     for( i = 0; i < p_item->i_options; i++ )
     {
-        ParseOption( p_input, p_item->ppsz_options[i] );
+        var_OptionParse( p_input, p_item->ppsz_options[i] );
     }
     vlc_mutex_unlock( &p_item->lock );
 
@@ -172,62 +175,90 @@ input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
     input_ControlVarInit( p_input );
     p_input->input.i_cr_average = var_GetInteger( p_input, "cr-average" );
 
-    /* TODO */
-    var_Get( p_input, "bookmarks", &val );
-    if( val.psz_string )
+    if( !b_quick )
     {
-        /* FIXME: have a common cfg parsing routine used by sout and others */
-        char *psz_parser, *psz_start, *psz_end;
-        psz_parser = val.psz_string;
-        while( (psz_start = strchr( psz_parser, '{' ) ) )
+        var_Get( p_input, "bookmarks", &val );
+        if( val.psz_string )
         {
-            seekpoint_t *p_seekpoint = vlc_seekpoint_New();
-            char backup;
-            psz_start++;
-            psz_end = strchr( psz_start, '}' );
-            if( !psz_end ) break;
-            psz_parser = psz_end + 1;
-            backup = *psz_parser;
-            *psz_parser = 0;
-            *psz_end = ',';
-
-            while( (psz_end = strchr( psz_start, ',' ) ) )
+            /* FIXME: have a common cfg parsing routine used by sout and others */
+            char *psz_parser, *psz_start, *psz_end;
+            psz_parser = val.psz_string;
+            while( (psz_start = strchr( psz_parser, '{' ) ) )
             {
-                *psz_end = 0;
-                if( !strncmp( psz_start, "name=", 5 ) )
-                {
-                    p_seekpoint->psz_name = psz_start + 5;
+                 seekpoint_t *p_seekpoint = vlc_seekpoint_New();
+                 char backup;
+                 psz_start++;
+                 psz_end = strchr( psz_start, '}' );
+                 if( !psz_end ) break;
+                 psz_parser = psz_end + 1;
+                 backup = *psz_parser;
+                 *psz_parser = 0;
+                 *psz_end = ',';
+                 while( (psz_end = strchr( psz_start, ',' ) ) )
+                 {
+                     *psz_end = 0;
+                     if( !strncmp( psz_start, "name=", 5 ) )
+                     {
+                         p_seekpoint->psz_name = psz_start + 5;
+                     }
+                     else if( !strncmp( psz_start, "bytes=", 6 ) )
+                     {
+                         p_seekpoint->i_byte_offset = atoll(psz_start + 6);
+                     }
+                     else if( !strncmp( psz_start, "time=", 5 ) )
+                     {
+                         p_seekpoint->i_time_offset = atoll(psz_start + 5) *
+                                                        1000000;
+                     }
+                     psz_start = psz_end + 1;
                 }
-                else if( !strncmp( psz_start, "bytes=", 6 ) )
-                {
-                    p_seekpoint->i_byte_offset = atoll(psz_start + 6);
-                }
-                else if( !strncmp( psz_start, "time=", 5 ) )
-                {
-                    p_seekpoint->i_time_offset = atoll(psz_start + 5) * 1000000;
-                }
-                psz_start = psz_end + 1;
+                msg_Dbg( p_input, "adding bookmark: %s, bytes="I64Fd", time="I64Fd,
+                                  p_seekpoint->psz_name, p_seekpoint->i_byte_offset,
+                                  p_seekpoint->i_time_offset );
+                input_Control( p_input, INPUT_ADD_BOOKMARK, p_seekpoint );
+                vlc_seekpoint_Delete( p_seekpoint );
+                *psz_parser = backup;
             }
-            msg_Dbg( p_input, "adding bookmark: %s, bytes="I64Fd", time="I64Fd,
-                     p_seekpoint->psz_name, p_seekpoint->i_byte_offset,
-                     p_seekpoint->i_time_offset );
-            input_Control( p_input, INPUT_ADD_BOOKMARK, p_seekpoint );
-            vlc_seekpoint_Delete( p_seekpoint );
-            *psz_parser = backup;
+            free( val.psz_string );
         }
-        free( val.psz_string );
     }
 
     /* Remove 'Now playing' info as it is probably outdated */
-    input_Control( p_input, INPUT_DEL_INFO, _("Meta-information"),
-                   VLC_META_NOW_PLAYING );
+    input_Control( p_input, INPUT_DEL_INFO, _(VLC_META_INFO_CAT),
+                   VLC_META_NOW_PLAYING );     /* ? Don't translate as it might has been copied ? */
 
+    return p_input;
+}
+
+/**
+ * Initialize an input thread and run it. You will need to monitor the thread to clean
+ * up after it is done
+ *
+ * \param p_parent a vlc_object
+ * \param p_item an input item
+ * \return a pointer to the spawned input thread
+ */
+input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
+                                      input_item_t *p_item )
+{
+    return __input_CreateThread2( p_parent, p_item, NULL );
+}
+
+
+/* Gruik ! */
+input_thread_t *__input_CreateThread2( vlc_object_t *p_parent,
+                                       input_item_t *p_item,
+                                       char *psz_header )
+{
+    input_thread_t *p_input = NULL;      /* thread descriptor */
+
+    p_input = Create( p_parent, p_item, psz_header, VLC_FALSE );
     /* Now we can attach our new input */
     vlc_object_attach( p_input, p_parent );
 
     /* Create thread and wait for its readiness. */
     if( vlc_thread_create( p_input, "input", Run,
-                           VLC_THREAD_PRIORITY_INPUT, VLC_TRUE ) )
+                            VLC_THREAD_PRIORITY_INPUT, VLC_TRUE ) )
     {
         msg_Err( p_input, "cannot create input thread" );
         vlc_object_detach( p_input );
@@ -238,75 +269,60 @@ input_thread_t *__input_CreateThread( vlc_object_t *p_parent,
     return p_input;
 }
 
-/*****************************************************************************
- * input_PreParse: Lightweight input for playlist item preparsing
- *****************************************************************************/
+
+/**
+ * Initialize an input thread and run it. This thread will clean after himself,
+ * you can forget about it. It can work either in blocking or non-blocking mode
+ *
+ * \param p_parent a vlc_object
+ * \param p_item an input item
+ * \param b_block should we block until read is finished ?
+ * \return the input object id if non blocking, an error code else
+ */
+int __input_Read( vlc_object_t *p_parent, input_item_t *p_item,
+                   vlc_bool_t b_block )
+{
+    input_thread_t *p_input = NULL;         /* thread descriptor */
+
+    p_input = Create( p_parent, p_item, NULL, VLC_FALSE );
+    /* Now we can attach our new input */
+    vlc_object_attach( p_input, p_parent );
+
+    if( b_block )
+    {
+        RunAndClean( p_input );
+        return VLC_SUCCESS;
+    }
+    else
+    {
+        if( vlc_thread_create( p_input, "input", RunAndClean,
+                               VLC_THREAD_PRIORITY_INPUT, VLC_TRUE ) )
+        {
+            msg_Err( p_input, "cannot create input thread" );
+            vlc_object_detach( p_input );
+            vlc_object_destroy( p_input );
+            return VLC_EGENERIC;
+        }
+    }
+    return p_input->i_object_id;
+}
+
+/**
+ * Initialize an input and initialize it to preparse the item
+ * This function is blocking. It will only accept to parse files
+ *
+ * \param p_parent a vlc_object_t
+ * \param p_item an input item
+ * \return VLC_SUCCESS or an error
+ */
 int __input_Preparse( vlc_object_t *p_parent, input_item_t *p_item )
 {
-    input_thread_t *p_input;                        /* thread descriptor */
-    int i;
+    input_thread_t *p_input = NULL;           /* thread descriptor */
 
     /* Allocate descriptor */
-    p_input = vlc_object_create( p_parent, VLC_OBJECT_INPUT );
-    if( p_input == NULL )
-    {
-        msg_Err( p_parent, "out of memory" );
-        return VLC_EGENERIC;
-    }
-
-    /* Init Common fields */
-    p_input->b_eof = VLC_FALSE;
-    p_input->b_can_pace_control = VLC_TRUE;
-    p_input->i_start = 0;
-    p_input->i_time  = 0;
-    p_input->i_stop  = 0;
-    p_input->i_title = 0;
-    p_input->title   = NULL;
-    p_input->i_title_offset = p_input->i_seekpoint_offset = 0;
-    p_input->i_state = INIT_S;
-    p_input->i_rate  = INPUT_RATE_DEFAULT;
-    p_input->i_bookmark = 0;
-    p_input->bookmark = NULL;
-    p_input->p_meta  = NULL;
-    p_input->p_es_out = NULL;
-    p_input->p_sout  = NULL;
-    p_input->b_out_pace_control = VLC_FALSE;
-    p_input->i_pts_delay = 0;
-
-    /* Init Input fields */
-    p_input->input.p_item = p_item;
-    p_input->input.p_access = NULL;
-    p_input->input.p_stream = NULL;
-    p_input->input.p_demux  = NULL;
-    p_input->input.b_title_demux = VLC_FALSE;
-    p_input->input.i_title  = 0;
-    p_input->input.title    = NULL;
-    p_input->input.i_title_offset = p_input->input.i_seekpoint_offset = 0;
-    p_input->input.b_can_pace_control = VLC_TRUE;
-    p_input->input.b_eof = VLC_FALSE;
-    p_input->input.i_cr_average = 0;
-
-    /* No slave */
-    p_input->i_slave = 0;
-    p_input->slave   = NULL;
-
-    /* Init control buffer */
-    vlc_mutex_init( p_input, &p_input->lock_control );
-    p_input->i_control = 0;
-
-    /* Parse input options */
-    vlc_mutex_lock( &p_item->lock );
-    for( i = 0; i < p_item->i_options; i++ )
-    {
-        ParseOption( p_input, p_item->ppsz_options[i] );
-    }
-    vlc_mutex_unlock( &p_item->lock );
-
-    /* Create Object Variables for private use only */
-    input_ConfigVarInit( p_input );
-    input_ControlVarInit( p_input );
-
-    p_input->input.i_cr_average = var_GetInteger( p_input, "cr-average" );
+    p_input = Create( p_parent, p_item, NULL, VLC_TRUE );
+    p_input->i_flags |= OBJECT_FLAGS_NODBG;
+    p_input->i_flags |= OBJECT_FLAGS_NOINTERACT;
 
     /* Now we can attach our new input */
     vlc_object_attach( p_input, p_parent );
@@ -315,10 +331,6 @@ int __input_Preparse( vlc_object_t *p_parent, input_item_t *p_item )
 
     /* Clean up master */
     InputSourceClean( p_input, &p_input->input );
-
-    /* Kill access and demux */
-    if( p_input->input.p_access ) p_input->input.p_access->b_die = VLC_TRUE;
-    if( p_input->input.p_demux ) p_input->input.p_access->b_die = VLC_TRUE;
 
     /* Unload all modules */
     if( p_input->p_es_out ) input_EsOutDelete( p_input->p_es_out );
@@ -332,11 +344,11 @@ int __input_Preparse( vlc_object_t *p_parent, input_item_t *p_item )
     return VLC_SUCCESS;
 }
 
-/*****************************************************************************
- * input_StopThread: mark an input thread as zombie
- *****************************************************************************
- * This function should not return until the thread is effectively cancelled.
- *****************************************************************************/
+/**
+ * Request a running input thread to stop and die
+ *
+ * \param the input thread to stop
+ */
 void input_StopThread( input_thread_t *p_input )
 {
     vlc_list_t *p_list;
@@ -375,11 +387,12 @@ void input_StopThread( input_thread_t *p_input )
     input_ControlPush( p_input, INPUT_CONTROL_SET_DIE, NULL );
 }
 
-/*****************************************************************************
- * input_DestroyThread: mark an input thread as zombie
- *****************************************************************************
- * This function should not return until the thread is effectively cancelled.
- *****************************************************************************/
+/**
+ * Clean up a dead input thread
+ * This function does not return until the thread is effectively cancelled.
+ *
+ * \param the input thread to kill
+ */
 void input_DestroyThread( input_thread_t *p_input )
 {
     /* Join the thread */
@@ -394,17 +407,11 @@ void input_DestroyThread( input_thread_t *p_input )
 
 /*****************************************************************************
  * Run: main thread loop
- *****************************************************************************
- * Thread in charge of processing the network packets and demultiplexing.
- *
- * TODO:
- *  read subtitle support (XXX take care of spu-delay in the right way).
- *  multi-input support (XXX may be done with subs)
+ * This is the "normal" thread that spawns the input processing chain,
+ * reads the stream, cleans up and waits
  *****************************************************************************/
 static int Run( input_thread_t *p_input )
 {
-    int64_t i_intf_update = 0;
-
     /* Signal that the thread is launched */
     vlc_thread_ready( p_input );
 
@@ -421,7 +428,88 @@ static int Run( input_thread_t *p_input )
         return 0;
     }
 
-    /* Main loop */
+    MainLoop( p_input );
+
+    if( !p_input->b_eof && !p_input->b_error && p_input->input.b_eof )
+    {
+        /* We have finish to demux data but not to play them */
+        while( !p_input->b_die )
+        {
+            if( input_EsOutDecodersEmpty( p_input->p_es_out ) )
+                break;
+
+            msg_Dbg( p_input, "waiting decoder fifos to empty" );
+
+            msleep( INPUT_IDLE_SLEEP );
+        }
+
+        /* We have finished */
+        p_input->b_eof = VLC_TRUE;
+    }
+
+    /* Wait we are asked to die */
+    if( !p_input->b_die )
+    {
+        Error( p_input );
+    }
+
+    /* Clean up */
+    End( p_input );
+
+    return 0;
+}
+
+/*****************************************************************************
+ * RunAndClean: main thread loop
+ * This is the "just forget me" thread that spawns the input processing chain,
+ * reads the stream, cleans up and releases memory
+ *****************************************************************************/
+static int RunAndClean( input_thread_t *p_input )
+{
+    /* Signal that the thread is launched */
+    vlc_thread_ready( p_input );
+
+    if( Init( p_input, VLC_FALSE ) )
+    {
+        /* If we failed, just exit */
+        return 0;
+    }
+
+    MainLoop( p_input );
+
+    if( !p_input->b_eof && !p_input->b_error && p_input->input.b_eof )
+    {
+        /* We have finish to demux data but not to play them */
+        while( !p_input->b_die )
+        {
+            if( input_EsOutDecodersEmpty( p_input->p_es_out ) )
+                break;
+
+            msg_Dbg( p_input, "waiting decoder fifos to empty" );
+
+            msleep( INPUT_IDLE_SLEEP );
+        }
+        /* We have finished */
+        p_input->b_eof = VLC_TRUE;
+    }
+
+    /* Clean up */
+    End( p_input );
+
+    /* Release memory */
+    vlc_object_detach( p_input );
+    vlc_object_destroy( p_input );
+
+    return 0;
+}
+
+
+/*****************************************************************************
+ * Main loop: Fill buffers from access, and demux
+ *****************************************************************************/
+static void MainLoop( input_thread_t *p_input )
+{
+    int64_t i_intf_update = 0;
     while( !p_input->b_die && !p_input->b_error && !p_input->input.b_eof )
     {
         vlc_bool_t b_force_update = VLC_FALSE;
@@ -570,34 +658,6 @@ static int Run( input_thread_t *p_input )
             i_intf_update = mdate() + I64C(150000);
         }
     }
-
-    if( !p_input->b_eof && !p_input->b_error && p_input->input.b_eof )
-    {
-        /* We have finish to demux data but not to play them */
-        while( !p_input->b_die )
-        {
-            if( input_EsOutDecodersEmpty( p_input->p_es_out ) )
-                break;
-
-            msg_Dbg( p_input, "waiting decoder fifos to empty" );
-
-            msleep( INPUT_IDLE_SLEEP );
-        }
-
-        /* We have finished */
-        p_input->b_eof = VLC_TRUE;
-    }
-
-    /* Wait we are asked to die */
-    if( !p_input->b_die )
-    {
-        Error( p_input );
-    }
-
-    /* Clean up */
-    End( p_input );
-
-    return 0;
 }
 
 
@@ -620,6 +680,32 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
      */
     if( !b_quick )
     {
+        /* Prepare statistics */
+        counter_t *p_counter;
+        stats_Create( p_input, "read_bytes", STATS_READ_BYTES,
+                      VLC_VAR_INTEGER, STATS_COUNTER );
+        stats_Create( p_input, "read_packets", STATS_READ_PACKETS,
+                      VLC_VAR_INTEGER, STATS_COUNTER );
+        stats_Create( p_input, "demux_read", STATS_DEMUX_READ,
+                      VLC_VAR_INTEGER, STATS_COUNTER );
+        stats_Create( p_input, "input_bitrate", STATS_INPUT_BITRATE,
+                      VLC_VAR_FLOAT, STATS_DERIVATIVE );
+        stats_Create( p_input, "demux_bitrate", STATS_DEMUX_BITRATE,
+                      VLC_VAR_FLOAT,  STATS_DERIVATIVE );
+
+        p_counter = stats_CounterGet( p_input, p_input->i_object_id,
+                                      STATS_INPUT_BITRATE );
+        if( p_counter ) p_counter->update_interval = 1000000;
+        p_counter = stats_CounterGet( p_input, p_input->i_object_id,
+                                      STATS_DEMUX_BITRATE );
+        if( p_counter ) p_counter->update_interval = 1000000;
+
+        stats_Create( p_input, "played_abuffers", STATS_PLAYED_ABUFFERS,
+                      VLC_VAR_INTEGER, STATS_COUNTER );
+        stats_Create( p_input, "lost_abuffers", STATS_LOST_ABUFFERS,
+                      VLC_VAR_INTEGER, STATS_COUNTER );
+
+        /* handle sout */
         psz = var_GetString( p_input, "sout" );
         if( *psz && strncasecmp( p_input->input.p_item->psz_uri, "vlc:", 4 ) )
         {
@@ -639,6 +725,9 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
     p_input->p_es_out = input_EsOutNew( p_input );
     es_out_Control( p_input->p_es_out, ES_OUT_SET_ACTIVE, VLC_FALSE );
     es_out_Control( p_input->p_es_out, ES_OUT_SET_MODE, ES_OUT_MODE_NONE );
+
+    var_Create( p_input, "bit-rate", VLC_VAR_INTEGER );
+    var_Create( p_input, "sample-rate", VLC_VAR_INTEGER );
 
     if( InputSourceInit( p_input, &p_input->input,
                          p_input->input.p_item->psz_uri, NULL, b_quick ) )
@@ -1009,11 +1098,6 @@ static int Init( input_thread_t * p_input, vlc_bool_t b_quick )
                  p_input->input.p_item->psz_uri );
 
     }
-
-    /* Trigger intf update for this item */
-    /* Playlist has a callback on this variable and will forward
-     * it to intf */
-    var_SetInteger( p_input, "item-change", p_input->input.p_item->i_id );
 
     /* initialization is complete */
     p_input->i_state = PLAYING_S;
@@ -1492,7 +1576,7 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
                 {
                     input_EsOutDiscontinuity( p_input->p_es_out, VLC_FALSE );
                     es_out_Control( p_input->p_es_out, ES_OUT_RESET_PCR );
-                    
+
                     access2_Control( p_access, ACCESS_SET_TITLE, i_title );
                     stream_AccessReset( p_input->input.p_stream );
                 }
@@ -1533,7 +1617,7 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
                 {
                     input_EsOutDiscontinuity( p_input->p_es_out, VLC_FALSE );
                     es_out_Control( p_input->p_es_out, ES_OUT_RESET_PCR );
-                    
+
                     demux2_Control( p_demux, DEMUX_SET_SEEKPOINT, i_seekpoint );
                 }
             }
@@ -1569,8 +1653,9 @@ static vlc_bool_t Control( input_thread_t *p_input, int i_type,
                 {
                     input_EsOutDiscontinuity( p_input->p_es_out, VLC_FALSE );
                     es_out_Control( p_input->p_es_out, ES_OUT_RESET_PCR );
-                    
-                    access2_Control( p_access, ACCESS_SET_SEEKPOINT, i_seekpoint );
+
+                    access2_Control( p_access, ACCESS_SET_SEEKPOINT,
+                                    i_seekpoint );
                     stream_AccessReset( p_input->input.p_stream );
                 }
             }
@@ -1812,15 +1897,15 @@ static int  UpdateMeta( input_thread_t *p_input, vlc_bool_t b_quick )
             msg_Dbg( p_input, "  - '%s' = '%s'",
                      _(p_meta->name[i]), p_meta->value[i] );
 
-        if( !strcmp(p_meta->name[i], VLC_META_TITLE) && p_meta->value[i] &&
+        if( !strcmp(p_meta->name[i], _(VLC_META_TITLE)) && p_meta->value[i] &&
             !p_input->input.p_item->b_fixed_name )
             input_Control( p_input, INPUT_SET_NAME, p_meta->value[i] );
 
-        if( !strcmp( p_meta->name[i], VLC_META_AUTHOR ) )
+        if( !strcmp( p_meta->name[i], _(VLC_META_AUTHOR) ) )
             input_Control( p_input, INPUT_ADD_INFO, _("General"),
-                           _("Author"), p_meta->value[i] );
+                           _(VLC_META_AUTHOR), p_meta->value[i] );
 
-        input_Control( p_input, INPUT_ADD_INFO, _("Meta-information"),
+        input_Control( p_input, INPUT_ADD_INFO, _(VLC_META_INFO_CAT),
                       _(p_meta->name[i]), "%s", p_meta->value[i] );
     }
 
@@ -1887,7 +1972,7 @@ static void UpdateItemLength( input_thread_t *p_input, int64_t i_length,
 static input_source_t *InputSourceNew( input_thread_t *p_input )
 {
     input_source_t *in = (input_source_t*) malloc( sizeof( input_source_t ) );
-   
+
     if( !in )
     {
         msg_Err( p_input, "out of memory for new input source" );
@@ -1959,7 +2044,7 @@ static int InputSourceInit( input_thread_t *p_input,
             {
                 psz_demux = psz_var_demux;
 
-                msg_Dbg( p_input, "Enforce demux ` %s'", psz_demux );
+                msg_Dbg( p_input, "enforced demux ` %s'", psz_demux );
             }
             else if( psz_var_demux )
             {
@@ -1977,7 +2062,7 @@ static int InputSourceInit( input_thread_t *p_input,
     else
     {
         psz_path = psz_mrl;
-        msg_Dbg( p_input, "trying to preparse %s",  psz_path );
+        msg_Dbg( p_input, "trying to pre-parse %s",  psz_path );
         psz_demux = strdup( "" );
         psz_access = strdup( "file" );
     }
@@ -2039,7 +2124,11 @@ static int InputSourceInit( input_thread_t *p_input,
             if( psz_dup ) free( psz_dup );
             psz_dup = strdup( psz_mrl );
             psz_access = "";
-            psz_demux = "";
+            if( psz_forced_demux && *psz_forced_demux )
+            {
+                psz_demux = psz_forced_demux;
+            }
+            else psz_demux = "";
             psz_path = psz_dup;
 
             in->p_access = access2_New( p_input,
@@ -2051,6 +2140,8 @@ static int InputSourceInit( input_thread_t *p_input,
         if( in->p_access == NULL )
         {
             msg_Err( p_input, "no suitable access module for `%s'", psz_mrl );
+            intf_UserFatal( VLC_OBJECT( p_input),
+                            _("Errors"),"Unable to open '%s'", psz_mrl );
             goto error;
         }
 
@@ -2120,6 +2211,8 @@ static int InputSourceInit( input_thread_t *p_input,
         {
             msg_Err( p_input, "no suitable demux module for `%s/%s://%s'",
                      psz_access, psz_demux, psz_path );
+            intf_UserFatal( VLC_OBJECT( p_input), _("Errors"),
+                            "Unrecognized format for '%s'", psz_mrl );
             goto error;
         }
 
@@ -2189,7 +2282,7 @@ static void SlaveDemux( input_thread_t *p_input )
 {
     int64_t i_time;
     int i;
-    
+ 
     if( demux2_Control( p_input->input.p_demux, DEMUX_GET_TIME, &i_time ) )
     {
         msg_Err( p_input, "demux doesn't like DEMUX_GET_TIME" );
@@ -2274,7 +2367,7 @@ static vlc_meta_t *InputMetaUser( input_thread_t *p_input )
 #define GET_META( c, s ) \
     var_Get( p_input, (s), &val );  \
     if( *val.psz_string )       \
-        vlc_meta_Add( p_meta, c, val.psz_string ); \
+        vlc_meta_Add( p_meta, _(c), val.psz_string ); \
     free( val.psz_string )
 
     GET_META( VLC_META_TITLE, "meta-title" );
@@ -2327,138 +2420,6 @@ static void DecodeUrl( char *psz )
     }
     if( psz ) *psz++  ='\0';
     if( dup ) free( dup );
-}
-
-/*****************************************************************************
- * ParseOption: parses the options for the input
- *****************************************************************************
- * This function parses the input (config) options and creates their associated
- * object variables.
- * Options are of the form "[no[-]]foo[=bar]" where foo is the option name and
- * bar is the value of the option.
- *****************************************************************************/
-static void ParseOption( input_thread_t *p_input, const char *psz_option )
-{
-    char *psz_name = (char *)psz_option;
-    char *psz_value = strchr( psz_option, '=' );
-    int  i_name_len, i_type;
-    vlc_bool_t b_isno = VLC_FALSE;
-    vlc_value_t val;
-
-    if( psz_value ) i_name_len = psz_value - psz_option;
-    else i_name_len = strlen( psz_option );
-
-    /* It's too much of an hassle to remove the ':' when we parse
-     * the cmd line :) */
-    if( i_name_len && *psz_name == ':' )
-    {
-        psz_name++;
-        i_name_len--;
-    }
-
-    if( i_name_len == 0 ) return;
-
-    psz_name = strndup( psz_name, i_name_len );
-    if( psz_value ) psz_value++;
-
-    /* FIXME: :programs should be handled generically */
-    if( !strcmp( psz_name, "programs" ) )
-        i_type = VLC_VAR_LIST;
-    else
-        i_type = config_GetType( p_input, psz_name );
-
-    if( !i_type && !psz_value )
-    {
-        /* check for "no-foo" or "nofoo" */
-        if( !strncmp( psz_name, "no-", 3 ) )
-        {
-            memmove( psz_name, psz_name + 3, strlen(psz_name) + 1 - 3 );
-        }
-        else if( !strncmp( psz_name, "no", 2 ) )
-        {
-            memmove( psz_name, psz_name + 2, strlen(psz_name) + 1 - 2 );
-        }
-        else goto cleanup;           /* Option doesn't exist */
-
-        b_isno = VLC_TRUE;
-        i_type = config_GetType( p_input, psz_name );
-
-        if( !i_type ) goto cleanup;  /* Option doesn't exist */
-    }
-    else if( !i_type ) goto cleanup; /* Option doesn't exist */
-
-    if( ( i_type != VLC_VAR_BOOL ) &&
-        ( !psz_value || !*psz_value ) ) goto cleanup; /* Invalid value */
-
-    /* Create the variable in the input object.
-     * Children of the input object will be able to retreive this value
-     * thanks to the inheritance property of the object variables. */
-    var_Create( p_input, psz_name, i_type );
-
-    switch( i_type )
-    {
-    case VLC_VAR_BOOL:
-        val.b_bool = !b_isno;
-        break;
-
-    case VLC_VAR_INTEGER:
-        val.i_int = atoi( psz_value );
-        break;
-
-    case VLC_VAR_FLOAT:
-        val.f_float = atof( psz_value );
-        break;
-
-    case VLC_VAR_STRING:
-    case VLC_VAR_MODULE:
-    case VLC_VAR_FILE:
-    case VLC_VAR_DIRECTORY:
-        val.psz_string = psz_value;
-        break;
-
-    case VLC_VAR_LIST:
-    {
-        char *psz_orig, *psz_var;
-        vlc_list_t *p_list = malloc(sizeof(vlc_list_t));
-        val.p_list = p_list;
-        p_list->i_count = 0;
-
-        psz_var = psz_orig = strdup(psz_value);
-        while( psz_var && *psz_var )
-        {
-            char *psz_item = psz_var;
-            vlc_value_t val2;
-            while( *psz_var && *psz_var != ',' ) psz_var++;
-            if( *psz_var == ',' )
-            {
-                *psz_var = '\0';
-                psz_var++;
-            }
-            val2.i_int = strtol( psz_item, NULL, 0 );
-            INSERT_ELEM( p_list->p_values, p_list->i_count,
-                         p_list->i_count, val2 );
-            /* p_list->i_count is incremented twice by INSERT_ELEM */
-            p_list->i_count--;
-            INSERT_ELEM( p_list->pi_types, p_list->i_count,
-                         p_list->i_count, VLC_VAR_INTEGER );
-        }
-        if( psz_orig ) free( psz_orig );
-        break;
-    }
-
-    default:
-        goto cleanup;
-        break;
-    }
-
-    var_Set( p_input, psz_name, val );
-
-    msg_Dbg( p_input, "set input option: %s to %s", psz_name,
-             psz_value ? psz_value : ( val.b_bool ? "true" : "false") );
-
-  cleanup:
-    if( psz_name ) free( psz_name );
-    return;
 }
 
 /*****************************************************************************

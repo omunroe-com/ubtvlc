@@ -2,7 +2,7 @@
  * video_output.h : video output thread
  *****************************************************************************
  * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: video_output.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: video_output.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -84,11 +84,12 @@ struct vout_thread_t
     vlc_bool_t          b_interface;                   /**< render interface */
     vlc_bool_t          b_scale;                  /**< allow picture scaling */
     vlc_bool_t          b_fullscreen;         /**< toogle fullscreen display */
-    vlc_bool_t          b_override_aspect;       /**< aspect ratio overriden */
     uint32_t            render_time;           /**< last picture render time */
     unsigned int        i_window_width;              /**< video window width */
     unsigned int        i_window_height;            /**< video window height */
     unsigned int        i_alignment;          /**< video alignment in window */
+    unsigned int        i_par_num;           /**< monitor pixel aspect-ratio */
+    unsigned int        i_par_den;           /**< monitor pixel aspect-ratio */
 
     intf_thread_t       *p_parent_intf;   /**< parent interface for embedded
                                                                vout (if any) */
@@ -183,8 +184,12 @@ struct vout_thread_t
 #define VOUT_DEPTH_CHANGE       0x0400
 /** change chroma tables */
 #define VOUT_CHROMA_CHANGE      0x0800
+/** cropping parameters changed */
+#define VOUT_CROP_CHANGE        0x1000
+/** aspect ratio changed */
+#define VOUT_ASPECT_CHANGE      0x2000
 /** change/recreate picture buffers */
-#define VOUT_PICTURE_BUFFERS_CHANGE 0x1000
+#define VOUT_PICTURE_BUFFERS_CHANGE 0x4000
 /**@}*/
 
 /* Alignment flags */
@@ -249,7 +254,8 @@ static inline int vout_Control( vout_thread_t *p_vout, int i_query, ... )
 
 enum output_query_e
 {
-    VOUT_SET_ZOOM,         /* arg1= double           res=    */
+    VOUT_GET_SIZE,         /* arg1= unsigned int*, arg2= unsigned int*, res= */
+    VOUT_SET_SIZE,         /* arg1= unsigned int, arg2= unsigned int, res= */
     VOUT_SET_STAY_ON_TOP,  /* arg1= vlc_bool_t       res=    */
     VOUT_REPARENT,
     VOUT_SNAPSHOT,

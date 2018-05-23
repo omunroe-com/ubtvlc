@@ -2,7 +2,7 @@
  * i420_rgb16.c : YUV to bitmap RGB conversion module for vlc
  *****************************************************************************
  * Copyright (C) 2000 the VideoLAN team
- * $Id: i420_rgb16.c 12684 2005-09-26 10:15:02Z sam $
+ * $Id: i420_rgb16.c 14019 2006-01-26 19:51:06Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -293,7 +293,7 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
                 __asm__( MMX_INIT_16
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
-                __asm__( ".align 8"
+                __asm__( ".p2align 3"
                          MMX_YUV_MUL
                          MMX_YUV_ADD
                          MMX_UNPACK_15
@@ -322,7 +322,7 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
                 __asm__( MMX_INIT_16
                          : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
-                __asm__( ".align 8"
+                __asm__( ".p2align 3"
                          MMX_YUV_MUL
                          MMX_YUV_ADD
                          MMX_UNPACK_16
@@ -373,7 +373,7 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
                 INTRINSICS_YUV_ADD
                 INTRINSICS_UNPACK_15
 #   else
-                __asm__( ".align 8"
+                __asm__( ".p2align 3"
                          MMX_YUV_MUL
                          MMX_YUV_ADD
                          MMX_UNPACK_15
@@ -388,7 +388,7 @@ void E_(I420_RGB16)( vout_thread_t *p_vout, picture_t *p_src,
                 INTRINSICS_UNPACK_16
 #   else
                 /* 16bpp 5/6/5 */
-                __asm__( ".align 8"
+                __asm__( ".p2align 3"
                          MMX_YUV_MUL
                          MMX_YUV_ADD
                          MMX_UNPACK_16
@@ -509,7 +509,7 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
             __asm__( MMX_INIT_32
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
-            __asm__( ".align 8"
+            __asm__( ".p2align 3"
                      MMX_YUV_MUL
                      MMX_YUV_ADD
                      MMX_UNPACK_32
@@ -552,7 +552,7 @@ void E_(I420_RGB32)( vout_thread_t *p_vout, picture_t *p_src,
             __asm__( MMX_INIT_32
                      : : "r" (p_y), "r" (p_u), "r" (p_v), "r" (p_buffer) );
 
-            __asm__( ".align 8"
+            __asm__( ".p2align 3"
                      MMX_YUV_MUL
                      MMX_YUV_ADD
                      MMX_UNPACK_32

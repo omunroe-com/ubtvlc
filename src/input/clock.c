@@ -2,7 +2,7 @@
  * input_clock.c: Clock/System date convertions, stream management
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: clock.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: clock.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -133,10 +133,11 @@ void input_ClockInit( input_clock_t *cl, vlc_bool_t b_master, int i_cr_average )
 
     cl->last_cr = 0;
     cl->last_pts = 0;
+    cl->last_sysdate = 0;
     cl->cr_ref = 0;
     cl->sysdate_ref = 0;
     cl->delta_cr = 0;
-    cl->c_average_count = 0;
+    cl->i_delta_cr_residue = 0;
 
     cl->i_cr_average = i_cr_average;
 
@@ -264,8 +265,9 @@ void input_ClockSetPCR( input_thread_t *p_input,
         else
         {
             cl->last_cr = 0;
+            cl->last_sysdate = 0;
             cl->delta_cr = 0;
-            cl->c_average_count = 0;
+            cl->i_delta_cr_residue = 0;
         }
     }
     else
@@ -308,15 +310,23 @@ void input_ClockSetPCR( input_thread_t *p_input,
             input_ClockManageControl( p_input, cl, i_clock );
 #endif
         }
-        else
+        else if ( mdate() - cl->last_sysdate > 200000 )
         {
             /* Smooth clock reference variations. */
             mtime_t i_extrapoled_clock = ClockCurrent( p_input, cl );
+            mtime_t delta_cr;
 
             /* Bresenham algorithm to smooth variations. */
-            cl->delta_cr = ( cl->delta_cr * (cl->i_cr_average - 1)
-                               + ( i_extrapoled_clock - i_clock ) )
+            delta_cr = ( cl->delta_cr * (cl->i_cr_average - 1)
+                               + ( i_extrapoled_clock - i_clock )
+                               + cl->i_delta_cr_residue )
                            / cl->i_cr_average;
+            cl->i_delta_cr_residue = ( cl->delta_cr * (cl->i_cr_average - 1)
+                                       + ( i_extrapoled_clock - i_clock )
+                                       + cl->i_delta_cr_residue )
+                                    % cl->i_cr_average;
+            cl->delta_cr = delta_cr;
+            cl->last_sysdate = mdate();
         }
     }
 }

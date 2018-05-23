@@ -2,10 +2,10 @@
  * cmd_show_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: cmd_show_window.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: cmd_show_window.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,17 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CMD_SHOW_WINDOW_HPP
 #define CMD_SHOW_WINDOW_HPP
 
 #include "cmd_generic.hpp"
+#include "../src/os_factory.hpp"
 #include "../src/top_window.hpp"
 #include "../src/window_manager.hpp"
+#include "../src/popup.hpp"
 
 
 /// Command to show a window
@@ -94,5 +96,31 @@ class CmdRaiseAll: public CmdGeneric
         /// Reference to the window manager
         WindowManager &m_rWinManager;
 };
+
+
+/// Command to show a popup menu
+class CmdShowPopup: public CmdGeneric
+{
+    public:
+        CmdShowPopup( intf_thread_t *pIntf, Popup &rPopup ):
+            CmdGeneric( pIntf ), m_rPopup( rPopup ) {}
+        virtual ~CmdShowPopup() {}
+
+        /// This method does the real job of the command
+        virtual void execute()
+        {
+            int x, y;
+            OSFactory::instance( getIntf() )->getMousePos( x, y );
+            m_rPopup.show( x, y );
+        }
+
+        /// Return the type of the command
+        virtual string getType() const { return "show popup"; }
+
+    private:
+        /// Reference to the popup
+        Popup &m_rPopup;
+};
+
 
 #endif

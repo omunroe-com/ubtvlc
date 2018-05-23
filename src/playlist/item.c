@@ -2,7 +2,7 @@
  * item.c : Playlist item functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: item.c 11699 2005-07-11 08:52:14Z sam $
+ * $Id: item.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
@@ -62,6 +62,9 @@ playlist_item_t * playlist_ItemNewWithType( vlc_object_t *p_obj,
     if( p_item == NULL ) return NULL;
 
     memset( p_item, 0, sizeof( playlist_item_t ) );
+
+    vlc_input_item_Init( p_obj, &p_item->input );
+    p_item->input.b_fixed_name = VLC_FALSE;
 
     p_item->input.psz_uri = strdup( psz_uri );
 
@@ -129,7 +132,7 @@ playlist_item_t *__playlist_ItemCopy( vlc_object_t *p_obj,
 
     if( p_item->i_children != -1 )
     {
-        msg_Warn( p_obj, "not copying playlist items children" );
+        msg_Warn( p_obj, "not copying playlist-item's children" );
         p_res->i_children = -1;
         p_res->pp_children = NULL;
     }

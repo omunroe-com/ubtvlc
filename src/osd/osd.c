@@ -2,7 +2,7 @@
  * osd.c - The OSD Menu core code.
  *****************************************************************************
  * Copyright (C) 2005 M2X
- * $Id: osd.c 9451 2004-12-01 01:07:08Z jpsaman $
+ * $Id: osd.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Jean-Paul Saman <jpsaman #_at_# m2x dot nl>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -69,7 +69,7 @@ osd_menu_t *__osd_MenuCreate( vlc_object_t *p_this, const char *psz_file )
     {
         vlc_value_t val;
 
-        msg_Dbg( p_this, "creating osd menu object" );
+        msg_Dbg( p_this, "creating OSD menu object" );
         if( ( p_osd = vlc_object_create( p_this, VLC_OBJECT_OSDMENU ) ) == NULL )
         {
             msg_Err( p_this, "out of memory" );
@@ -112,7 +112,7 @@ osd_menu_t *__osd_MenuCreate( vlc_object_t *p_this, const char *psz_file )
     return p_osd;
 
 error:
-    msg_Err( p_this, "creating osd menu object failed" );
+    msg_Err( p_this, "creating OSD menu object failed" );
     vlc_mutex_unlock( lockval.p_address );
     vlc_object_destroy( p_osd );
     return NULL;

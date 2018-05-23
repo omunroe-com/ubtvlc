@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: mkv.cpp 12915 2005-10-22 15:04:45Z robUx4 $
+ * $Id: mkv.cpp 14332 2006-02-16 07:22:57Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -281,19 +281,19 @@ typedef struct {
 } ATTRIBUTE_PACKED hl_gi_t;
 
 
-/** 
- * Button Color Information Table 
+/**
+ * Button Color Information Table
  * Each entry beeing a 32bit word that contains the color indexs and alpha
  * values to use.  They are all represented by 4 bit number and stored
  * like this [Ci3, Ci2, Ci1, Ci0, A3, A2, A1, A0].   The actual palette
  * that the indexes reference is in the PGC.
- * @TODO split the uint32_t into a struct
+ * \todo split the uint32_t into a struct
  */
 typedef struct {
   uint32_t btn_coli[3][2];  /**< [button color number-1][select:0/action:1] */
 } ATTRIBUTE_PACKED btn_colit_t;
 
-/** 
+/**
  * Button Information
  *
  * NOTE: I've had to change the structure from the disk layout to get
@@ -492,7 +492,7 @@ static void MkvTree( demux_t & demuxer, int i_level, char *psz_format, ... )
     psz_foo2[ 4 * i_level ] = '+';
     psz_foo2[ 4 * i_level + 1 ] = ' ';
     strcpy( &psz_foo2[ 4 * i_level + 2 ], psz_format );
-    __msg_GenericVa( VLC_OBJECT(&demuxer), VLC_MSG_DBG, "mkv", psz_foo2, args );
+    __msg_GenericVa( VLC_OBJECT(&demuxer), MSG_QUEUE_NORMAL, VLC_MSG_DBG, "mkv", psz_foo2, args );
     free( psz_foo2 );
     va_end( args );
 }
@@ -569,6 +569,8 @@ static vlc_fourcc_t __GetFOURCC( uint8_t *p )
  *****************************************************************************/
 typedef struct
 {
+//    ~mkv_track_t();
+
     vlc_bool_t   b_default;
     vlc_bool_t   b_enabled;
     unsigned int i_number;
@@ -586,6 +588,9 @@ typedef struct
     es_format_t fmt;
     float       f_fps;
     es_out_id_t *p_es;
+
+    /* audio */
+    unsigned int i_original_rate;
 
     vlc_bool_t      b_inited;
     /* data to be send first */
@@ -1036,21 +1041,14 @@ public:
             {
                 delete tracks[i_track]->p_compression_data;
             }
-            if( tracks[i_track]->fmt.psz_description )
-            {
-                free( tracks[i_track]->fmt.psz_description );
-            }
+            es_format_Clean( &tracks[i_track]->fmt );
+            if( tracks[i_track]->p_extra_data )
+                free( tracks[i_track]->p_extra_data );
             if( tracks[i_track]->psz_codec )
-            {
                 free( tracks[i_track]->psz_codec );
-            }
-            if( tracks[i_track]->fmt.psz_language )
-            {
-                free( tracks[i_track]->fmt.psz_language );
-            }
             delete tracks[i_track];
         }
-        
+
         if( psz_writing_application )
         {
             free( psz_writing_application );
@@ -1329,6 +1327,11 @@ public:
             delete opened_segments[i];
         for ( i=0; i<used_segments.size(); i++ )
             delete used_segments[i];
+        if( meta ) vlc_meta_Delete( meta );
+
+        while( titles.size() )
+        { vlc_input_title_Delete( titles.back() ); titles.pop_back();}
+
         vlc_mutex_destroy( &lock_demuxer );
     }
 
@@ -2316,7 +2319,7 @@ bool matroska_segment_c::Select( mtime_t i_start_time )
         else if( !strncmp( tracks[i_track]->psz_codec, "A_AAC/MPEG2/", strlen( "A_AAC/MPEG2/" ) ) ||
                  !strncmp( tracks[i_track]->psz_codec, "A_AAC/MPEG4/", strlen( "A_AAC/MPEG4/" ) ) )
         {
-            int i_profile, i_srate;
+            int i_profile, i_srate, sbr = 0;
             static unsigned int i_sample_rates[] =
             {
                     96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
@@ -2338,6 +2341,11 @@ bool matroska_segment_c::Select( mtime_t i_start_time )
             {
                 i_profile = 2;
             }
+            else if( !strcmp( &tracks[i_track]->psz_codec[12], "LC/SBR" ) )
+            {
+                i_profile = 1;
+                sbr = 1;
+            }
             else
             {
                 i_profile = 3;
@@ -2345,23 +2353,35 @@ bool matroska_segment_c::Select( mtime_t i_start_time )
 
             for( i_srate = 0; i_srate < 13; i_srate++ )
             {
-                if( i_sample_rates[i_srate] == tracks[i_track]->fmt.audio.i_rate )
+                if( i_sample_rates[i_srate] == tracks[i_track]->i_original_rate )
                 {
                     break;
                 }
             }
             msg_Dbg( &sys.demuxer, "profile=%d srate=%d", i_profile, i_srate );
 
-            tracks[i_track]->fmt.i_extra = 2;
+            tracks[i_track]->fmt.i_extra = sbr ? 5 : 2;
             tracks[i_track]->fmt.p_extra = malloc( tracks[i_track]->fmt.i_extra );
             ((uint8_t*)tracks[i_track]->fmt.p_extra)[0] = ((i_profile + 1) << 3) | ((i_srate&0xe) >> 1);
             ((uint8_t*)tracks[i_track]->fmt.p_extra)[1] = ((i_srate & 0x1) << 7) | (tracks[i_track]->fmt.audio.i_channels << 3);
+            if (sbr != 0)
+            {
+                int syncExtensionType = 0x2B7;
+                int iDSRI;
+                for (iDSRI=0; iDSRI<13; iDSRI++)
+                    if( i_sample_rates[iDSRI] == tracks[i_track]->fmt.audio.i_rate )
+                        break;
+                ((uint8_t*)tracks[i_track]->fmt.p_extra)[2] = (syncExtensionType >> 3) & 0xFF;
+                ((uint8_t*)tracks[i_track]->fmt.p_extra)[3] = ((syncExtensionType & 0x7) << 5) | 5;
+                ((uint8_t*)tracks[i_track]->fmt.p_extra)[4] = ((1 & 0x1) << 7) | (iDSRI << 3);
+            }
         }
         else if( !strcmp( tracks[i_track]->psz_codec, "A_AAC" ) )
         {
             tracks[i_track]->fmt.i_codec = VLC_FOURCC( 'm', 'p', '4', 'a' );
             tracks[i_track]->fmt.i_extra = tracks[i_track]->i_extra_data;
             tracks[i_track]->fmt.p_extra = malloc( tracks[i_track]->i_extra_data );
+            memcpy( tracks[i_track]->fmt.p_extra, tracks[i_track]->p_extra_data, tracks[i_track]->i_extra_data );
         }
         else if( !strcmp( tracks[i_track]->psz_codec, "A_PCM/INT/BIG" ) ||
                  !strcmp( tracks[i_track]->psz_codec, "A_PCM/INT/LIT" ) ||
@@ -2401,6 +2421,12 @@ bool matroska_segment_c::Select( mtime_t i_start_time )
         {
             tracks[i_track]->fmt.i_codec = VLC_FOURCC( 's', 's', 'a', ' ' );
             tracks[i_track]->fmt.subs.psz_encoding = strdup( "UTF-8" );
+            if( tracks[i_track]->i_extra_data ) 
+            {
+                tracks[i_track]->fmt.i_extra = tracks[i_track]->i_extra_data;
+                tracks[i_track]->fmt.p_extra = malloc( tracks[i_track]->i_extra_data );
+                memcpy( tracks[i_track]->fmt.p_extra, tracks[i_track]->p_extra_data, tracks[i_track]->i_extra_data );
+            }
         }
         else if( !strcmp( tracks[i_track]->psz_codec, "S_VOBSUB" ) )
         {
@@ -4288,7 +4314,7 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
             tk->f_fps = 0.0;
 
             tk->fmt.video.i_frame_rate_base = (unsigned int)(tk->i_default_duration / 1000);
-            tk->fmt.video.i_frame_rate = 1000000;     
+            tk->fmt.video.i_frame_rate = 1000000;
             
             for( j = 0; j < tkv->ListSize(); j++ )
             {
@@ -4310,14 +4336,14 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
                 {
                     KaxVideoPixelWidth &vwidth = *(KaxVideoPixelWidth*)l;
 
-                    tk->fmt.video.i_width = uint16( vwidth );
+                    tk->fmt.video.i_width += uint16( vwidth );
                     msg_Dbg( &sys.demuxer, "|   |   |   |   + width=%d", uint16( vwidth ) );
                 }
                 else if( MKV_IS_ID( l, KaxVideoPixelHeight ) )
                 {
                     KaxVideoPixelWidth &vheight = *(KaxVideoPixelWidth*)l;
 
-                    tk->fmt.video.i_height = uint16( vheight );
+                    tk->fmt.video.i_height += uint16( vheight );
                     msg_Dbg( &sys.demuxer, "|   |   |   |   + height=%d", uint16( vheight ) );
                 }
                 else if( MKV_IS_ID( l, KaxVideoDisplayWidth ) )
@@ -4333,6 +4359,36 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
 
                     tk->fmt.video.i_visible_height = uint16( vheight );
                     msg_Dbg( &sys.demuxer, "|   |   |   |   + display height=%d", uint16( vheight ) );
+                }
+                else if( MKV_IS_ID( l, KaxVideoPixelCropBottom ) )
+                {
+                    KaxVideoPixelCropBottom &cropval = *(KaxVideoPixelCropBottom*)l;
+
+                    tk->fmt.video.i_height -= uint16( cropval );
+                    msg_Dbg( &sys.demuxer, "|   |   |   |   + crop pixel bottom=%d", uint16( cropval ) );
+                }
+                else if( MKV_IS_ID( l, KaxVideoPixelCropTop ) )
+                {
+                    KaxVideoPixelCropTop &cropval = *(KaxVideoPixelCropTop*)l;
+
+                    tk->fmt.video.i_height -= uint16( cropval );
+                    tk->fmt.video.i_y_offset += uint16( cropval );
+                    msg_Dbg( &sys.demuxer, "|   |   |   |   + crop pixel top=%d", uint16( cropval ) );
+                }
+                else if( MKV_IS_ID( l, KaxVideoPixelCropRight ) )
+                {
+                    KaxVideoPixelCropRight &cropval = *(KaxVideoPixelCropRight*)l;
+
+                    tk->fmt.video.i_width -= uint16( cropval );
+                    msg_Dbg( &sys.demuxer, "|   |   |   |   + crop pixel right=%d", uint16( cropval ) );
+                }
+                else if( MKV_IS_ID( l, KaxVideoPixelCropLeft ) )
+                {
+                    KaxVideoPixelCropLeft &cropval = *(KaxVideoPixelCropLeft*)l;
+
+                    tk->fmt.video.i_width -= uint16( cropval );
+                    tk->fmt.video.i_x_offset += uint16( cropval );
+                    msg_Dbg( &sys.demuxer, "|   |   |   |   + crop pixel left=%d", uint16( cropval ) );
                 }
                 else if( MKV_IS_ID( l, KaxVideoFrameRate ) )
                 {
@@ -4383,8 +4439,15 @@ void matroska_segment_c::ParseTrackEntry( KaxTrackEntry *m )
                 {
                     KaxAudioSamplingFreq &afreq = *(KaxAudioSamplingFreq*)l;
 
-                    tk->fmt.audio.i_rate = (int)float( afreq );
+                    tk->i_original_rate = tk->fmt.audio.i_rate = (int)float( afreq );
                     msg_Dbg( &sys.demuxer, "|   |   |   |   + afreq=%d", tk->fmt.audio.i_rate );
+                }
+                else if( MKV_IS_ID( l, KaxAudioOutputSamplingFreq ) )
+                {
+                    KaxAudioOutputSamplingFreq &afreq = *(KaxAudioOutputSamplingFreq*)l;
+
+                    tk->fmt.audio.i_rate = (int)float( afreq );
+                    msg_Dbg( &sys.demuxer, "|   |   |   |   + aoutfreq=%d", tk->fmt.audio.i_rate );
                 }
                 else if( MKV_IS_ID( l, KaxAudioChannels ) )
                 {
@@ -4555,7 +4618,7 @@ void matroska_segment_c::ParseInfo( KaxInfo *info )
 
             msg_Dbg( &sys.demuxer, "|   |   + family=%d", *(uint32*)uid->GetBuffer() );
         }
-#if defined( HAVE_GMTIME_R ) && !defined( SYS_DARWIN )
+#if defined( HAVE_GMTIME_R ) && !defined( __APPLE__ )
         else if( MKV_IS_ID( l, KaxDateUTC ) )
         {
             KaxDateUTC &date = *(KaxDateUTC*)l;
@@ -5134,9 +5197,9 @@ void demux_sys_t::PreloadLinked( matroska_segment_c *p_segment )
             // create a name if there is none
             if ( p_title->psz_name == NULL )
             {
-                sz_name = N_("Segment ");
+                sz_name = N_("Segment");
                 char psz_str[6];
-                sprintf( psz_str, "%d", (int)i );
+                sprintf( psz_str, " %d", (int)i );
                 sz_name += psz_str;
                 p_title->psz_name = strdup( sz_name.c_str() );
             }

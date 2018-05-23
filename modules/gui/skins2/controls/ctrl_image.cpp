@@ -2,10 +2,10 @@
  * ctrl_image.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_image.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ctrl_image.cpp 14118 2006-02-01 18:06:48Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "ctrl_image.hpp"
@@ -32,10 +32,10 @@
 
 
 CtrlImage::CtrlImage( intf_thread_t *pIntf, const GenericBitmap &rBitmap,
-                      resize_t resizeMethod, const UString &rHelp,
-                      VarBool *pVisible ):
+                      CmdGeneric &rCommand, resize_t resizeMethod,
+                      const UString &rHelp, VarBool *pVisible ):
     CtrlFlat( pIntf, rHelp, pVisible ), m_rBitmap( rBitmap ),
-    m_resizeMethod( resizeMethod )
+    m_rCommand( rCommand ), m_resizeMethod( resizeMethod )
 {
     OSFactory *pOsFactory = OSFactory::instance( pIntf );
     // Create an initial unscaled image in the buffer
@@ -64,13 +64,28 @@ void CtrlImage::handleEvent( EvtGeneric &rEvent )
         CmdDlgHidePopupMenu cmd( getIntf() );
         cmd.execute();
     }
-
+    else if( rEvent.getAsString() == "mouse:left:dblclick:none" )
+    {
+        m_rCommand.execute();
+    }
 }
 
 
 bool CtrlImage::mouseOver( int x, int y ) const
 {
-    return m_pImage->hit( x, y );
+    if( m_resizeMethod == kMosaic &&
+        x >= 0 && x < getPosition()->getWidth() &&
+        y >= 0 && y < getPosition()->getHeight() )
+    {
+        // In mosaic mode, convert the coordinates to make them fit to the
+        // size of the original image
+        return m_pImage->hit( x % m_pImage->getWidth(),
+                              y % m_pImage->getHeight() );
+    }
+    else
+    {
+        return m_pImage->hit( x, y );
+    }
 }
 
 
@@ -85,8 +100,8 @@ void CtrlImage::draw( OSGraphics &rImage, int xDest, int yDest )
         if( m_resizeMethod == kScale )
         {
             // Use scaling method
-            if(  width != m_pImage->getWidth() ||
-                 height != m_pImage->getHeight() )
+            if( width != m_pImage->getWidth() ||
+                height != m_pImage->getHeight() )
             {
                 OSFactory *pOsFactory = OSFactory::instance( getIntf() );
                 // Rescale the image with the actual size of the control

@@ -2,7 +2,7 @@
  * glx.c: GLX OpenGL provider
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: glx.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: glx.c 15002 2006-03-31 16:12:31Z fkuehne $
  *
  * Authors: Cyril Deguet <asmax@videolan.org>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -86,7 +86,7 @@ static void SwitchContext( vout_thread_t * );
  *****************************************************************************/
 #define ADAPTOR_TEXT N_("XVideo adaptor number")
 #define ADAPTOR_LONGTEXT N_( \
-    "If you graphics card provides several adaptors, this option allows you " \
+    "If your graphics card provides several adaptors, you have " \
     "to choose which one will be used (you shouldn't have to change this).")
 
 #define ALT_FS_TEXT N_("Alternate fullscreen method")
@@ -98,14 +98,14 @@ static void SwitchContext( vout_thread_t * );
     "2) Completely bypass the window manager, but then nothing will be able " \
     "to show on top of the video.")
 
-#define DISPLAY_TEXT N_("X11 display name")
+#define DISPLAY_TEXT N_("X11 display")
 #define DISPLAY_LONGTEXT N_( \
-    "Specify the X11 hardware display you want to use. By default VLC will " \
+    "X11 hardware display to use. By default VLC will " \
     "use the value of the DISPLAY environment variable.")
 
-#define SCREEN_TEXT N_("Screen to be used for fullscreen mode.")
+#define SCREEN_TEXT N_("Screen for fullscreen mode.")
 #define SCREEN_LONGTEXT N_( \
-    "Choose the screen you want to use in fullscreen mode. For instance " \
+    "Screen to use in fullscreen mode. For instance " \
     "set it to 0 for first screen, 1 for the second.")
 
 vlc_module_begin();
@@ -187,7 +187,7 @@ static int CheckGLX( vlc_object_t *p_this, vlc_bool_t *b_glx13 )
     p_display = XOpenDisplay( NULL );
     if( p_display == NULL )
     {
-        msg_Err( p_this, "Cannot open display" );
+        msg_Err( p_this, "cannot open display" );
         return VLC_EGENERIC;
     }
 
@@ -215,12 +215,12 @@ static int CheckGLX( vlc_object_t *p_this, vlc_bool_t *b_glx13 )
     if( i_maj <= 0 || ((i_maj == 1) && (i_min < 3)) )
     {
         *b_glx13 = VLC_FALSE;
-        msg_Dbg( p_this, "Using GLX 1.2 API" );
+        msg_Dbg( p_this, "using GLX 1.2 API" );
     }
     else
     {
         *b_glx13 = VLC_TRUE;
-        msg_Dbg( p_this, "Using GLX 1.3 API" );
+        msg_Dbg( p_this, "using GLX 1.3 API" );
     }
 
     XCloseDisplay( p_display );

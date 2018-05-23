@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "plugin.h"
@@ -161,13 +161,20 @@ STDMETHODIMP VLCPersistPropertyBag::Load(LPPROPERTYBAG pPropBag, LPERRORLOG pErr
         }
     }
 
-    int i_vlc = _p_instance->getVLCObject();
     V_VT(&value) = VT_I4;
     if( S_OK == pPropBag->Read(OLESTR("volume"), &value, pErrorLog) )
     {
-        VLC_VolumeSet(i_vlc, V_I4(&value));
+        _p_instance->setVolume(V_I4(&value));
         VariantClear(&value);
     }
+
+    V_VT(&value) = VT_I4;
+    if( S_OK == pPropBag->Read(OLESTR("starttime"), &value, pErrorLog) )
+    {
+        _p_instance->setTime(V_I4(&value));
+        VariantClear(&value);
+    }
+
     return _p_instance->onLoad();
 };
 
@@ -208,14 +215,15 @@ STDMETHODIMP VLCPersistPropertyBag::Save(LPPROPERTYBAG pPropBag, BOOL fClearDirt
     pPropBag->Write(OLESTR("Visible"), &value);
     VariantClear(&value);
 
-    int i_vlc = _p_instance->getVLCObject();
-    if( i_vlc )
-    {
-        V_VT(&value) = VT_I4;
-        V_I4(&value) = VLC_VolumeGet(i_vlc);
-        pPropBag->Write(OLESTR("Volume"), &value);
-        VariantClear(&value);
-    }
+    V_VT(&value) = VT_I4;
+    V_I4(&value) = _p_instance->getVolume();
+    pPropBag->Write(OLESTR("Volume"), &value);
+    VariantClear(&value);
+
+    V_VT(&value) = VT_I4;
+    V_I4(&value) = _p_instance->getTime();
+    pPropBag->Write(OLESTR("StartTime"), &value);
+    VariantClear(&value);
 
     if( fClearDirty )
         _p_instance->setDirty(FALSE);

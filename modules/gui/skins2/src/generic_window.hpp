@@ -2,10 +2,10 @@
  * generic_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: generic_window.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: generic_window.hpp 14925 2006-03-25 16:36:51Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef GENERIC_WINDOW_HPP
@@ -32,6 +32,7 @@ class OSWindow;
 class EvtGeneric;
 class EvtFocus;
 class EvtLeave;
+class EvtMenu;
 class EvtMotion;
 class EvtMouse;
 class EvtKey;
@@ -41,7 +42,7 @@ class WindowManager;
 
 
 /// Generic window class
-class GenericWindow: public SkinObject, public Observer<VarBool>
+class GenericWindow: public SkinObject, public Observer<VarBool, void*>
 {
     private:
         friend class WindowManager;
@@ -53,6 +54,7 @@ class GenericWindow: public SkinObject, public Observer<VarBool>
 
         /// Methods to process OS events.
         virtual void processEvent( EvtFocus &rEvtFocus ) {}
+        virtual void processEvent( EvtMenu &rEvtMenu ) {}
         virtual void processEvent( EvtMotion &rEvtMotion ) {}
         virtual void processEvent( EvtMouse &rEvtMouse ) {}
         virtual void processEvent( EvtLeave &rEvtLeave ) {}
@@ -74,7 +76,7 @@ class GenericWindow: public SkinObject, public Observer<VarBool>
         int getHeight() const { return m_height; }
 
         /// Give access to the visibility variable
-        VarBool &getVisibleVar() { return m_varVisible; }
+        VarBool &getVisibleVar() { return *m_pVarVisible; }
 
         /// Window type, mainly useful when overloaded (for VoutWindow)
         virtual string getType() const { return "Generic"; }
@@ -117,10 +119,10 @@ class GenericWindow: public SkinObject, public Observer<VarBool>
         /// OS specific implementation
         OSWindow *m_pOsWindow;
         /// Variable for the visibility of the window
-        mutable VarBoolImpl m_varVisible;
+        mutable VarBoolImpl *m_pVarVisible;
 
         /// Method called when the observed variable is modified
-        virtual void onUpdate( Subject<VarBool> &rVariable );
+        virtual void onUpdate( Subject<VarBool, void*> &rVariable , void*);
 };
 
 

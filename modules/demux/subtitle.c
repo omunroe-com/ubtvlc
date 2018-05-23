@@ -2,7 +2,7 @@
  * subtitle.c: Demux for subtitle text files.
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: subtitle.c 12548 2005-09-14 00:36:41Z hartman $
+ * $Id: subtitle.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,22 +44,24 @@ static int  Open ( vlc_object_t *p_this );
 static void Close( vlc_object_t *p_this );
 
 #define SUB_DELAY_LONGTEXT \
-    "Delay subtitles (in 1/10s)"
+    "Apply a delay to all subtitles (in 1/10s, eg 100 means 10s)."
 #define SUB_FPS_LONGTEXT \
-    "Override frames per second. " \
-    "It will only work with MicroDVD subtitles."
+    "Override the normal frames per second settings. " \
+    "This will only work with MicroDVD and SubRIP (SRT) subtitles."
 #define SUB_TYPE_LONGTEXT \
-    "One from \"microdvd\", \"subrip\", \"ssa1\", \"ssa2-4\", \"ass\", \"vplayer\" " \
-    "\"sami\" (auto for autodetection, it should always work)."
+    "Force the subtiles format. Valid values are : \"microdvd\", \"subrip\"," \
+    "\"ssa1\", \"ssa2-4\", \"ass\", \"vplayer\" " \
+    "\"sami\", \"dvdsubtitle\" and \"auto\" (meaning autodetection, this " \
+    "should always work)."
 static char *ppsz_sub_type[] =
 {
     "auto", "microdvd", "subrip", "subviewer", "ssa1",
-    "ssa2-4", "ass", "vplayer", "sami"
+    "ssa2-4", "ass", "vplayer", "sami", "dvdsubtitle"
 };
 
 vlc_module_begin();
     set_shortname( _("Subtitles"));
-    set_description( _("Text subtitles demux") );
+    set_description( _("Text subtitles parser") );
     set_capability( "demux2", 0 );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
@@ -69,7 +71,7 @@ vlc_module_begin();
     add_integer( "sub-delay", 0, NULL,
                N_("Subtitles delay"),
                SUB_DELAY_LONGTEXT, VLC_TRUE );
-    add_string( "sub-type", "auto", NULL, "Subtitles fileformat",
+    add_string( "sub-type", "auto", NULL, N_("Subtitles format"),
                 SUB_TYPE_LONGTEXT, VLC_TRUE );
         change_string_list( ppsz_sub_type, 0, 0 );
     set_callbacks( Open, Close );
@@ -91,6 +93,7 @@ enum
     SUB_TYPE_VPLAYER,
     SUB_TYPE_SAMI,
     SUB_TYPE_SUBVIEWER,
+    SUB_TYPE_DVDSUBTITLE
 };
 
 typedef struct
@@ -130,12 +133,13 @@ struct demux_sys_t
     int64_t     i_length;
 };
 
-static int  ParseMicroDvd ( demux_t *, subtitle_t * );
-static int  ParseSubRip   ( demux_t *, subtitle_t * );
-static int  ParseSubViewer( demux_t *, subtitle_t * );
-static int  ParseSSA      ( demux_t *, subtitle_t * );
-static int  ParseVplayer  ( demux_t *, subtitle_t * );
-static int  ParseSami     ( demux_t *, subtitle_t * );
+static int  ParseMicroDvd   ( demux_t *, subtitle_t * );
+static int  ParseSubRip     ( demux_t *, subtitle_t * );
+static int  ParseSubViewer  ( demux_t *, subtitle_t * );
+static int  ParseSSA        ( demux_t *, subtitle_t * );
+static int  ParseVplayer    ( demux_t *, subtitle_t * );
+static int  ParseSami       ( demux_t *, subtitle_t * );
+static int  ParseDVDSubtitle( demux_t *, subtitle_t * );
 
 static struct
 {
@@ -145,15 +149,16 @@ static struct
     int  (*pf_read)( demux_t *, subtitle_t* );
 } sub_read_subtitle_function [] =
 {
-    { "microdvd",   SUB_TYPE_MICRODVD,  "MicroDVD", ParseMicroDvd },
-    { "subrip",     SUB_TYPE_SUBRIP,    "SubRIP",   ParseSubRip },
-    { "subviewer",  SUB_TYPE_SUBVIEWER, "SubViewer",ParseSubViewer },
-    { "ssa1",       SUB_TYPE_SSA1,      "SSA-1",    ParseSSA },
-    { "ssa2-4",     SUB_TYPE_SSA2_4,    "SSA-2/3/4",ParseSSA },
-    { "ass",        SUB_TYPE_ASS,       "SSA/ASS",  ParseSSA },
-    { "vplayer",    SUB_TYPE_VPLAYER,   "VPlayer",  ParseVplayer },
-    { "sami",       SUB_TYPE_SAMI,      "SAMI",     ParseSami },
-    { NULL,         SUB_TYPE_UNKNOWN,   "Unknown",  NULL }
+    { "microdvd",   SUB_TYPE_MICRODVD,    "MicroDVD",    ParseMicroDvd },
+    { "subrip",     SUB_TYPE_SUBRIP,      "SubRIP",      ParseSubRip },
+    { "subviewer",  SUB_TYPE_SUBVIEWER,   "SubViewer",   ParseSubViewer },
+    { "ssa1",       SUB_TYPE_SSA1,        "SSA-1",       ParseSSA },
+    { "ssa2-4",     SUB_TYPE_SSA2_4,      "SSA-2/3/4",   ParseSSA },
+    { "ass",        SUB_TYPE_ASS,         "SSA/ASS",     ParseSSA },
+    { "vplayer",    SUB_TYPE_VPLAYER,     "VPlayer",     ParseVplayer },
+    { "sami",       SUB_TYPE_SAMI,        "SAMI",        ParseSami },
+    { "dvdsubtitle",SUB_TYPE_DVDSUBTITLE, "DVDSubtitle", ParseDVDSubtitle },
+    { NULL,         SUB_TYPE_UNKNOWN,     "Unknown",     NULL }
 };
 
 static int Demux( demux_t * );
@@ -299,6 +304,12 @@ static int Open ( vlc_object_t *p_this )
                      sscanf( s, "%d:%d:%d ", &i_dummy, &i_dummy, &i_dummy ) == 3 )
             {
                 p_sys->i_type = SUB_TYPE_VPLAYER;
+                break;
+            }
+            else if( sscanf( s, "{T %d:%d:%d:%d", &i_dummy, &i_dummy,
+                             &i_dummy, &i_dummy ) == 4 )
+            {
+                p_sys->i_type = SUB_TYPE_DVDSUBTITLE;
                 break;
             }
 
@@ -693,9 +704,9 @@ static int ParseMicroDvd( demux_t *p_demux, subtitle_t *p_subtitle )
     unsigned int i;
 
     int i_microsecperframe = 40000; /* default to 25 fps */
-    if( p_sys->i_microsecperframe > 0 ) 
+    if( p_sys->i_microsecperframe > 0 )
         i_microsecperframe = p_sys->i_microsecperframe;
-    
+
     p_subtitle->i_start = 0;
     p_subtitle->i_stop  = 0;
     p_subtitle->psz_text = NULL;
@@ -1203,3 +1214,79 @@ static int  ParseSami( demux_t *p_demux, subtitle_t *p_subtitle )
     return( VLC_SUCCESS );
 #undef ADDC
 }
+
+static int ParseDVDSubtitle( demux_t *p_demux, subtitle_t *p_subtitle )
+{
+    demux_sys_t *p_sys = p_demux->p_sys;
+    text_t      *txt = &p_sys->txt;
+
+    /*
+     * {T h1:m1:s1:c1
+     * Line1
+     * Line2
+     * ...
+     * }
+     *
+     */
+    char *s;
+    char buffer_text[ 10 * MAX_LINE];
+    int  i_buffer_text;
+    int64_t     i_start;
+
+    p_subtitle->i_start = 0;
+    p_subtitle->i_stop  = 0;
+    p_subtitle->psz_text = NULL;
+
+    for( ;; )
+    {
+        int h1, m1, s1, c1;
+        if( ( s = TextGetLine( txt ) ) == NULL )
+        {
+            return( VLC_EGENERIC );
+        }
+        if( sscanf( s,
+                    "{T %d:%d:%d:%d",
+                    &h1, &m1, &s1, &c1 ) == 4 )
+        {
+            i_start = ( (int64_t)h1 * 3600*1000 +
+                        (int64_t)m1 * 60*1000 +
+                        (int64_t)s1 * 1000 +
+                        (int64_t)c1 * 10) * 1000;
+
+            /* Now read text until a line containing "}" */
+            for( i_buffer_text = 0;; )
+            {
+                int i_len;
+                if( ( s = TextGetLine( txt ) ) == NULL )
+                {
+                    return( VLC_EGENERIC );
+                }
+
+                i_len = strlen( s );
+                if( i_len == 1 && s[0] == '}' )
+                {
+                    /* "}" -> end of this subtitle */
+                    buffer_text[__MAX( i_buffer_text - 1, 0 )] = '\0';
+                    p_subtitle->i_start = i_start;
+                    p_subtitle->i_stop  = 0;
+                    p_subtitle->psz_text = strdup( buffer_text );
+                    return 0;
+                }
+                else
+                {
+                    if( i_buffer_text + i_len + 1 < 10 * MAX_LINE )
+                    {
+                        memcpy( buffer_text + i_buffer_text,
+                                s,
+                                i_len );
+                        i_buffer_text += i_len;
+
+                        buffer_text[i_buffer_text] = '\n';
+                        i_buffer_text++;
+                    }
+                }
+            }
+        }
+    }
+}
+

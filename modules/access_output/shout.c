@@ -2,7 +2,7 @@
  * shout.c: This module forwards vorbis streams to an icecast server
  *****************************************************************************
  * Copyright (C) 2005 VideoLAN
- * $Id: shout.c 12415 2005-08-28 18:59:53Z hartman $
+ * $Id: shout.c 14974 2006-03-30 05:37:29Z zorglub $
  *
  * Authors: Daniel Fischer <dan at subsignal dot org>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,7 +33,7 @@
  *
  * vlc v4l:/dev/video:input=2:norm=pal:size=192x144 \
  * --sout '#transcode{vcodec=theora,vb=300,acodec=vorb,ab=96}\
- * :std{access=shout,mux=ogg,url=localhost:8005}'
+ * :std{access=shout,mux=ogg,dst=localhost:8005}'
  *
  *****************************************************************************/
 
@@ -55,28 +55,31 @@ static void Close( vlc_object_t * );
 
 #define SOUT_CFG_PREFIX "sout-shout-"
 
-#define NAME_TEXT N_("Stream-name")
-#define NAME_LONGTEXT N_("The name this stream/channel will get on the icecast server." )
+#define NAME_TEXT N_("Stream name")
+#define NAME_LONGTEXT N_("Name to give to this stream/channel on the " \
+                         "icecast server." )
 
-#define DESCRIPTION_TEXT N_("Stream-description")
-#define DESCRIPTION_LONGTEXT N_("A description of the stream content. (Information about " \
-                         "your channel)." )
+#define DESCRIPTION_TEXT N_("Stream description")
+#define DESCRIPTION_LONGTEXT N_("Description of the stream content or " \
+                                "information about your channel." )
 
 #define MP3_TEXT N_("Stream MP3")
-#define MP3_LONGTEXT N_("Normally you have to feed the shoutcast module with Ogg streams. " \
-                         "This option allows you to feed MP3 streams instead, so you can " \
-                         "forward MP3 streams to the icecast server." )
+#define MP3_LONGTEXT N_("You normally have to feed the shoutcast module " \
+                        "with Ogg streams. It is also possible to stream " \
+                        "MP3 instead, so you can "\
+                        "forward MP3 streams to the icecast server." )
 
 vlc_module_begin();
-    set_description( _("libshout (icecast) output") );
-    set_shortname( N_("Shout" ));
+    set_description( _("IceCAST output") );
+    set_shortname( "Shoutcast" );
     set_capability( "sout access", 50 );
     set_category( CAT_SOUT );
     set_subcategory( SUBCAT_SOUT_ACO );
     add_shortcut( "shout" );
     add_string( SOUT_CFG_PREFIX "name", "VLC media player - Live stream", NULL,
                 NAME_TEXT, NAME_LONGTEXT, VLC_FALSE );
-    add_string( SOUT_CFG_PREFIX "description", "Live stream from VLC media player. " \
+    add_string( SOUT_CFG_PREFIX "description",
+                 "Live stream from VLC media player. " \
                 "http://www.videolan.org/vlc", NULL,
                 DESCRIPTION_TEXT, DESCRIPTION_LONGTEXT, VLC_FALSE );
     add_bool(   SOUT_CFG_PREFIX "mp3", VLC_FALSE, NULL,

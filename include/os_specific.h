@@ -2,7 +2,7 @@
  * os_specific.h: OS specific features
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: os_specific.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: os_specific.h 14104 2006-02-01 13:01:06Z sam $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _NEED_OS_SPECIFIC_H
@@ -28,7 +28,7 @@
 
 #if defined( SYS_BEOS )
 #   include "beos_specific.h"
-#elif defined( SYS_DARWIN )
+#elif defined( __APPLE__ )
 #   include "darwin_specific.h"
 #elif defined( WIN32 ) || defined( UNDER_CE )
 #   include "win32_specific.h"

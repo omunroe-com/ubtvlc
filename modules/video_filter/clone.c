@@ -2,7 +2,7 @@
  * clone.c : Clone video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: clone.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: clone.c 14977 2006-03-30 08:40:51Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -53,11 +53,12 @@ static int  SendEvents( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define COUNT_TEXT N_("Number of clones")
-#define COUNT_LONGTEXT N_("Select the number of video windows in which to "\
+#define COUNT_LONGTEXT N_("Number of video windows in which to "\
     "clone the video.")
 
-#define VOUTLIST_TEXT N_("List of video output modules")
-#define VOUTLIST_LONGTEXT N_("Select the specific video output modules that you want to activate.")
+#define VOUTLIST_TEXT N_("Video output modules")
+#define VOUTLIST_LONGTEXT N_("You can use specific video output modules " \
+        "for the clones. Use a comma-separated list of modules." )
 
 vlc_module_begin();
     set_description( _("Clone video filter") );
@@ -214,14 +215,8 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
-
-    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
-    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
-    fmt.i_x_offset = fmt.i_y_offset = 0;
-    fmt.i_chroma = p_vout->render.i_chroma;
-    fmt.i_aspect = p_vout->render.i_aspect;
-    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
-    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+    p_vout->fmt_out = p_vout->fmt_in;
+    fmt = p_vout->fmt_out;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video outputs" );

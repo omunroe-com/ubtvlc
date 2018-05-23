@@ -2,7 +2,7 @@
  * open.m: MacOS X module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: open.m 12843 2005-10-15 18:19:03Z hartman $
+ * $Id: open.m 15032 2006-04-01 21:38:18Z xtophe $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net> 
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -170,7 +170,7 @@ static VLCOpen *_o_sharedMainInstance = nil;
     [o_disc_videots_btn_browse setTitle: _NS("Browse...")];
     [o_disc_dvd_menus setTitle: _NS("Use DVD menus")];
 
-    [[o_disc_type cellAtRow:0 column:0] setTitle: _NS("VIDEO_TS folder")];
+    [[o_disc_type cellAtRow:0 column:0] setTitle: _NS("VIDEO_TS directory")];
     [[o_disc_type cellAtRow:1 column:0] setTitle: _NS("DVD")];
     [[o_disc_type cellAtRow:2 column:0] setTitle: _NS("VCD")];
     [[o_disc_type cellAtRow:3 column:0] setTitle: _NS("Audio CD")];
@@ -240,16 +240,16 @@ static VLCOpen *_o_sharedMainInstance = nil;
     [o_file_sub_ckbox setTitle: _NS("Load subtitles file:")];
     [o_file_sub_btn_settings setTitle: _NS("Settings...")];
     [o_file_sub_btn_browse setTitle: _NS("Browse...")];
-    [o_file_sub_override setTitle: _NS("Override")];
-    [o_file_sub_delay_lbl setStringValue: _NS("delay")];
+    [o_file_sub_override setTitle: _NS("Override parametters")];
+    [o_file_sub_delay_lbl setStringValue: _NS("Delay")];
     [o_file_sub_delay_stp setEnabled: NO];
-    [o_file_sub_fps_lbl setStringValue: _NS("fps")];
+    [o_file_sub_fps_lbl setStringValue: _NS("FPS")];
     [o_file_sub_fps_stp setEnabled: NO];
     [o_file_sub_encoding_lbl setStringValue: _NS("Subtitles encoding")];
     [o_file_sub_encoding_pop removeAllItems];
     [o_file_sub_size_lbl setStringValue: _NS("Font size")];
     [o_file_sub_size_pop removeAllItems];
-    [o_file_sub_align_lbl setStringValue: _NS("Subtitles justification")];
+    [o_file_sub_align_lbl setStringValue: _NS("Subtitles alignment")];
     [o_file_sub_align_pop removeAllItems];
     [o_file_sub_ok_btn setStringValue: _NS("OK")];
     [o_file_sub_font_box setTitle: _NS("Font Properties")];
@@ -475,7 +475,7 @@ static VLCOpen *_o_sharedMainInstance = nil;
     
     o_type = [[o_disc_type selectedCell] title];
 
-    if ( [o_type isEqualToString: _NS("VIDEO_TS folder")] )
+    if ( [o_type isEqualToString: _NS("VIDEO_TS directory")] )
     {
         b_device = 0; b_menus = 1;
     }

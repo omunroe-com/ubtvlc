@@ -2,7 +2,7 @@
  * var_tree.hpp
  *****************************************************************************
  * Copyright (C) 2005 VideoLAN
- * $Id: var_bool.hpp 9934 2005-02-15 13:55:08Z courmisch $
+ * $Id: var_tree.hpp 14771 2006-03-16 16:59:41Z dionoea $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef VAR_TREE_HPP
@@ -31,15 +31,25 @@
 #include "ustring.hpp"
 #include "var_percent.hpp"
 
+/// Description of an update to the tree
+typedef struct tree_update
+{
+     int i_type;
+     int i_parent;
+     int i_id;
+     bool b_active_item;
+     bool b_visible;
+} tree_update;
+
 /// Tree variable
-class VarTree: public Variable, public Subject<VarTree>
+class VarTree: public Variable, public Subject<VarTree, tree_update*>
 {
     public:
         VarTree( intf_thread_t *pIntf );
 
         VarTree( intf_thread_t *pIntf, VarTree *pParent, int id,
                  const UStringPtr &rcString, bool selected, bool playing,
-                 bool expanded, void *pData );
+                 bool expanded,bool readonly, void *pData );
 
         virtual ~VarTree();
 
@@ -48,7 +58,8 @@ class VarTree: public Variable, public Subject<VarTree>
 
         /// Add a pointer on string in the children's list
         virtual void add( int id, const UStringPtr &rcString, bool selected,
-                          bool playing, bool expanded, void *pData );
+                          bool playing, bool expanded, bool readonly,
+                          void *pData );
 
         /// Remove the selected item from the children's list
         virtual void delSelected();
@@ -56,13 +67,16 @@ class VarTree: public Variable, public Subject<VarTree>
         /// Remove all elements from the children's list
         virtual void clear();
 
-        /// FIXME should be private
+        /// \todo Use accessors for these fields ?
         int m_id;
         UStringPtr m_cString;
         bool m_selected;
         bool m_playing;
         bool m_expanded;
+        bool m_deleted;
         void *m_pData;
+
+        inline bool isReadonly() { return m_readonly; };
 
         /// Get the number of children
         int size() const { return m_children.size(); }
@@ -88,9 +102,13 @@ class VarTree: public Variable, public Subject<VarTree>
 
         /// Parent node
         VarTree *parent() { return m_pParent; }
-        void VarTree::checkParents( VarTree *pParent );
+        void checkParents( VarTree *pParent );
 
-        Iterator uncle();
+        /// Get next sibling
+        Iterator getNextSibling( Iterator );
+
+        Iterator next_uncle();
+        Iterator prev_uncle();
 
         /// Get root node
         VarTree *root()
@@ -101,14 +119,12 @@ class VarTree: public Variable, public Subject<VarTree>
             return parent;
         }
 
-        /// Get depth (root depth is 0)
-        int depth()
+        /// Get first leaf
+        Iterator firstLeaf();
+
+        void removeChild( VarTree::Iterator item )
         {
-            VarTree *parent = this;
-            int depth = 0;
-            while( ( parent = parent->parent() ) != NULL )
-                depth++;
-            return depth;
+            m_children.erase( item );
         }
 
         /// Execute the action associated to this item
@@ -124,14 +140,49 @@ class VarTree: public Variable, public Subject<VarTree>
         /// Count the number of items that should be displayed if the playlist window wasn't limited
         int visibleItems();
 
+        /// Count the number of leafs in the tree
+        int countLeafs();
+
         /// Return iterator to the n'th visible item
         Iterator getVisibleItem( int n );
+
+        /// Return iterator to the n'th leaf
+        Iterator getLeaf( int n );
 
         /// Given an iterator to a visible item, return the next visible item
         Iterator getNextVisibleItem( Iterator it );
 
+        /// Given an it to a visible item, return the previous visible item
+        Iterator getPrevVisibleItem( Iterator it );
+
+        /// Given an iterator to an item, return the next item
+        Iterator getNextItem( Iterator it );
+
+        /// Given an iterator to an item, return the previous item
+        Iterator getPrevItem( Iterator it );
+
+        /// Given an iterator to an item, return the next leaf
+        Iterator getNextLeaf( Iterator it );
+
+        /// Given an iterator to an item, return the previous leaf
+        Iterator getPrevLeaf( Iterator it );
+
         /// Find a children node with the given id
         Iterator findById( int id );
+
+        /// Ensure an item is expanded
+        void ensureExpanded( VarTree::Iterator );
+
+        /// Get depth (root depth is 0)
+        int depth()
+        {
+            VarTree *parent = this;
+            int depth = 0;
+            while( ( parent = parent->parent() ) != NULL )
+                depth++;
+            return depth;
+        }
+
 
     private:
         /// List of children
@@ -139,6 +190,8 @@ class VarTree: public Variable, public Subject<VarTree>
 
         /// Pointer to parent node
         VarTree *m_pParent;
+
+        bool m_readonly;
 
         /// Variable type
         static const string m_type;

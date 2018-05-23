@@ -2,7 +2,7 @@
  * es_out.c: Es Out handler for input.
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: es_out.c 12354 2005-08-22 20:24:20Z gbazin $
+ * $Id: es_out.c 15241 2006-04-15 16:29:24Z asmax $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x dot nl>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -103,8 +103,8 @@ struct es_out_sys_t
     int         i_sub;
 
     /* es to select */
-    int         i_audio_last;
-    int         i_sub_last;
+    int         i_audio_last, i_audio_id;
+    int         i_sub_last, i_sub_id;
     char        **ppsz_audio_language;
     char        **ppsz_sub_language;
 
@@ -179,7 +179,7 @@ es_out_t *input_EsOutNew( input_thread_t *p_input )
     if( p_sys->ppsz_audio_language )
     {
         for( i = 0; p_sys->ppsz_audio_language[i]; i++ )
-            msg_Dbg( p_input, "select audio in language[%d] %s",
+            msg_Dbg( p_input, "selected audio language[%d] %s",
                      i, p_sys->ppsz_audio_language[i] );
     }
     if( val.psz_string ) free( val.psz_string );
@@ -189,10 +189,16 @@ es_out_t *input_EsOutNew( input_thread_t *p_input )
     if( p_sys->ppsz_sub_language )
     {
         for( i = 0; p_sys->ppsz_sub_language[i]; i++ )
-            msg_Dbg( p_input, "select subtitle in language[%d] %s",
+            msg_Dbg( p_input, "selected subtitle language[%d] %s",
                      i, p_sys->ppsz_sub_language[i] );
     }
     if( val.psz_string ) free( val.psz_string );
+
+    var_Get( p_input, "audio-track-id", &val );
+    p_sys->i_audio_id = val.i_int;
+
+    var_Get( p_input, "sub-track-id", &val );
+    p_sys->i_sub_id = val.i_int;
 
     p_sys->p_es_audio = NULL;
     p_sys->p_es_video = NULL;
@@ -281,7 +287,7 @@ void input_EsOutDiscontinuity( es_out_t *out, vlc_bool_t b_audio )
     {
         es_out_id_t *es = p_sys->es[i];
         es->b_discontinuity = VLC_TRUE; /* signal discontinuity */
-        
+
         /* Send a dummy block to let decoder know that
          * there is a discontinuity */
         if( es->p_dec && ( !b_audio || es->fmt.i_cat == AUDIO_ES ) )
@@ -362,8 +368,10 @@ static void EsOutESVarUpdate( es_out_t *out, es_out_id_t *es,
     {
         if( es->psz_language && *es->psz_language )
         {
-            text.psz_string = malloc( strlen( es->fmt.psz_description) + strlen( es->psz_language ) + 10 );
-            sprintf( text.psz_string, "%s - [%s]", es->fmt.psz_description, es->psz_language );
+            text.psz_string = malloc( strlen( es->fmt.psz_description) +
+                                      strlen( es->psz_language ) + 10 );
+            sprintf( text.psz_string, "%s - [%s]", es->fmt.psz_description,
+                                                   es->psz_language );
         }
         else text.psz_string = strdup( es->fmt.psz_description );
     }
@@ -372,7 +380,8 @@ static void EsOutESVarUpdate( es_out_t *out, es_out_id_t *es,
         if( es->psz_language && *es->psz_language )
         {
             char *temp;
-            text.psz_string = malloc( strlen( _("Track %i") )+ strlen( es->psz_language ) + 30 );
+            text.psz_string = malloc( strlen( _("Track %i") )+
+                                      strlen( es->psz_language ) + 30 );
             asprintf( &temp,  _("Track %i"), val.i_int );
             sprintf( text.psz_string, "%s - [%s]", temp, es->psz_language );
             free( temp );
@@ -456,8 +465,8 @@ static void EsOutProgramSelect( es_out_t *out, es_out_pgrm_t *p_pgrm )
         char *psz_cat = malloc( strlen(_("Program")) + 10 );
 
         sprintf( psz_cat, "%s %d", _("Program"), p_pgrm->i_id );
-        input_Control( p_input, INPUT_ADD_INFO, _("Meta-information"),
-                       VLC_META_NOW_PLAYING, "%s", p_pgrm->psz_now_playing );
+        input_Control( p_input, INPUT_ADD_INFO, _(VLC_META_INFO_CAT),
+                       _(VLC_META_NOW_PLAYING), "%s", p_pgrm->psz_now_playing );
         free( psz_cat );
     }
 
@@ -620,12 +629,13 @@ static void EsOutProgramMeta( es_out_t *out, int i_group, vlc_meta_t *p_meta )
     }
     if( psz_now_playing )
     {
+        if( p_pgrm->psz_now_playing ) free( p_pgrm->psz_now_playing );
         p_pgrm->psz_now_playing = strdup(psz_now_playing);
 
         if( p_sys->p_pgrm == p_pgrm )
         {
-            input_Control( p_input, INPUT_ADD_INFO, _("Meta-information"),
-                           VLC_META_NOW_PLAYING, "%s", psz_now_playing );
+            input_Control( p_input, INPUT_ADD_INFO, _(VLC_META_INFO_CAT),
+                           _(VLC_META_NOW_PLAYING), "%s", psz_now_playing );
         }
     }
     free( psz_cat );
@@ -760,6 +770,17 @@ static void EsSelect( es_out_t *out, es_out_id_t *es )
             ( p_input->p_sout && !var_GetBool( p_input, "sout-audio" ) ) )
         {
             msg_Dbg( p_input, "audio is disabled, not selecting ES 0x%x",
+                     es->i_id );
+            return;
+        }
+    }
+    if( es->fmt.i_cat == SPU_ES )
+    {
+        var_Get( p_input, "spu", &val );
+        if( !var_GetBool( p_input, "spu" ) ||
+            ( p_input->p_sout && !var_GetBool( p_input, "sout-spu" ) ) )
+        {
+            msg_Dbg( p_input, "spu is disabled, not selecting ES 0x%x",
                      es->i_id );
             return;
         }
@@ -903,6 +924,14 @@ static void EsOutSelect( es_out_t *out, es_out_id_t *es, vlc_bool_t b_force )
 
             if( p_sys->i_audio_last >= 0 )
                 i_wanted = p_sys->i_audio_last;
+
+            if( p_sys->i_audio_id >= 0 )
+            {
+                if( es->i_id == p_sys->i_audio_id )
+                    i_wanted = es->i_channel;
+                else
+                    return;
+            }
         }
         else if( i_cat == SPU_ES )
         {
@@ -933,6 +962,14 @@ static void EsOutSelect( es_out_t *out, es_out_id_t *es, vlc_bool_t b_force )
             }
             if( p_sys->i_sub_last >= 0 )
                 i_wanted  = p_sys->i_sub_last;
+
+            if( p_sys->i_sub_id >= 0 )
+            {
+                if( es->i_id == p_sys->i_sub_id )
+                    i_wanted = es->i_channel;
+                else
+                    return;
+            }
         }
         else if( i_cat == VIDEO_ES )
         {
@@ -988,6 +1025,7 @@ static int EsOutSend( es_out_t *out, es_out_id_t *es, block_t *p_block )
     input_thread_t    *p_input = p_sys->p_input;
     es_out_pgrm_t *p_pgrm = es->p_pgrm;
     int64_t i_delay;
+    int i_total=0;
 
     if( es->fmt.i_cat == AUDIO_ES )
         i_delay = p_sys->i_audio_delay;
@@ -995,6 +1033,13 @@ static int EsOutSend( es_out_t *out, es_out_id_t *es, block_t *p_block )
         i_delay = p_sys->i_spu_delay;
     else
         i_delay = 0;
+
+    if( p_input->p_libvlc->b_stats )
+    {
+        stats_UpdateInteger( p_input, STATS_DEMUX_READ, p_block->i_buffer,
+                             &i_total );
+        stats_UpdateFloat( p_input , STATS_DEMUX_BITRATE, (float)i_total, NULL );
+    }
 
     /* Mark preroll blocks */
     if( es->i_preroll_end >= 0 )
@@ -1528,6 +1573,7 @@ static void EsOutAddInfo( es_out_t *out, es_out_id_t *es )
     input_thread_t *p_input = p_sys->p_input;
     es_format_t    *fmt = &es->fmt;
     char           *psz_cat;
+    lldiv_t         div;
 
     /* Add stream info */
     asprintf( &psz_cat, _("Stream %d"), out->p_sys->i_id - 1 );
@@ -1550,8 +1596,11 @@ static void EsOutAddInfo( es_out_t *out, es_out_id_t *es )
                            "%d", fmt->audio.i_channels );
 
         if( fmt->audio.i_rate > 0 )
+        {
             input_Control( p_input, INPUT_ADD_INFO, psz_cat, _("Sample rate"),
                            _("%d Hz"), fmt->audio.i_rate );
+            var_SetInteger( p_input, "sample-rate", fmt->audio.i_rate );
+        }
 
         if( fmt->audio.i_bitspersample > 0 )
             input_Control( p_input, INPUT_ADD_INFO, psz_cat,
@@ -1559,8 +1608,11 @@ static void EsOutAddInfo( es_out_t *out, es_out_id_t *es )
                            fmt->audio.i_bitspersample );
 
         if( fmt->i_bitrate > 0 )
+        {
             input_Control( p_input, INPUT_ADD_INFO, psz_cat, _("Bitrate"),
                            _("%d kb/s"), fmt->i_bitrate / 1000 );
+            var_SetInteger( p_input, "bit-rate", fmt->i_bitrate );
+        }
         break;
 
     case VIDEO_ES:
@@ -1580,11 +1632,15 @@ static void EsOutAddInfo( es_out_t *out, es_out_id_t *es )
                            fmt->video.i_visible_height);
        if( fmt->video.i_frame_rate > 0 &&
            fmt->video.i_frame_rate_base > 0 )
+       {
+           div = lldiv( (float)fmt->video.i_frame_rate /
+                               fmt->video.i_frame_rate_base * 1000000,
+                               1000000 );
            input_Control( p_input, INPUT_ADD_INFO, psz_cat,
-                          _("Frame rate"), "%f",
-                          (float)fmt->video.i_frame_rate / 
-                          fmt->video.i_frame_rate_base );
-        break;
+                          _("Frame rate"), I64Fd".%06u",
+                          div.quot, (unsigned int )div.rem );
+       }
+       break;
 
     case SPU_ES:
         input_Control( p_input, INPUT_ADD_INFO, psz_cat,

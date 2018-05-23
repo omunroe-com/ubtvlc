@@ -2,10 +2,10 @@
  * ctrl_resize.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: ctrl_resize.hpp 12053 2005-08-06 23:38:31Z asmax $
+ * $Id: ctrl_resize.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef CTRL_RESIZE_HPP
@@ -29,16 +29,22 @@
 #include "../commands/cmd_generic.hpp"
 #include "../utils/fsm.hpp"
 
-class GenericLayout;
-
 
 /// Control decorator for resizing windows
 class CtrlResize: public CtrlFlat
 {
     public:
+        enum Direction_t
+        {
+            kResizeE,   // East
+            kResizeSE,  // South-East
+            kResizeS,   // South
+            kNone       // Reserved for internal use
+        };
+
         CtrlResize( intf_thread_t *pIntf, CtrlFlat &rCtrl,
                     GenericLayout &rLayout, const UString &rHelp,
-                    VarBool *pVisible );
+                    VarBool *pVisible, Direction_t direction );
         virtual ~CtrlResize() {}
 
         /// Handle an event
@@ -70,6 +76,11 @@ class CtrlResize: public CtrlFlat
         EvtGeneric *m_pEvt;
         /// Position of the click that started the resizing
         int m_xPos, m_yPos;
+        /// Direction of the resizing
+        Direction_t m_direction;
+
+        /// Change the cursor, based on the given direction
+        void changeCursor( Direction_t direction ) const;
 
         /// Callback objects
         DEFINE_CALLBACK( CtrlResize, OutStill )

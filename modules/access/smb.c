@@ -2,7 +2,7 @@
  * smb.c: SMB input module
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: smb.c 12451 2005-09-02 18:18:03Z gbazin $
+ * $Id: smb.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -58,16 +58,16 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for SMB streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for SMB streams. This " \
+    "value should be set in milliseconds." )
 #define USER_TEXT N_("SMB user name")
-#define USER_LONGTEXT N_("Allows you to modify the user name that will " \
+#define USER_LONGTEXT N_("User name that will " \
     "be used for the connection.")
 #define PASS_TEXT N_("SMB password")
-#define PASS_LONGTEXT N_("Allows you to modify the password that will be " \
+#define PASS_LONGTEXT N_("Password that will be " \
     "used for the connection.")
 #define DOMAIN_TEXT N_("SMB domain")
-#define DOMAIN_LONGTEXT N_("Allows you to modify the domain/workgroup that " \
+#define DOMAIN_LONGTEXT N_("Domain/Workgroup that " \
     "will be used for the connection.")
 
 vlc_module_begin();

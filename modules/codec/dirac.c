@@ -3,7 +3,7 @@
  *          (http://www.bbc.co.uk/rd/projects/dirac/index.shtml)
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: dirac.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: dirac.c 14989 2006-03-30 22:58:23Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -65,7 +65,7 @@ static const char *ppsz_enc_options[] = {
  *****************************************************************************/
 #define ENC_QUALITY_TEXT N_("Encoding quality")
 #define ENC_QUALITY_LONGTEXT N_( \
-  "Allows you to specify a quality between 1.0 (low) and 10.0 (high)." )
+  "Quality of the encoding between 1.0 (low) and 10.0 (high)." )
 
 vlc_module_begin();
     set_category( CAT_INPUT );

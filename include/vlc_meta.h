@@ -1,8 +1,8 @@
 /*****************************************************************************
- * vlc_meta.h
+ * vlc_meta.h: Stream meta-data
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: vlc_meta.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc_meta.h 14408 2006-02-19 16:16:56Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,18 +18,21 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_META_H
 #define _VLC_META_H 1
 
 /* VLC meta name */
+#define VLC_META_INFO_CAT           N_("Meta-information")
 #define VLC_META_TITLE              N_("Title")
 #define VLC_META_AUTHOR             N_("Author")
 #define VLC_META_ARTIST             N_("Artist")
 #define VLC_META_GENRE              N_("Genre")
 #define VLC_META_COPYRIGHT          N_("Copyright")
+#define VLC_META_COLLECTION         N_("Album/movie/show title")
+#define VLC_META_SEQ_NUM            N_("Track number/position in set")
 #define VLC_META_DESCRIPTION        N_("Description")
 #define VLC_META_RATING             N_("Rating")
 #define VLC_META_DATE               N_("Date")
@@ -37,13 +40,14 @@
 #define VLC_META_URL                N_("URL")
 #define VLC_META_LANGUAGE           N_("Language")
 #define VLC_META_NOW_PLAYING        N_("Now Playing")
+#define VLC_META_PUBLISHER          N_("Publisher")
 
 #define VLC_META_CDDB_ARTIST        N_("CDDB Artist")
-#define VLC_META_CDDB_CATEGORY      N_("CDDB Category")  
+#define VLC_META_CDDB_CATEGORY      N_("CDDB Category")
 #define VLC_META_CDDB_DISCID        N_("CDDB Disc ID")
 #define VLC_META_CDDB_EXT_DATA      N_("CDDB Extended Data")
 #define VLC_META_CDDB_GENRE         N_("CDDB Genre")
-#define VLC_META_CDDB_YEAR          N_("CDDB Year")      
+#define VLC_META_CDDB_YEAR          N_("CDDB Year")
 #define VLC_META_CDDB_TITLE         N_("CDDB Title")
 
 #define VLC_META_CDTEXT_ARRANGER    N_("CD-Text Arranger")
@@ -55,11 +59,11 @@
 #define VLC_META_CDTEXT_PERFORMER   N_("CD-Text Performer")
 #define VLC_META_CDTEXT_TITLE       N_("CD-Text Title")
 
-#define VLC_META_ISO_APPLICATION_ID N_("ISO-9660 Application ID") 
-#define VLC_META_ISO_PREPARER       N_("ISO-9660 Preparer") 
-#define VLC_META_ISO_PUBLISHER      N_("ISO-9660 Publisher") 
-#define VLC_META_ISO_VOLUME         N_("ISO-9660 Volume") 
-#define VLC_META_ISO_VOLUMESET      N_("ISO-9660 Volume Set") 
+#define VLC_META_ISO_APPLICATION_ID N_("ISO-9660 Application ID")
+#define VLC_META_ISO_PREPARER       N_("ISO-9660 Preparer")
+#define VLC_META_ISO_PUBLISHER      N_("ISO-9660 Publisher")
+#define VLC_META_ISO_VOLUME         N_("ISO-9660 Volume")
+#define VLC_META_ISO_VOLUMESET      N_("ISO-9660 Volume Set")
 
 #define VLC_META_CODEC_NAME         N_("Codec Name")
 #define VLC_META_CODEC_DESCRIPTION  N_("Codec Description")

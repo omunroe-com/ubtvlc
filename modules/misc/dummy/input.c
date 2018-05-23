@@ -2,7 +2,7 @@
  * input_dummy.c: dummy input plugin, to manage "vlc:***" special options
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: input.c 12108 2005-08-10 16:18:18Z hartman $
+ * $Id: input.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

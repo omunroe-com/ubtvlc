@@ -2,9 +2,9 @@
  * motiondetect.c : Motion detect video effect plugin for vlc
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: motiondetect.c 11924 2005-07-31 00:07:48Z dionoea $
+ * $Id: motiondetect.c 15199 2006-04-13 09:04:34Z zorglub $
  *
- * Authors: Jérôme Decoodt <djc@videolan.org>
+ * Authors: JÃ©rÃ´me Decoodt <djc@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,6 +32,7 @@
 #include <vlc/intf.h>
 
 #include "filter_common.h"
+#include "charset.h"
 
 /*****************************************************************************
  * Local prototypes
@@ -52,9 +53,10 @@ static int  SendEvents   ( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define DESC_TEXT N_("Description file")
-#define DESC_LONGTEXT N_("Description file, file containing simple playlist")
+#define DESC_LONGTEXT N_("A file containing a simple playlist")
 #define HISTORY_TEXT N_("History parameter")
-#define HISTORY_LONGTEXT N_("History parameter, number of frames used for detection")
+/// \bug [String] typo
+#define HISTORY_LONGTEXT N_("The umber of frames used for detection.")
 
 vlc_module_begin();
     set_description( _("Motion detect video filter") );
@@ -158,10 +160,10 @@ static int Create( vlc_object_t *p_this )
     }
 
     /* Parse description file and allocate areas */
-    p_file = fopen( psz_descfilename, "r" );
+    p_file = utf8_fopen( psz_descfilename, "r" );
     if( !p_file )
     {
-        msg_Err( p_this, "Failed to open descritpion file %s",
+        msg_Err( p_this, "Failed to open description file %s",
                             psz_descfilename );
         free( psz_descfilename );
         free( p_vout->p_sys );
@@ -222,14 +224,8 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
-
-    fmt.i_width = fmt.i_visible_width = p_vout->render.i_width;
-    fmt.i_height = fmt.i_visible_height = p_vout->render.i_height;
-    fmt.i_x_offset = fmt.i_y_offset = 0;
-    fmt.i_chroma = p_vout->render.i_chroma;
-    fmt.i_aspect = p_vout->render.i_aspect;
-    fmt.i_sar_num = p_vout->render.i_aspect * fmt.i_height / fmt.i_width;
-    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+    p_vout->fmt_out = p_vout->fmt_in;
+    fmt = p_vout->fmt_out;
 
     /* Try to open the real video output */
     msg_Dbg( p_vout, "spawning the real video output" );

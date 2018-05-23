@@ -2,10 +2,10 @@
  * win32_factory.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: win32_factory.cpp 12207 2005-08-15 15:54:32Z asmax $
+ * $Id: win32_factory.cpp 15008 2006-03-31 19:24:33Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef WIN32_SKINS
@@ -29,6 +29,7 @@
 #include "win32_timer.hpp"
 #include "win32_window.hpp"
 #include "win32_tooltip.hpp"
+#include "win32_popup.hpp"
 #include "win32_loop.hpp"
 #include "../src/theme.hpp"
 
@@ -119,7 +120,7 @@ bool Win32Factory::init()
         // then fine, otherwise return with an error.
         if( !GetClassInfo( m_hInst, _T("SkinWindowClass"), &wndclass ) )
         {
-            msg_Err( getIntf(), "Cannot register window class" );
+            msg_Err( getIntf(), "cannot register window class" );
             return false;
         }
     }
@@ -130,7 +131,7 @@ bool Win32Factory::init()
         -200, -200, 0, 0, 0, 0, m_hInst, 0 );
     if( m_hParentWindow == NULL )
     {
-        msg_Err( getIntf(), "Cannot create parent window" );
+        msg_Err( getIntf(), "cannot create parent window" );
         return false;
     }
 
@@ -156,7 +157,7 @@ bool Win32Factory::init()
             GetProcAddress( m_hMsimg32, _T("TransparentBlt") ) ) )
     {
         TransparentBlt = NULL;
-        msg_Dbg( getIntf(), "Couldn't find TransparentBlt(), "
+        msg_Dbg( getIntf(), "couldn't find TransparentBlt(), "
                  "falling back to BitBlt()" );
     }
     if( !m_hMsimg32 ||
@@ -166,7 +167,7 @@ bool Win32Factory::init()
             GetProcAddress( m_hMsimg32, _T("AlphaBlend") ) ) )
     {
         AlphaBlend = NULL;
-        msg_Dbg( getIntf(), "Couldn't find AlphaBlend()" );
+        msg_Dbg( getIntf(), "couldn't find AlphaBlend()" );
     }
 
     // Idem for user32.dll and SetLayeredWindowAttributes()
@@ -177,7 +178,7 @@ bool Win32Factory::init()
             GetProcAddress( m_hUser32, _T("SetLayeredWindowAttributes") ) ) )
     {
         SetLayeredWindowAttributes = NULL;
-        msg_Dbg( getIntf(), "Couldn't find SetLayeredWindowAttributes()" );
+        msg_Dbg( getIntf(), "couldn't find SetLayeredWindowAttributes()" );
     }
 
     // Initialize the resource path
@@ -254,6 +255,23 @@ OSWindow *Win32Factory::createOSWindow( GenericWindow &rWindow, bool dragDrop,
 OSTooltip *Win32Factory::createOSTooltip()
 {
     return new Win32Tooltip( getIntf(), m_hInst, m_hParentWindow );
+}
+
+
+OSPopup *Win32Factory::createOSPopup()
+{
+    // XXX FIXME: this way of getting the handle really sucks!
+    // In fact, the clean way would be to have in Builder::addPopup() a call
+    // to pPopup->associateToWindow() (to be written)... but the problem is
+    // that there is no way to access the OS-dependent window handle from a
+    // GenericWindow (we cannot eevn access the OSWindow).
+    if( m_windowMap.begin() == m_windowMap.end() )
+    {
+        msg_Err( getIntf(), "no window has been created before the popup!" );
+        return NULL;
+    }
+
+    return new Win32Popup( getIntf(), m_windowMap.begin()->first );
 }
 
 

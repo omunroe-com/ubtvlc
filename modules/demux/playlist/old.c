@@ -2,9 +2,9 @@
  * old.c : Old playlist format import
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: old.c 11990 2005-08-03 19:09:58Z courmisch $
+ * $Id: old.c 14377 2006-02-18 20:34:32Z courmisch $
  *
- * Authors: Clément Stenac <zorglub@videolan.org>
+ * Authors: ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -29,6 +29,7 @@
 #include <vlc/vlc.h>
 #include <vlc/input.h>
 #include <vlc/intf.h>
+#include "charset.h"
 
 #include <errno.h>                                                 /* ENOMEM */
 
@@ -67,7 +68,7 @@ static int Demux( demux_t *p_demux)
     playlist_t *p_playlist;
 
     p_playlist = (playlist_t*)vlc_object_find( p_demux,
-                         VLC_OBJECT_PLAYLIST, FIND_PARENT );
+                         VLC_OBJECT_PLAYLIST, FIND_ANYWHERE );
     if( !p_playlist )
     {
         msg_Err( p_demux, "cannot attach playlist" );

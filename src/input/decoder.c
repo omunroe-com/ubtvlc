@@ -2,7 +2,7 @@
  * decoder.c: Functions for the management of decoders
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: decoder.c 12887 2005-10-19 07:09:09Z md $
+ * $Id: decoder.c 14953 2006-03-28 20:29:28Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -20,7 +20,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -384,7 +384,7 @@ static decoder_t * CreateDecoder( input_thread_t *p_input,
     p_dec->pf_decode_sub = 0;
     p_dec->pf_packetize = 0;
 
-    /* Initialize the decoder fifo */
+   /* Initialize the decoder fifo */
     p_dec->p_module = NULL;
 
 
@@ -429,6 +429,12 @@ static decoder_t * CreateDecoder( input_thread_t *p_input,
 
     vlc_object_attach( p_dec, p_input );
 
+    stats_Create( p_dec->p_parent, "decoded_audio", STATS_DECODED_AUDIO,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
+    stats_Create( p_dec->p_parent, "decoded_video", STATS_DECODED_VIDEO,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
+    stats_Create( p_dec->p_parent, "decoded_sub", STATS_DECODED_SUB,
+                  VLC_VAR_INTEGER, STATS_COUNTER );
     /* Find a suitable decoder/packetizer module */
     if( i_object_type == VLC_OBJECT_DECODER )
         p_dec->p_module = module_Need( p_dec, "decoder", "$codec", 0 );
@@ -621,6 +627,8 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
                     while( (p_aout_buf = p_dec->pf_decode_audio( p_dec,
                                                        &p_packetized_block )) )
                     {
+                        stats_UpdateInteger( p_dec->p_parent,
+                                             STATS_DECODED_AUDIO, 1, NULL );
                         /* FIXME the best would be to handle the case start_date < preroll < end_date
                          * but that's not easy with non raw audio stream */
                         if( p_dec->p_owner->i_preroll_end > 0 &&
@@ -644,6 +652,7 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
         }
         else while( (p_aout_buf = p_dec->pf_decode_audio( p_dec, &p_block )) )
         {
+            stats_UpdateInteger( p_dec->p_parent, STATS_DECODED_AUDIO, 1, NULL );
             if( p_dec->p_owner->i_preroll_end > 0 &&
                 p_aout_buf->start_date < p_dec->p_owner->i_preroll_end )
             {
@@ -689,6 +698,8 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
                     while( (p_pic = p_dec->pf_decode_video( p_dec,
                                                        &p_packetized_block )) )
                     {
+                        stats_UpdateInteger( p_dec->p_parent, STATS_DECODED_VIDEO,
+                                                             1, NULL );
                         if( p_dec->p_owner->i_preroll_end > 0 &&
                             p_pic->date < p_dec->p_owner->i_preroll_end )
                         {
@@ -709,6 +720,7 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
         }
         else while( (p_pic = p_dec->pf_decode_video( p_dec, &p_block )) )
         {
+            stats_UpdateInteger( p_dec->p_parent, STATS_DECODED_VIDEO, 1 , NULL);
             if( p_dec->p_owner->i_preroll_end > 0 &&
                 p_pic->date < p_dec->p_owner->i_preroll_end )
             {
@@ -728,6 +740,7 @@ static int DecoderDecode( decoder_t *p_dec, block_t *p_block )
         subpicture_t *p_spu;
         while( (p_spu = p_dec->pf_decode_sub( p_dec, &p_block ) ) )
         {
+            stats_UpdateInteger( p_dec->p_parent, STATS_DECODED_SUB, 1 , NULL);
             if( p_dec->p_owner->i_preroll_end > 0 &&
                 p_spu->i_start < p_dec->p_owner->i_preroll_end &&
                 ( p_spu->i_stop <= 0 || p_spu->i_stop <= p_dec->p_owner->i_preroll_end ) )
@@ -930,13 +943,15 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
             var_CreateGetBool( p_dec, "hdtv-fix" ) )
         {
             p_dec->fmt_out.video.i_visible_height = 1080;
+            p_dec->fmt_out.video.i_sar_num *= 135;
+            p_dec->fmt_out.video.i_sar_den *= 136;
             msg_Warn( p_dec, "Fixing broken HDTV stream (display_height=1088)");
         }
 
         if( !p_dec->fmt_out.video.i_sar_num ||
             !p_dec->fmt_out.video.i_sar_den )
         {
-            p_dec->fmt_out.video.i_sar_num = p_dec->fmt_out.video.i_aspect * 
+            p_dec->fmt_out.video.i_sar_num = p_dec->fmt_out.video.i_aspect *
               p_dec->fmt_out.video.i_visible_height;
 
             p_dec->fmt_out.video.i_sar_den = VOUT_ASPECT_FACTOR *
@@ -946,7 +961,7 @@ static picture_t *vout_new_buffer( decoder_t *p_dec )
         vlc_ureduce( &p_dec->fmt_out.video.i_sar_num,
                      &p_dec->fmt_out.video.i_sar_den,
                      p_dec->fmt_out.video.i_sar_num,
-                     p_dec->fmt_out.video.i_sar_den, 0 );
+                     p_dec->fmt_out.video.i_sar_den, 50000 );
 
         p_dec->fmt_out.video.i_chroma = p_dec->fmt_out.i_codec;
         p_sys->video = p_dec->fmt_out.video;

@@ -25,8 +25,9 @@
 #define _PIXEL_H 1
 
 typedef int  (*x264_pixel_cmp_t) ( uint8_t *, int, uint8_t *, int );
-typedef void (*x264_pixel_avg_t) ( uint8_t *, int, uint8_t *, int );
-typedef void (*x264_pixel_avg_weight_t) ( uint8_t *, int, uint8_t *, int, int );
+typedef int  (*x264_pixel_cmp_pde_t) ( uint8_t *, int, uint8_t *, int, int );
+typedef void (*x264_pixel_cmp_x3_t) ( uint8_t *, uint8_t *, uint8_t *, uint8_t *, int, int[3] );
+typedef void (*x264_pixel_cmp_x4_t) ( uint8_t *, uint8_t *, uint8_t *, uint8_t *, uint8_t *, int, int[4] );
 
 enum
 {
@@ -68,10 +69,25 @@ typedef struct
     x264_pixel_cmp_t satd[7];
     x264_pixel_cmp_t sa8d[4];
     x264_pixel_cmp_t mbcmp[7]; /* either satd or sad for subpel refine and mode decision */
-    x264_pixel_avg_t  avg[10];
-    x264_pixel_avg_weight_t avg_weight[10];
+
+    /* partial distortion elimination:
+     * terminate early if partial score is worse than a threshold.
+     * may be NULL, in which case just use sad instead. */
+    x264_pixel_cmp_pde_t sad_pde[7];
+
+    /* multiple parallel calls to sad. */
+    x264_pixel_cmp_x3_t sad_x3[7];
+    x264_pixel_cmp_x4_t sad_x4[7];
+
+    /* calculate satd of V, H, and DC modes.
+     * may be NULL, in which case just use pred+satd instead. */
+    void (*intra_satd_x3_16x16)( uint8_t *fenc, uint8_t *fdec, int res[3] );
+    void (*intra_satd_x3_8x8c)( uint8_t *fenc, uint8_t *fdec, int res[3] );
+    void (*intra_satd_x3_4x4)( uint8_t *fenc, uint8_t *fdec, int res[3] );
+    void (*intra_sa8d_x3_8x8)( uint8_t *fenc, uint8_t edge[33], int res[3] );
 } x264_pixel_function_t;
 
 void x264_pixel_init( int cpu, x264_pixel_function_t *pixf );
+int64_t x264_pixel_ssd_wxh( x264_pixel_function_t *pf, uint8_t *pix1, int i_pix1, uint8_t *pix2, int i_pix2, int i_width, int i_height );
 
 #endif

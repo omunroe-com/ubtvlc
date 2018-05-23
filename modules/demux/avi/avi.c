@@ -2,7 +2,7 @@
  * avi.c : AVI file Stream input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: avi.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: avi.c 14790 2006-03-18 02:06:16Z xtophe $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -27,6 +27,8 @@
 
 #include <vlc/vlc.h>
 #include <vlc/input.h>
+
+#include <vlc_interaction.h>
 
 #include "vlc_meta.h"
 #include "codecs.h"
@@ -38,12 +40,12 @@
  *****************************************************************************/
 
 #define INTERLEAVE_TEXT N_("Force interleaved method" )
-#define INTERLEAVE_LONGTEXT N_( "Force interleaved method" )
+#define INTERLEAVE_LONGTEXT N_( "Force interleaved method." )
 
 #define INDEX_TEXT N_("Force index creation")
 #define INDEX_LONGTEXT N_( \
     "Recreate a index for the AVI file. Use this if your AVI file is damaged "\
-    "or incomplete (not seekable)" )
+    "or incomplete (not seekable)." )
 
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -142,6 +144,10 @@ struct demux_sys_t
 
     /* meta */
     vlc_meta_t  *meta;
+
+    /* Progress box */
+    mtime_t    last_update;
+    int        i_dialog_id;
 };
 
 static inline off_t __EVEN( off_t i )
@@ -197,6 +203,8 @@ static int Open( vlc_object_t * p_this )
 {
     demux_t  *p_demux = (demux_t *)p_this;
     demux_sys_t     *p_sys;
+
+    vlc_bool_t       b_index = VLC_FALSE;
 
     avi_chunk_t         ck_riff;
     avi_chunk_list_t    *p_riff = (avi_chunk_list_t*)&ck_riff;
@@ -495,6 +503,8 @@ static int Open( vlc_object_t * p_this )
         }
         if( p_strn )
         {
+            /* The charset of p_strn is undefined */
+            EnsureUTF8( p_strn->p_str );
             fmt.psz_description = strdup( p_strn->p_str );
         }
         tk->p_es = es_out_Add( p_demux->out, &fmt );
@@ -509,6 +519,7 @@ static int Open( vlc_object_t * p_this )
 
     if( config_GetInt( p_demux, "avi-index" ) )
     {
+aviindex:
         if( p_sys->b_seekable )
         {
             AVI_IndexCreate( p_demux );
@@ -530,8 +541,30 @@ static int Open( vlc_object_t * p_this )
                           (mtime_t)p_avih->i_microsecperframe /
                           (mtime_t)1000000 )
     {
-        msg_Warn( p_demux, "broken or missing index, 'seek' will be axproximative or will have strange behavour" );
+        msg_Warn( p_demux, "broken or missing index, 'seek' will be "
+                           "axproximative or will have strange behaviour" );
+        if( !b_index )
+        {
+            int i_create;
+            i_create = intf_UserYesNo( p_demux, _("AVI Index") ,
+                        _( "This AVI file is broken. Seeking will not "
+                        "work correctly.\nDo you want to "
+                        "try to repair it (this might take a long time) ?" ) );
+            if( i_create == DIALOG_OK_YES )
+            {
+                b_index = VLC_TRUE;
+                msg_Dbg( p_demux, "Fixing AVI index" );
+                goto aviindex;
+            }
+            else if( i_create == DIALOG_CANCELLED )
+            {
+                /* Kill input */
+                p_demux->p_parent->b_die = VLC_TRUE;
+                goto error;
+            }
+        }
     }
+
     /* fix some BeOS MediaKit generated file */
     for( i = 0 ; i < p_sys->i_track; i++ )
     {
@@ -1134,8 +1167,8 @@ static int Seek( demux_t *p_demux, mtime_t i_date, int i_percent )
             int64_t i_pos;
 
             /* use i_percent to create a true i_date */
-            msg_Warn( p_demux, "mmh, seeking without index at %d%%"
-                      " work only for interleaved file", i_percent );
+            msg_Warn( p_demux, "seeking without index at %d%%"
+                      " only works for interleaved files", i_percent );
             if( i_percent >= 100 )
             {
                 msg_Warn( p_demux, "cannot seek so far !" );
@@ -2137,7 +2170,8 @@ static void AVI_IndexLoad_indx( demux_t *p_demux )
 
         if( !p_indx )
         {
-            msg_Warn( p_demux, "cannot find indx (misdetect/broken OpenDML file?)" );
+            msg_Warn( p_demux, "cannot find indx (misdetect/broken OpenDML "
+                               "file?)" );
             continue;
         }
 
@@ -2225,6 +2259,19 @@ static void AVI_IndexCreate( demux_t *p_demux )
 
     stream_Seek( p_demux->s, p_movi->i_chunk_pos + 12 );
     msg_Warn( p_demux, "creating index from LIST-movi, will take time !" );
+
+
+    /* Only show dialog if AVI is > 10MB */
+    p_demux->p_sys->i_dialog_id = -1;
+    if( stream_Size( p_demux->s ) > 10000000 )
+    {
+        p_demux->p_sys->i_dialog_id = intf_UserProgress( p_demux,
+                                        _( "Fixing AVI Index" ),
+                                        _( "Creating AVI Index ..." ),
+                                        0.0 );
+        p_demux->p_sys->last_update = mdate();
+    }
+
     for( ;; )
     {
         avi_packet_t pk;
@@ -2232,6 +2279,18 @@ static void AVI_IndexCreate( demux_t *p_demux )
         if( p_demux->b_die )
         {
             return;
+        }
+
+        /* Don't update dialog too often */
+        if( p_demux->p_sys->i_dialog_id > 0 &&
+            mdate() - p_demux->p_sys->last_update > 100000 )
+        {
+            int64_t i_pos = stream_Tell( p_demux->s )* 100 /
+                            stream_Size( p_demux->s );
+            float f_pos = (float)i_pos;
+            p_demux->p_sys->last_update = mdate();
+            intf_UserProgressUpdate( p_demux, p_demux->p_sys->i_dialog_id,
+                                    _( "Creating AVI Index ..." ), f_pos );
         }
 
         if( AVI_PacketGetHeader( p_demux, &pk ) )
@@ -2291,6 +2350,11 @@ static void AVI_IndexCreate( demux_t *p_demux )
     }
 
 print_stat:
+    if( p_demux->p_sys->i_dialog_id > 0 )
+    {
+        intf_UserHide( p_demux, p_demux->p_sys->i_dialog_id );
+    }
+
     for( i_stream = 0; i_stream < p_sys->i_track; i_stream++ )
     {
         msg_Dbg( p_demux,

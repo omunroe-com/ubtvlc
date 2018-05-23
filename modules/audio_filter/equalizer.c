@@ -1,8 +1,8 @@
 /*****************************************************************************
  * equalizer.c:
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: equalizer.c 12676 2005-09-25 16:49:40Z babal $
+ * Copyright (C) 2004, 2006 the VideoLAN team
+ * $Id: equalizer.c 15209 2006-04-14 09:37:39Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -50,19 +50,24 @@ static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
 
 #define PRESET_TEXT N_( "Equalizer preset" )
-#define PRESET_LONGTEXT PRESET_TEXT
+#define PRESET_LONGTEXT N_("Preset to use for the equalizer." )
 
 #define BANDS_TEXT N_( "Bands gain")
-#define BANDS_LONGTEXT N_( "Override preset bands gain in dB (-20 ... 20)" )
+/// \bug [String] missing dot
+#define BANDS_LONGTEXT N_( \
+         "Don't use presets, but manually specified bands. You need to " \
+         "provide 10 values between -20dB and 20dB, separated by spaces, " \
+         "e.g. \"0 2 4 2 0 -2 -4 -2 0\"" )
 
 #define TWOPASS_TEXT N_( "Two pass" )
-#define TWOPASS_LONGTEXT N_( "Filter twice the audio" )
+#define TWOPASS_LONGTEXT N_( "Filter the audio twice. This provides a more "  \
+         "intense effect.")
 
 #define PREAMP_TEXT N_("Global gain" )
-#define PREAMP_LONGTEXT N_("Set the global gain in dB (-20 ... 20)" )
+#define PREAMP_LONGTEXT N_("Set the global gain in dB (-20 ... 20)." )
 
 vlc_module_begin();
-    set_description( _("Equalizer 10 bands") );
+    set_description( _("Equalizer with 10 bands") );
     set_shortname( N_("Equalizer" ) );
     set_capability( "audio filter", 0 );
     set_category( CAT_AUDIO );
@@ -144,7 +149,7 @@ static int Open( vlc_object_t *p_this )
         b_fit = VLC_FALSE;
         p_filter->input.i_format = VLC_FOURCC('f','l','3','2');
         p_filter->output.i_format = VLC_FOURCC('f','l','3','2');
-        msg_Warn( p_filter, "Bad input or output format" );
+        msg_Warn( p_filter, "bad input or output format" );
     }
     if ( !AOUT_FMTS_SIMILAR( &p_filter->input, &p_filter->output ) )
     {
@@ -287,7 +292,7 @@ static int EqzInit( aout_filter_t *p_filter, int i_rate )
     else
     {
         /* TODO compute the coeffs on the fly */
-        msg_Err( p_filter, "unsupported rate" );
+        msg_Err( p_filter, "rate not supported" );
         return VLC_EGENERIC;
     }
 
@@ -359,7 +364,8 @@ static int EqzInit( aout_filter_t *p_filter, int i_rate )
         strstr( p_sys->psz_newbands, val2.psz_string ) ) || !*val2.psz_string )
     {
         var_SetString( p_aout, "equalizer-bands", p_sys->psz_newbands );
-        var_SetFloat( p_aout, "equalizer-preamp", p_sys->f_newpreamp );
+        if( p_sys->f_newpreamp == p_sys->f_gamp )
+            var_SetFloat( p_aout, "equalizer-preamp", p_sys->f_newpreamp );
     }
 
     /* Add our own callbacks */
@@ -482,10 +488,13 @@ static int PresetCallback( vlc_object_t *p_this, char const *psz_cmd,
                 p_sys->f_gamp *= pow( 10, eqz_preset_10b[i]->f_preamp / 20.0 );
                 for( j = 0; j < p_sys->i_band; j++ )
                 {
+                    lldiv_t div;
                     p_sys->f_amp[j] = EqzConvertdB(
                                         eqz_preset_10b[i]->f_amp[j] );
-                    sprintf( psz_newbands, "%s %f", psz_newbands,
-                                         eqz_preset_10b[i]->f_amp[j] );
+                    div = lldiv( eqz_preset_10b[i]->f_amp[j] * 10000000,
+                                 10000000 );
+                    sprintf( psz_newbands, "%s "I64Fd".%07u", psz_newbands,
+                                      div.quot, (unsigned int) div.rem );
                 }
                 if( p_sys->b_first == VLC_FALSE )
                 {

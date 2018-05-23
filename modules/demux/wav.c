@@ -2,7 +2,7 @@
  * wav.c : wav file input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2003 the VideoLAN team
- * $Id: wav.c 11685 2005-07-10 10:51:28Z zorglub $
+ * $Id: wav.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -191,6 +191,7 @@ static int Open( vlc_object_t * p_this )
             }
 
             if( p_sys->fmt.i_codec == VLC_FOURCC('a','r','a','w') ||
+                p_sys->fmt.i_codec == VLC_FOURCC('p','c','m',' ') ||
                 p_sys->fmt.i_codec == VLC_FOURCC('a','f','l','t') )
 
             p_sys->b_chan_reorder =
@@ -230,6 +231,7 @@ static int Open( vlc_object_t * p_this )
     case VLC_FOURCC( 'a', 'f', 'l', 't' ):
     case VLC_FOURCC( 'u', 'l', 'a', 'w' ):
     case VLC_FOURCC( 'a', 'l', 'a', 'w' ):
+    case VLC_FOURCC( 'p', 'c', 'm', ' ' ):
         FrameInfo_PCM( p_demux, &p_sys->i_frame_size,
                        &p_sys->i_frame_samples );
         break;
@@ -379,7 +381,7 @@ static int ChunkFind( demux_t *p_demux, char *fcc, unsigned int *pi_size )
 
         i_size = GetDWLE( p_peek + 4 );
 
-        msg_Dbg( p_demux, "Chunk: fcc=`%4.4s` size=%d", p_peek, i_size );
+        msg_Dbg( p_demux, "chunk: fcc=`%4.4s` size=%d", p_peek, i_size );
 
         if( !memcmp( p_peek, fcc, 4 ) )
         {

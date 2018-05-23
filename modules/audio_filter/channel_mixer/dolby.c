@@ -1,10 +1,10 @@
 /*****************************************************************************
  * dolby.c : simple decoder for dolby surround encoded streams
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: headphone.c 11664 2005-07-09 06:17:09Z courmisch $
+ * Copyright (C) 2005, 2006 the VideoLAN team
+ * $Id: dolby.c 14997 2006-03-31 15:15:07Z fkuehne $
  *
- * Authors: Boris Dorès <babal@via.ecp.fr>
+ * Authors: Boris DorÃ¨s <babal@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,8 +44,8 @@ static void DoWork    ( aout_instance_t *, aout_filter_t *, aout_buffer_t *,
  * Module descriptor
  *****************************************************************************/
 vlc_module_begin();
-    set_description( N_("Simple decoder for dolby surround encoded streams") );
-    set_shortname( _("Dolby surround decoder") );
+    set_description( N_("Simple decoder for Dolby Surround encoded streams") );
+    set_shortname( _("Dolby Surround decoder") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACODEC );
     set_capability( "audio filter", 5 );
@@ -105,7 +105,7 @@ static int Create( vlc_object_t *p_this )
     p_filter->p_sys = malloc( sizeof(struct aout_filter_sys_t) );
     if ( p_filter->p_sys == NULL )
     {
-        msg_Err( p_filter, "Out of memory" );
+        msg_Err( p_filter, "out of memory" );
         return VLC_EGENERIC;
     }
     p_filter->p_sys->i_left = -1;

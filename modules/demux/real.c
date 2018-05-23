@@ -1,8 +1,8 @@
 /*****************************************************************************
  * real.c: Real demuxer.
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: real.c 12614 2005-09-19 21:21:17Z gbazin $
+ * Copyright (C) 2004, 2006 the VideoLAN team
+ * $Id: real.c 15058 2006-04-02 14:28:18Z fkuehne $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -59,6 +59,16 @@ typedef struct
     int         i_frame;
     block_t     *p_frame;
 
+    int         i_subpacket_h;
+    int         i_subpacket_size;
+    int         i_coded_frame_size;
+    int         i_frame_size;
+
+    int         i_subpacket;
+    int         i_subpackets;
+    block_t     **p_subpackets;
+    int         i_out_subpacket;
+
 } real_track_t;
 
 struct demux_sys_t
@@ -69,12 +79,17 @@ struct demux_sys_t
     uint32_t i_data_packets;
     int64_t  i_data_offset_next;
 
+    int  i_our_duration;
+    int  i_mux_rate;
+
     int          i_track;
     real_track_t **track;
 
     uint8_t buffer[65536];
 
     int64_t     i_pcr;
+    
+    vlc_meta_t *p_meta;
 };
 
 static int Demux( demux_t *p_demux );
@@ -100,6 +115,7 @@ static int Open( vlc_object_t *p_this )
     p_demux->pf_demux = Demux;
     p_demux->pf_control = Control;
     p_demux->p_sys = p_sys = malloc( sizeof( demux_sys_t ) );
+    memset( p_sys, 0, sizeof( demux_sys_t ) );
     p_sys->i_data_offset = 0;
     p_sys->i_track = 0;
     p_sys->track   = NULL;
@@ -144,19 +160,22 @@ static void Close( vlc_object_t *p_this )
     for( i = 0; i < p_sys->i_track; i++ )
     {
         real_track_t *tk = p_sys->track[i];
+        int j = tk->i_subpackets;
 
-        if( tk->p_frame )
+        if( tk->p_frame ) block_Release( tk->p_frame );
+        es_format_Clean( &tk->fmt );
+
+        while(  j-- )
         {
-            block_Release( tk->p_frame );
+            if( tk->p_subpackets[ j ] )
+                block_Release( tk->p_subpackets[ j ] );
         }
+        if( !tk->i_subpackets ) free( tk->p_subpackets );
+
         free( tk );
     }
 
-    if( p_sys->i_track > 0 )
-    {
-        free( p_sys->track );
-    }
-
+    if( p_sys->i_track > 0 ) free( p_sys->track );
     free( p_sys );
 }
 
@@ -168,16 +187,14 @@ static int Demux( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
     uint8_t     header[18];
-    int         i_size;
-    int         i_id;
+    int         i_size, i_id, i_flags, i;
     int64_t     i_pts;
-    int         i;
     real_track_t *tk = NULL;
     vlc_bool_t  b_selected;
 
-    if( p_sys->i_data_packets >= p_sys->i_data_packets_count )
+    if( p_sys->i_data_packets >= p_sys->i_data_packets_count &&
+        p_sys->i_data_packets_count )
     {
-
         if( stream_Read( p_demux->s, header, 18 ) < 18 )
         {
             return 0;
@@ -203,8 +220,7 @@ static int Demux( demux_t *p_demux )
     i_id   = GetWBE( &header[4] );
     i_pts  = 1000 * GetDWBE( &header[6] );
     i_pts += 1000; /* Avoid 0 pts */
-
-    /* header[11] -> flags 0x02 -> keyframe */
+    i_flags= header[11]; /* flags 0x02 -> keyframe */
 
 #if 0
     msg_Dbg( p_demux, "packet %d size=%d id=%d pts=%u",
@@ -217,10 +233,7 @@ static int Demux( demux_t *p_demux )
 
     for( i = 0; i < p_sys->i_track; i++ )
     {
-        if( p_sys->track[i]->i_id == i_id )
-        {
-            tk = p_sys->track[i];
-        }
+        if( p_sys->track[i]->i_id == i_id ) tk = p_sys->track[i];
     }
 
     if( tk == NULL )
@@ -481,6 +494,71 @@ static int Demux( demux_t *p_demux )
                 }
             }
         }
+        else if( tk->fmt.i_codec == VLC_FOURCC( 'c', 'o', 'o', 'k' ) ||
+                 tk->fmt.i_codec == VLC_FOURCC('2','8','_','8') )
+        {
+            uint8_t *p_buf = p_sys->buffer;
+            int y = tk->i_subpacket / (tk->i_frame_size /tk->i_subpacket_size);
+            int i_index, i;
+
+            /* Sanity check */
+            if( i_flags & 2 ) y = tk->i_subpacket = 0;
+
+            if( tk->fmt.i_codec == VLC_FOURCC( 'c', 'o', 'o', 'k' ) )
+            for( i = 0; i < tk->i_frame_size / tk->i_subpacket_size; i++ )
+            {
+                block_t *p_block = block_New( p_demux, tk->i_subpacket_size );
+                memcpy( p_block->p_buffer, p_buf, tk->i_subpacket_size );
+                p_buf += tk->i_subpacket_size;
+
+                i_index = tk->i_subpacket_h * i +
+                    ((tk->i_subpacket_h + 1) / 2) * (y&1) + (y>>1);
+
+                p_block->i_dts = p_block->i_pts = i_pts;
+                tk->p_subpackets[i_index] = p_block;
+                tk->i_subpacket++;
+            }
+
+            if( tk->fmt.i_codec == VLC_FOURCC('2','8','_','8') )
+            for( i = 0; i < tk->i_subpacket_h / 2; i++ )
+            {
+                block_t *p_block = block_New( p_demux, tk->i_coded_frame_size);
+                memcpy( p_block->p_buffer, p_buf, tk->i_coded_frame_size );
+                p_buf += tk->i_coded_frame_size;
+
+                i_index = (i * 2 * tk->i_frame_size) /
+                    tk->i_coded_frame_size + y;
+
+                p_block->i_dts = p_block->i_pts = i_pts;
+                tk->p_subpackets[i_index] = p_block;
+                tk->i_subpacket++;
+            }
+
+            while( tk->i_out_subpacket != tk->i_subpackets &&
+                   tk->p_subpackets[tk->i_out_subpacket] )
+            {
+                block_t *p_block = tk->p_subpackets[tk->i_out_subpacket];
+                tk->p_subpackets[tk->i_out_subpacket] = 0;
+
+                if( tk->i_out_subpacket ) p_block->i_dts = p_block->i_pts = 0;
+                es_out_Send( p_demux->out, tk->p_es, p_block );
+
+                tk->i_out_subpacket++;
+            }
+
+            if( tk->i_subpacket == tk->i_subpackets &&
+                tk->i_out_subpacket != tk->i_subpackets )
+            {
+                msg_Warn( p_demux, "i_subpacket != i_out_subpacket, "
+                          "this shouldn't happen" );
+            }
+
+            if( tk->i_subpacket == tk->i_subpackets )
+            {
+                tk->i_subpacket = 0;
+                tk->i_out_subpacket = 0;
+            }
+        }
         else
         {
             block_t *p_block = block_New( p_demux, i_size );
@@ -503,9 +581,7 @@ static int Demux( demux_t *p_demux )
             {
                 memcpy( p_block->p_buffer, p_sys->buffer, i_size );
             }
-            p_block->i_dts =
-            p_block->i_pts = i_pts;
-
+            p_block->i_dts = p_block->i_pts = i_pts;
             es_out_Send( p_demux->out, tk->p_es, p_block );
         }
     }
@@ -519,13 +595,16 @@ static int Demux( demux_t *p_demux )
  *****************************************************************************/
 static int Control( demux_t *p_demux, int i_query, va_list args )
 {
-#if 0
     demux_sys_t *p_sys = p_demux->p_sys;
+#if 0
     double f, *pf;
-    int64_t i64, *pi64;
+    int64_t i64;
+#endif
+    int64_t *pi64;
 
     switch( i_query )
     {
+#if 0
         case DEMUX_GET_POSITION:
             pf = (double*) va_arg( args, double* );
             i64 = stream_Size( p_demux->s );
@@ -538,6 +617,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
                 *pf = 0.0;
             }
             return VLC_SUCCESS;
+
         case DEMUX_SET_POSITION:
             f = (double) va_arg( args, double );
             i64 = stream_Size( p_demux->s );
@@ -555,23 +635,40 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
             }
             *pi64 = 0;
             return VLC_EGENERIC;
+#endif
 
         case DEMUX_GET_LENGTH:
             pi64 = (int64_t*)va_arg( args, int64_t * );
-            if( p_sys->i_mux_rate > 0 )
+            
+            /* the commented following lines are fen's implementation, which doesn't seem to
+             * work for one reason or another -- FK */
+            /*if( p_sys->i_mux_rate > 0 )
             {
                 *pi64 = (int64_t)1000000 * ( stream_Size( p_demux->s ) / 50 ) / p_sys->i_mux_rate;
+                return VLC_SUCCESS;
+            }*/
+            if( p_sys->i_our_duration > 0 )
+            {
+                /* our stored duration is in ms, so... */
+                *pi64 = (int64_t)1000 * p_sys->i_our_duration;
+                
                 return VLC_SUCCESS;
             }
             *pi64 = 0;
             return VLC_EGENERIC;
+
+        case DEMUX_GET_META:
+        {
+            vlc_meta_t **pp_meta = (vlc_meta_t**)va_arg( args, vlc_meta_t** );
+            *pp_meta = p_sys->p_meta;
+            return VLC_SUCCESS;
+        }
 
         case DEMUX_SET_TIME:
         case DEMUX_GET_FPS:
         default:
             return VLC_EGENERIC;
     }
-#endif
     return VLC_EGENERIC;
 }
 
@@ -587,6 +684,8 @@ static int HeaderRead( demux_t *p_demux )
     uint32_t    i_size;
     int64_t     i_skip;
     int         i_version;
+    
+    p_sys->p_meta = vlc_meta_New();
 
     for( ;; )
     {
@@ -602,7 +701,11 @@ static int HeaderRead( demux_t *p_demux )
         msg_Dbg( p_demux, "object %4.4s size=%d version=%d",
                  (char*)&i_id, i_size, i_version );
 
-        if( i_size < 10 ) return VLC_EGENERIC;
+        if( i_size < 10 )
+        {
+            msg_Dbg( p_demux, "invalid size for object %4.4s", (char*)&i_id );
+            return VLC_EGENERIC;
+        }
         i_skip = i_size - 10;
 
         if( i_id == VLC_FOURCC('.','R','M','F') )
@@ -629,6 +732,10 @@ static int HeaderRead( demux_t *p_demux )
             msg_Dbg( p_demux, "    - index offset=%d", GetDWBE(&header[28]) );
             msg_Dbg( p_demux, "    - data offset=%d", GetDWBE(&header[32]) );
             msg_Dbg( p_demux, "    - num streams=%d", GetWBE(&header[36]) );
+            
+            /* set the duration for export in control */
+            p_sys->i_our_duration = (int)GetDWBE(&header[20]);
+            
             i_flags = GetWBE(&header[38]);
             msg_Dbg( p_demux, "    - flags=0x%x %s%s%s",
                      i_flags,
@@ -641,6 +748,9 @@ static int HeaderRead( demux_t *p_demux )
         {
             int i_len;
             char *psz;
+            
+            /* FIXME FIXME: should convert from whatever the character
+             * encoding of the input meta data is to UTF-8. */
 
             stream_Read( p_demux->s, header, 2 );
             if( ( i_len = GetWBE( header ) ) > 0 )
@@ -650,6 +760,8 @@ static int HeaderRead( demux_t *p_demux )
                 psz[i_len] = '\0';
 
                 msg_Dbg( p_demux, "    - title=`%s'", psz );
+                EnsureUTF8( psz );
+                vlc_meta_Add( p_sys->p_meta, VLC_META_TITLE, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -663,6 +775,8 @@ static int HeaderRead( demux_t *p_demux )
                 psz[i_len] = '\0';
 
                 msg_Dbg( p_demux, "    - author=`%s'", psz );
+                EnsureUTF8( psz );
+                vlc_meta_Add( p_sys->p_meta, VLC_META_ARTIST, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -676,6 +790,8 @@ static int HeaderRead( demux_t *p_demux )
                 psz[i_len] = '\0';
 
                 msg_Dbg( p_demux, "    - copyright=`%s'", psz );
+                EnsureUTF8( psz );
+                vlc_meta_Add( p_sys->p_meta, VLC_META_COPYRIGHT, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -689,6 +805,8 @@ static int HeaderRead( demux_t *p_demux )
                 psz[i_len] = '\0';
 
                 msg_Dbg( p_demux, "    - comment=`%s'", psz );
+                EnsureUTF8( psz );
+                vlc_meta_Add( p_sys->p_meta, VLC_META_DESCRIPTION, psz );
                 free( psz );
                 i_skip -= i_len;
             }
@@ -711,6 +829,7 @@ static int HeaderRead( demux_t *p_demux )
             msg_Dbg( p_demux, "    - start time=%d", GetDWBE(&header[18]) );
             msg_Dbg( p_demux, "    - preroll=%d", GetDWBE(&header[22]) );
             msg_Dbg( p_demux, "    - duration=%d", GetDWBE(&header[26]) );
+            
             i_skip -= 30;
 
             stream_Read( p_demux->s, header, 1 );
@@ -811,11 +930,29 @@ static int ReadCodecSpecificData( demux_t *p_demux, int i_len, int i_num )
         {
             fmt.i_codec = VLC_FOURCC( 'R','V','1','3' );
         }
+        else if( GetDWBE( &p_peek[30] ) == 0x20001000 ||
+                 GetDWBE( &p_peek[30] ) == 0x20100001 ||
+                 GetDWBE( &p_peek[30] ) == 0x20200002 )
+        {
+            fmt.i_codec = VLC_FOURCC( 'R','V','2','0' );
+        }
+        else if( GetDWBE( &p_peek[30] ) == 0x30202002 )
+        {
+            fmt.i_codec = VLC_FOURCC( 'R','V','3','0' );
+        }
+        else if( GetDWBE( &p_peek[30] ) == 0x40000000 )
+        {
+            fmt.i_codec = VLC_FOURCC( 'R','V','4','0' );
+        }
 
         msg_Dbg( p_demux, "    - video %4.4s %dx%d",
                  (char*)&fmt.i_codec, fmt.video.i_width, fmt.video.i_height );
 
         tk = malloc( sizeof( real_track_t ) );
+        tk->i_out_subpacket = 0;
+        tk->i_subpacket = 0;
+        tk->i_subpackets = 0;
+        tk->p_subpackets = NULL;
         tk->i_id = i_num;
         tk->fmt = fmt;
         tk->i_frame = 0;
@@ -902,16 +1039,14 @@ static int ReadCodecSpecificData( demux_t *p_demux, int i_len, int i_num )
             break;
 
         case VLC_FOURCC('c','o','o','k'):
-            fmt.i_extra = GetDWBE( p_peek ); p_peek += 4;
-            fmt.p_extra = malloc( fmt.i_extra + 10 );
+            fmt.audio.i_blockalign = i_subpacket_size;
+            if( !(fmt.i_extra = GetDWBE( p_peek )) ) break;
+            fmt.p_extra = malloc( fmt.i_extra );
+            memcpy( fmt.p_extra, p_peek + 4, fmt.i_extra );
+            break;
 
-            ((short*)(fmt.p_extra))[0] = i_subpacket_size;
-            ((short*)(fmt.p_extra))[1] = i_subpacket_h;
-            ((short*)(fmt.p_extra))[2] = i_flavor;
-            ((short*)(fmt.p_extra))[3] = i_coded_frame_size;
-            ((short*)(fmt.p_extra))[4] = fmt.i_extra;
-            if( fmt.i_extra ) memcpy( fmt.p_extra + 10, p_peek, fmt.i_extra );
-            fmt.i_extra += 10;
+        case VLC_FOURCC('2','8','_','8'):
+            fmt.audio.i_blockalign = i_coded_frame_size;
             break;
 
         default:
@@ -922,21 +1057,42 @@ static int ReadCodecSpecificData( demux_t *p_demux, int i_len, int i_num )
 
         if( fmt.i_codec != 0 )
         {
+            int i;
+
             msg_Dbg( p_demux, "        - extra data=%d", fmt.i_extra );
-            {
-                int i;
-                for( i = 0; i < fmt.i_extra; i++ )
-                {
-                    msg_Dbg( p_demux, "          data[%d] = 0x%x", i,
-                             ((uint8_t*)fmt.p_extra)[i] );
-                }
-            }
 
             tk = malloc( sizeof( real_track_t ) );
             tk->i_id = i_num;
             tk->fmt = fmt;
             tk->i_frame = 0;
             tk->p_frame = NULL;
+
+            tk->i_subpacket_h = i_subpacket_h;
+            tk->i_subpacket_size = i_subpacket_size;
+            tk->i_coded_frame_size = i_coded_frame_size;
+            tk->i_frame_size = i_frame_size;
+
+            tk->i_out_subpacket = 0;
+            tk->i_subpacket = 0;
+            tk->i_subpackets = 0;
+            tk->p_subpackets = NULL;
+            if( fmt.i_codec == VLC_FOURCC('c','o','o','k') )
+            {
+                tk->i_subpackets =
+                    i_subpacket_h * i_frame_size / tk->i_subpacket_size;
+                tk->p_subpackets =
+                    malloc( tk->i_subpackets * sizeof(block_t *) );
+            }
+            else if( fmt.i_codec == VLC_FOURCC('2','8','_','8') )
+            {
+                tk->i_subpackets =
+                    i_subpacket_h * i_frame_size / tk->i_coded_frame_size;
+                tk->p_subpackets =
+                    malloc( tk->i_subpackets * sizeof(block_t *) );
+            }
+
+            for( i = 0; i < tk->i_subpackets; i++ ) tk->p_subpackets[i] = NULL;
+
             tk->p_es = es_out_Add( p_demux->out, &fmt );
 
             TAB_APPEND( p_sys->i_track, p_sys->track, tk );

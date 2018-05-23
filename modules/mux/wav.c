@@ -1,8 +1,8 @@
 /*****************************************************************************
  * wav.c: wav muxer module for vlc
  *****************************************************************************
- * Copyright (C) 2004 the VideoLAN team
- * $Id: wav.c 12090 2005-08-09 15:20:23Z jpsaman $
+ * Copyright (C) 2004, 2006 the VideoLAN team
+ * $Id: wav.c 14918 2006-03-25 12:54:27Z fkuehne $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -171,7 +171,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         return VLC_EGENERIC;
     }
 
-    msg_Dbg( p_mux, "adding input %i channels, %iHz",
+    msg_Dbg( p_mux, "adding %i input channels, %iHz",
              p_input->p_fmt->audio.i_channels,
              p_input->p_fmt->audio.i_rate );
 

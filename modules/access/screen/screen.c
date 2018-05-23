@@ -2,7 +2,7 @@
  * screen.c: Screen capture module.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: screen.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: screen.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,16 +36,16 @@
  *****************************************************************************/
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for screen capture " \
-    "streams. This value should be set in millisecond units." )
+    "Caching value for screen capture. "\
+    "This value should be set in milliseconds." )
 #define FPS_TEXT N_("Frame rate")
 #define FPS_LONGTEXT N_( \
-    "Allows you to set the desired frame rate for the capture." )
+    "Desired frame rate for the capture." )
 
 #ifdef WIN32
 #define FRAGS_TEXT N_("Capture fragment size")
 #define FRAGS_LONGTEXT N_( \
-    "Allows you optimize the capture by fragmenting the screen in chunks " \
+    "Optimize the capture by fragmenting the screen in chunks " \
     "of predefined height (16 might be a good value, and 0 means disabled)." )
 #endif
 

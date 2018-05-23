@@ -2,7 +2,7 @@
  * vlcplugin.cpp: a VLC plugin for Mozilla
  *****************************************************************************
  * Copyright (C) 2002-2005 the VideoLAN team
- * $Id: vlcplugin.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlcplugin.cpp 15273 2006-04-19 09:13:26Z damienf $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -41,7 +41,6 @@
 #undef XP_UNIX
 #endif
 
-#include "vlcpeer.h"
 #include "vlcplugin.h"
 
 /*****************************************************************************
@@ -94,38 +93,5 @@ VlcIntf* VlcPlugin::GetPeer()
 
     NS_ADDREF( p_peer );
     return p_peer;
-}
-
-void VlcPlugin::SetFileName(const char * filename)
-{
-#if 0
-    FILE * fh;
-    fh = fopen(filename, "rb");
-    if(!fh)
-    {
-        fprintf(stderr, "Error while opening %s.\n", filename);
-        return;
-    }
-    fseek(fh, 0, SEEK_END);
-    m_lSize = ftell(fh);
-    m_szSound = (char*) malloc(m_lSize);
-    if(!m_szSound)
-    {
-        fprintf(stderr, "Error while allocating memory.\n");
-        fclose(fh);
-        return;
-    }
-    rewind(fh);
-    long pos = 0;
-    do
-    {
-        pos += fread(m_szSound + pos, 1, m_lSize - pos, fh);
-        fprintf(stderr, "pos = %d\n", pos);
-    }
-    while (pos < m_lSize -1);
-    fclose (fh);
-    fprintf(stderr, "File loaded\n");
-#endif
-    return;
 }
 

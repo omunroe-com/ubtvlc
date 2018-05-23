@@ -3,7 +3,7 @@
  * This header provides a portable threads implementation.
  *****************************************************************************
  * Copyright (C) 1999, 2002 the VideoLAN team
- * $Id: vlc_threads_funcs.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc_threads_funcs.h 14644 2006-03-05 15:32:01Z courmisch $
  *
  * Authors: Jean-Marc Dressler <polux@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -64,7 +64,7 @@ VLC_EXPORT( void, __vlc_thread_join,   ( vlc_object_t *, char *, int ) );
 #define vlc_mutex_lock( P_MUTEX )                                           \
     __vlc_mutex_lock( __FILE__, __LINE__, P_MUTEX )
 
-static inline int __vlc_mutex_lock( char * psz_file, int i_line,
+static inline int __vlc_mutex_lock( const char * psz_file, int i_line,
                                     vlc_mutex_t * p_mutex )
 {
     int i_result;
@@ -136,7 +136,7 @@ static inline int __vlc_mutex_lock( char * psz_file, int i_line,
 #define vlc_mutex_unlock( P_MUTEX )                                         \
     __vlc_mutex_unlock( __FILE__, __LINE__, P_MUTEX )
 
-static inline int __vlc_mutex_unlock( char * psz_file, int i_line,
+static inline int __vlc_mutex_unlock( const char * psz_file, int i_line,
                                       vlc_mutex_t *p_mutex )
 {
     int i_result;
@@ -222,7 +222,7 @@ static inline int __vlc_mutex_unlock( char * psz_file, int i_line,
 #define vlc_cond_signal( P_COND )                                           \
     __vlc_cond_signal( __FILE__, __LINE__, P_COND )
 
-static inline int __vlc_cond_signal( char * psz_file, int i_line,
+static inline int __vlc_cond_signal( const char * psz_file, int i_line,
                                      vlc_cond_t *p_condvar )
 {
     int i_result;
@@ -352,7 +352,7 @@ static inline int __vlc_cond_signal( char * psz_file, int i_line,
 #define vlc_cond_wait( P_COND, P_MUTEX )                                     \
     __vlc_cond_wait( __FILE__, __LINE__, P_COND, P_MUTEX  )
 
-static inline int __vlc_cond_wait( char * psz_file, int i_line,
+static inline int __vlc_cond_wait( const char * psz_file, int i_line,
                                    vlc_cond_t *p_condvar, vlc_mutex_t *p_mutex )
 {
     int i_result;

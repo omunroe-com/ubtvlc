@@ -2,7 +2,7 @@
  * vout_pictures.c : picture management functions
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: vout_pictures.c 12933 2005-10-23 11:07:38Z gbazin $
+ * $Id: vout_pictures.c 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -445,19 +445,18 @@ void vout_PlacePicture( vout_thread_t *p_vout,
     }
 
     if( p_vout->fmt_in.i_visible_width * (int64_t)p_vout->fmt_in.i_sar_num *
-        *pi_height /
-        (p_vout->fmt_in.i_visible_height * p_vout->fmt_in.i_sar_den) >
-        *pi_width )
+        *pi_height / p_vout->fmt_in.i_visible_height /
+        p_vout->fmt_in.i_sar_den > *pi_width )
     {
         *pi_height = p_vout->fmt_in.i_visible_height *
             (int64_t)p_vout->fmt_in.i_sar_den * *pi_width /
-            (p_vout->fmt_in.i_visible_width * p_vout->fmt_in.i_sar_num);
+            p_vout->fmt_in.i_visible_width / p_vout->fmt_in.i_sar_num;
     }
     else
     {
         *pi_width = p_vout->fmt_in.i_visible_width *
             (int64_t)p_vout->fmt_in.i_sar_num * *pi_height /
-            (p_vout->fmt_in.i_visible_height * p_vout->fmt_in.i_sar_den);
+            p_vout->fmt_in.i_visible_height / p_vout->fmt_in.i_sar_den;
     }
 
     switch( p_vout->i_alignment & VOUT_ALIGN_HMASK )

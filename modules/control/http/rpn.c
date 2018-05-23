@@ -1,8 +1,8 @@
 /*****************************************************************************
  * rpn.c : RPN evaluator for the HTTP Interface
  *****************************************************************************
- * Copyright (C) 2001-2005 the VideoLAN team
- * $Id: http.c 12225 2005-08-18 10:01:30Z massiot $
+ * Copyright (C) 2001-2006 the VideoLAN team
+ * $Id: rpn.c 15294 2006-04-21 07:56:51Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@netcourrier.com>
  *          Laurent Aimar <fenrir@via.ecp.fr>
@@ -20,10 +20,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "http.h"
+#include "vlc_url.h"
+#include "vlc_meta.h"
 
 static vlc_object_t *GetVLCObject( intf_thread_t *p_intf,
                                    const char *psz_object,
@@ -352,7 +354,7 @@ void E_(EvaluateRPN)( intf_thread_t *p_intf, mvar_t  *vars,
             char *tmp;
 
             E_(ExtractURIValue)( url, name, value, 512 );
-            E_(DecodeEncodedURI)( value );
+            decode_URI( value );
             tmp = E_(FromUTF8)( p_intf, value );
             E_(SSPush)( st, tmp );
             free( tmp );
@@ -419,44 +421,8 @@ void E_(EvaluateRPN)( intf_thread_t *p_intf, mvar_t  *vars,
         {
             char *psz_src = E_(SSPop)( st );
             char *psz_dest;
-            char *str = psz_src;
 
-            p = psz_dest = malloc( strlen( str ) * 6 + 1 );
-
-            while( *str != '\0' )
-            {
-                if( *str == '&' )
-                {
-                    strcpy( p, "&amp;" );
-                    p += 5;
-                }
-                else if( *str == '\"' )
-                {
-                    strcpy( p, "&quot;" );
-                    p += 6;
-                }
-                else if( *str == '\'' )
-                {
-                    strcpy( p, "&#039;" );
-                    p += 6;
-                }
-                else if( *str == '<' )
-                {
-                    strcpy( p, "&lt;" );
-                    p += 4;
-                }
-                else if( *str == '>' )
-                {
-                    strcpy( p, "&gt;" );
-                    p += 4;
-                }
-                else
-                {
-                    *p++ = *str;
-                }
-                str++;
-            }
-            *p = '\0';
+            psz_dest = convert_xml_special_chars( psz_src );
 
             E_(SSPush)( st, psz_dest );
             free( psz_src );
@@ -729,7 +695,9 @@ void E_(EvaluateRPN)( intf_thread_t *p_intf, mvar_t  *vars,
                 case VLC_VAR_FLOAT:
                 {
                     char psz_value[20];
-                    snprintf( psz_value, sizeof(psz_value), "%f", val.f_float );
+                    lldiv_t value = lldiv( val.f_float * 1000000, 1000000 );
+                    snprintf( psz_value, sizeof(psz_value), I64Fd".%06u",
+                                    value.quot, (unsigned int)value.rem );
                     E_(SSPush)( st, psz_value );
                     break;
                 }
@@ -749,6 +717,21 @@ void E_(EvaluateRPN)( intf_thread_t *p_intf, mvar_t  *vars,
 
             if( b_need_release && p_object != NULL )
                 vlc_object_release( p_object );
+        }
+        else if( !strcmp( s, "vlc_object_exists" ) )
+        {
+            char *psz_object = E_(SSPop)( st );
+            vlc_bool_t b_need_release;
+
+            vlc_object_t *p_object = GetVLCObject( p_intf, psz_object,
+                                                   &b_need_release );
+            if( b_need_release && p_object != NULL )
+                vlc_object_release( p_object );
+
+            if( p_object != NULL )
+                E_(SSPush)( st, "1" );
+            else
+                E_(SSPush)( st, "0" );
         }
         else if( !strcmp( s, "vlc_config_set" ) )
         {
@@ -808,8 +791,10 @@ void E_(EvaluateRPN)( intf_thread_t *p_intf, mvar_t  *vars,
             case VLC_VAR_FLOAT:
             {
                 char psz_string[20];
-                snprintf( psz_string, sizeof(psz_string), "%f",
-                          config_GetFloat( p_intf, psz_variable ) );
+                lldiv_t value = lldiv( config_GetFloat( p_intf, psz_variable )
+                                       * 1000000, 1000000 );
+                snprintf( psz_string, sizeof(psz_string), I64Fd".%06u",
+                          value.quot, (unsigned int)value.rem );
                 E_(SSPush)( st, psz_string );
                 break;
             }
@@ -906,6 +891,162 @@ void E_(EvaluateRPN)( intf_thread_t *p_intf, mvar_t  *vars,
             }
             msg_Dbg( p_intf, "requested to move playlist item %d to %d",
                      i_pos, i_newpos);
+        }
+        else if( !strcmp( s, "playlist_sort" ) )
+        {
+            int i_order = E_(SSPopN)( st, vars );
+            int i_sort = E_(SSPopN)( st, vars );
+            i_order = i_order % 2;
+            i_sort = i_sort % 9;
+            playlist_RecursiveNodeSort(  p_sys->p_playlist,
+                                         p_sys->p_playlist->p_general,
+                                         i_sort, i_order );
+            msg_Dbg( p_intf, "requested sort playlist by : %d in order : %d",
+                     i_sort, i_order );
+        }
+        else if( !strcmp( s, "services_discovery_add" ) )
+        {
+            char *psz_sd = E_(SSPop)( st );
+            playlist_ServicesDiscoveryAdd( p_sys->p_playlist, psz_sd );
+            free( psz_sd );
+        }
+        else if( !strcmp( s, "services_discovery_remove" ) )
+        {
+            char *psz_sd = E_(SSPop)( st );
+            playlist_ServicesDiscoveryRemove( p_sys->p_playlist, psz_sd );
+            free( psz_sd );
+        }
+        else if( !strcmp( s, "services_discovery_is_loaded" ) )
+        {
+            char *psz_sd = E_(SSPop)( st );
+            E_(SSPushN)( st,
+            playlist_IsServicesDiscoveryLoaded( p_sys->p_playlist, psz_sd ) );
+            free( psz_sd );
+        }
+        else if( !strcmp( s, "vlc_volume_set" ) )
+        {
+            char *psz_vol = E_(SSPop)( st );
+            int i_value;
+            audio_volume_t i_volume;
+            aout_VolumeGet( p_intf, &i_volume );
+            if( psz_vol[0] == '+' )
+            {
+                i_value = atoi( psz_vol );
+                if( (i_volume + i_value) > AOUT_VOLUME_MAX )
+                    aout_VolumeSet( p_intf, AOUT_VOLUME_MAX );
+                else
+                    aout_VolumeSet( p_intf, i_volume + i_value );
+            }
+            else if( psz_vol[0] == '-' )
+            {
+                i_value = atoi( psz_vol );
+                if( (i_volume + i_value) < AOUT_VOLUME_MIN )
+                    aout_VolumeSet( p_intf, AOUT_VOLUME_MIN );
+                else
+                    aout_VolumeSet( p_intf, i_volume + i_value );
+            }
+            else if( strstr( psz_vol, "%") != NULL )
+            {
+                i_value = atoi( psz_vol );
+                if( i_value < 0 ) i_value = 0;
+                if( i_value > 400 ) i_value = 400;
+                aout_VolumeSet( p_intf, (i_value * (AOUT_VOLUME_MAX - AOUT_VOLUME_MIN))/400+AOUT_VOLUME_MIN);
+            }
+            else
+            {
+                i_value = atoi( psz_vol );
+                if( i_value > AOUT_VOLUME_MAX ) i_value = AOUT_VOLUME_MAX;
+                if( i_value < AOUT_VOLUME_MIN ) i_value = AOUT_VOLUME_MIN;
+                aout_VolumeSet( p_intf, i_value );
+            }
+            aout_VolumeGet( p_intf, &i_volume );
+            free( psz_vol );
+        }
+        else if( !strcmp( s, "vlc_get_meta" ) )
+        {
+            char *psz_meta = E_(SSPop)( st );
+            char *psz_val = NULL;
+            if( p_sys->p_input && p_sys->p_input->input.p_item )
+            {
+#define p_item  p_sys->p_input->input.p_item
+                if( !strcmp( psz_meta, "ARTIST" ) )
+                {
+                    psz_val = vlc_input_item_GetInfo( p_item,
+                                _(VLC_META_INFO_CAT), _(VLC_META_ARTIST) );
+                }
+                else if( !strcmp( psz_meta, "TITLE" ) )
+                {
+                    psz_val = vlc_input_item_GetInfo( p_item,
+                                _(VLC_META_INFO_CAT), _(VLC_META_TITLE) );
+                    if( psz_val == NULL )
+                        psz_val == strdup( p_item->psz_name );
+                }
+                else if( !strcmp( psz_meta, "ALBUM" ) )
+                {
+                    psz_val = vlc_input_item_GetInfo( p_item,
+                                _(VLC_META_INFO_CAT), _(VLC_META_COLLECTION) );
+                }
+                else
+                {
+                    psz_val = vlc_input_item_GetInfo( p_item,
+                                            _(VLC_META_INFO_CAT), psz_meta );
+                }
+#undef p_item
+            }
+            if( psz_val == NULL ) psz_val = strdup( "" );
+            E_(SSPush)( st, psz_val );
+            free( psz_meta );
+            free( psz_val );
+        }
+        else if( !strcmp( s, "vlm_command" ) || !strcmp( s, "vlm_cmd" ) )
+        {
+            char *psz_elt;
+            char *psz_cmd = strdup( "" );
+            char *psz_error;
+            vlm_message_t *vlm_answer;
+
+            /* make sure that we have a vlm object */
+            if( p_intf->p_sys->p_vlm == NULL )
+                p_intf->p_sys->p_vlm = vlm_New( p_intf );
+
+
+            /* vlm command uses the ';' delimiter
+             * (else we can't know when to stop) */
+            while( strcmp( psz_elt = E_(SSPop)( st ), "" )
+                   && strcmp( psz_elt, ";" ) )
+            {
+                char *psz_buf =
+                    (char *)malloc( strlen( psz_cmd ) + strlen( psz_elt ) + 2 );
+                sprintf( psz_buf, "%s %s", psz_cmd, psz_elt );
+                free( psz_cmd );
+                free( psz_elt );
+                psz_cmd = psz_buf;
+            }
+
+            msg_Dbg( p_intf, "executing vlm command: %s", psz_cmd );
+            vlm_ExecuteCommand( p_intf->p_sys->p_vlm, psz_cmd, &vlm_answer );
+
+            if( vlm_answer->psz_value == NULL )
+            {
+                psz_error = strdup( "" );
+            }
+            else
+            {
+                psz_error = malloc( strlen(vlm_answer->psz_name) +
+                                    strlen(vlm_answer->psz_value) +
+                                    strlen( " : ") + 1 );
+                sprintf( psz_error , "%s : %s" , vlm_answer->psz_name,
+                                                 vlm_answer->psz_value );
+            }
+
+            E_(mvar_AppendNewVar)( vars, "vlm_error", psz_error );
+            /* this is kind of a duplicate but we need to have the message
+             * without the command name for the "export" command */
+            E_(mvar_AppendNewVar)( vars, "vlm_value", vlm_answer->psz_value );
+            vlm_MessageDelete( vlm_answer );
+
+            free( psz_cmd );
+            free( psz_error );
         }
         else
         {

@@ -2,7 +2,7 @@
  * vcd.c : VCD input module for vlc
  *****************************************************************************
  * Copyright (C) 2000-2004 the VideoLAN team
- * $Id: vcd.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vcd.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Author: Johan Bilien <jobi@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -39,8 +39,8 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for cdda streams. This " \
-    "value should be set in milliseconds units." )
+    "Caching value for VCDs. This " \
+    "value should be set in milliseconds." )
 
 vlc_module_begin();
     set_shortname( _("VCD"));
@@ -124,6 +124,11 @@ static int Open( vlc_object_t *p_this )
         }
     }
 
+#ifdef WIN32
+    if( psz_dup[0] && psz_dup[1] == ':' &&
+        psz_dup[2] == '\\' && psz_dup[3] == '\0' ) psz_dup[2] = '\0';
+#endif
+
     /* Open VCD */
     if( !(vcddev = ioctl_Open( p_this, psz_dup )) )
     {
@@ -168,8 +173,8 @@ static int Open( vlc_object_t *p_this )
     {
         input_title_t *t = p_sys->title[i] = vlc_input_title_New();
 
-        fprintf( stderr, "title[%d] start=%d\n", i, p_sys->p_sectors[1+i] );
-        fprintf( stderr, "title[%d] end=%d\n", i, p_sys->p_sectors[i+2] );
+        msg_Dbg( p_access, "title[%d] start=%d\n", i, p_sys->p_sectors[1+i] );
+        msg_Dbg( p_access, "title[%d] end=%d\n", i, p_sys->p_sectors[i+2] );
 
         t->i_size = ( p_sys->p_sectors[i+2] - p_sys->p_sectors[i+1] ) *
                     (int64_t)VCD_DATA_SIZE;
@@ -491,3 +496,4 @@ static int EntryPoints( access_t *p_access )
 
     return VLC_SUCCESS;
 }
+

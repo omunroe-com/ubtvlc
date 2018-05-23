@@ -2,7 +2,7 @@
  * block.c: Data blocks management functions
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: block.c 12954 2005-10-24 17:08:54Z md $
+ * $Id: block.c 14755 2006-03-14 13:08:48Z dionoea $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -70,7 +70,6 @@ block_t *__block_New( vlc_object_t *p_obj, int i_size )
     p_block->i_dts          = 0;
     p_block->i_length       = 0;
     p_block->i_rate         = 0;
-    p_block->i_seqno        = 0;
     p_block->i_buffer       = i_size;
     p_block->p_buffer       =
         &p_sys->p_allocated_buffer[BLOCK_PADDING_SIZE +
@@ -152,7 +151,7 @@ block_fifo_t *__block_FifoNew( vlc_object_t *p_obj )
 {
     block_fifo_t *p_fifo;
 
-    p_fifo = malloc( sizeof( vlc_object_t ) );
+    p_fifo = malloc( sizeof( block_fifo_t ) );
     vlc_mutex_init( p_obj, &p_fifo->lock );
     vlc_cond_init( p_obj, &p_fifo->wait );
     p_fifo->i_depth = p_fifo->i_size = 0;

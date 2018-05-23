@@ -2,7 +2,7 @@
  * playlist.h:  Playlist import module common functions
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: playlist.h 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: playlist.h 15386 2006-04-28 12:09:04Z dionoea $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 char *E_(ProcessMRL)( char *, char * );
@@ -42,3 +42,11 @@ void E_(Close_B4S) ( vlc_object_t * );
 
 int E_(Import_DVB) ( vlc_object_t * );
 void E_(Close_DVB) ( vlc_object_t * );
+
+int E_(Import_podcast) ( vlc_object_t * );
+void E_(Close_podcast) ( vlc_object_t * );
+
+int E_(xspf_import_Activate) ( vlc_object_t * );
+
+int E_(Import_Shoutcast) ( vlc_object_t * );
+void E_(Close_Shoutcast) ( vlc_object_t * );

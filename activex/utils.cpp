@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "utils.h"
@@ -82,6 +82,7 @@ HRESULT GetObjectProperty(LPUNKNOWN object, DISPID dispID, VARIANT& v)
     {
         DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
         VARIANT vres;
+        VariantInit(&vres);
         hr = pDisp->Invoke(dispID, IID_NULL, LOCALE_USER_DEFAULT,
                 DISPATCH_PROPERTYGET, &dispparamsNoArgs, &vres, NULL, NULL);
         if( SUCCEEDED(hr) )

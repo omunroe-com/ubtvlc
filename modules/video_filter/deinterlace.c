@@ -2,7 +2,7 @@
  * deinterlace.c : deinterlacer plugin for vlc
  *****************************************************************************
  * Copyright (C) 2000, 2001, 2002, 2003 the VideoLAN team
- * $Id: deinterlace.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: deinterlace.c 15030 2006-04-01 20:33:59Z sam $
  *
  * Author: Sam Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -72,13 +72,19 @@ static void MergeGeneric ( void *, const void *, const void *, size_t );
 static void MergeAltivec ( void *, const void *, const void *, size_t );
 #endif
 #if defined(CAN_COMPILE_MMXEXT)
-static void MergeMMX     ( void *, const void *, const void *, size_t );
+static void MergeMMXEXT  ( void *, const void *, const void *, size_t );
+#endif
+#if defined(CAN_COMPILE_3DNOW)
+static void Merge3DNow   ( void *, const void *, const void *, size_t );
 #endif
 #if defined(CAN_COMPILE_SSE)
 static void MergeSSE2    ( void *, const void *, const void *, size_t );
 #endif
 #if defined(CAN_COMPILE_MMXEXT) || defined(CAN_COMPILE_SSE)
 static void EndMMX       ( void );
+#endif
+#if defined(CAN_COMPILE_3DNOW)
+static void End3DNow     ( void );
 #endif
 
 static int  SendEvents   ( vlc_object_t *, char const *,
@@ -100,10 +106,10 @@ static int FilterCallback ( vlc_object_t *, char const *,
  * Module descriptor
  *****************************************************************************/
 #define MODE_TEXT N_("Deinterlace mode")
-#define MODE_LONGTEXT N_("Default deinterlace method to use for local playback")
+#define MODE_LONGTEXT N_("Deinterlace method to use for local playback.")
 
-#define SOUT_MODE_TEXT N_("Deinterlace mode")
-#define SOUT_MODE_LONGTEXT N_("Default deinterlace methode to use for streaming")
+#define SOUT_MODE_TEXT N_("Streaming deinterlace mode")
+#define SOUT_MODE_LONGTEXT N_("Deinterlace method to use for streaming.")
 
 #define FILTER_CFG_PREFIX "sout-deinterlace-"
 
@@ -217,10 +223,18 @@ static int Create( vlc_object_t *p_this )
     else
 #endif
 #if defined(CAN_COMPILE_MMXEXT)
-    if( p_vout->p_libvlc->i_cpu & CPU_CAPABILITY_MMX )
+    if( p_vout->p_libvlc->i_cpu & CPU_CAPABILITY_MMXEXT )
     {
-        p_vout->p_sys->pf_merge = MergeMMX;
+        p_vout->p_sys->pf_merge = MergeMMXEXT;
         p_vout->p_sys->pf_end_merge = EndMMX;
+    }
+    else
+#endif
+#if defined(CAN_COMPILE_3DNOW)
+    if( p_vout->p_libvlc->i_cpu & CPU_CAPABILITY_3DNOW )
+    {
+        p_vout->p_sys->pf_merge = Merge3DNow;
+        p_vout->p_sys->pf_end_merge = End3DNow;
     }
     else
 #endif
@@ -319,6 +333,7 @@ static int Init( vout_thread_t *p_vout )
             p_vout->output.i_width  = p_vout->render.i_width;
             p_vout->output.i_height = p_vout->render.i_height;
             p_vout->output.i_aspect = p_vout->render.i_aspect;
+            p_vout->fmt_out = p_vout->fmt_in;
             break;
 
         default:
@@ -358,13 +373,7 @@ static vout_thread_t *SpawnRealVout( vout_thread_t *p_vout )
 
     msg_Dbg( p_vout, "spawning the real video output" );
 
-    fmt.i_width = fmt.i_visible_width = p_vout->output.i_width;
-    fmt.i_height = fmt.i_visible_height = p_vout->output.i_height;
-    fmt.i_x_offset = fmt.i_y_offset = 0;
-    fmt.i_chroma = p_vout->output.i_chroma;
-    fmt.i_aspect = p_vout->output.i_aspect;
-    fmt.i_sar_num = p_vout->output.i_aspect * fmt.i_height / fmt.i_width;
-    fmt.i_sar_den = VOUT_ASPECT_FACTOR;
+    fmt = p_vout->fmt_out;
 
     switch( p_vout->render.i_chroma )
     {
@@ -375,7 +384,8 @@ static vout_thread_t *SpawnRealVout( vout_thread_t *p_vout )
         {
         case DEINTERLACE_MEAN:
         case DEINTERLACE_DISCARD:
-            fmt.i_height = fmt.i_visible_height = p_vout->output.i_height / 2;
+            fmt.i_height /= 2; fmt.i_visible_height /= 2; fmt.i_y_offset /= 2;
+            fmt.i_sar_den *= 2;
             p_real_vout = vout_Create( p_vout, &fmt );
             break;
 
@@ -445,8 +455,25 @@ static void Destroy( vlc_object_t *p_this )
  *****************************************************************************/
 static void Render ( vout_thread_t *p_vout, picture_t *p_pic )
 {
+    vout_sys_t *p_sys = p_vout->p_sys;
     picture_t *pp_outpic[2];
 
+    p_vout->fmt_out.i_x_offset = p_sys->p_vout->fmt_in.i_x_offset =
+        p_vout->fmt_in.i_x_offset;
+    p_vout->fmt_out.i_y_offset = p_sys->p_vout->fmt_in.i_y_offset =
+        p_vout->fmt_in.i_y_offset;
+    p_vout->fmt_out.i_visible_width = p_sys->p_vout->fmt_in.i_visible_width =
+        p_vout->fmt_in.i_visible_width;
+    p_vout->fmt_out.i_visible_height = p_sys->p_vout->fmt_in.i_visible_height =
+        p_vout->fmt_in.i_visible_height;
+    if( p_vout->p_sys->i_mode == DEINTERLACE_MEAN ||
+        p_vout->p_sys->i_mode == DEINTERLACE_DISCARD )
+    {
+        p_vout->fmt_out.i_y_offset /= 2; p_sys->p_vout->fmt_in.i_y_offset /= 2;
+        p_vout->fmt_out.i_visible_height /= 2;
+        p_sys->p_vout->fmt_in.i_visible_height /= 2;
+    }
+ 
     pp_outpic[0] = pp_outpic[1] = NULL;
 
     vlc_mutex_lock( &p_vout->p_sys->filter_lock );
@@ -567,7 +594,7 @@ static void RenderDiscard( vout_thread_t *p_vout,
                 p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                           p_pic->p[i_plane].i_pitch );
 
-                p_out += p_pic->p[i_plane].i_pitch;
+                p_out += p_outpic->p[i_plane].i_pitch;
                 p_in += 2 * p_pic->p[i_plane].i_pitch;
             }
             break;
@@ -582,10 +609,10 @@ static void RenderDiscard( vout_thread_t *p_vout,
                 {
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                     p_in += i_increment;
                 }
             }
@@ -595,7 +622,7 @@ static void RenderDiscard( vout_thread_t *p_vout,
                 {
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                     p_in += i_increment;
                 }
             }
@@ -636,7 +663,7 @@ static void RenderBob( vout_thread_t *p_vout,
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
                     p_in += p_pic->p[i_plane].i_pitch;
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                 }
 
                 p_out_end -= 2 * p_outpic->p[i_plane].i_pitch;
@@ -646,13 +673,13 @@ static void RenderBob( vout_thread_t *p_vout,
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
 
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
 
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
 
                     p_in += 2 * p_pic->p[i_plane].i_pitch;
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                 }
 
                 p_vout->p_vlc->pf_memcpy( p_out, p_in,
@@ -662,7 +689,7 @@ static void RenderBob( vout_thread_t *p_vout,
                 if( i_field == 0 )
                 {
                     p_in += p_pic->p[i_plane].i_pitch;
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
                 }
@@ -675,7 +702,7 @@ static void RenderBob( vout_thread_t *p_vout,
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
                     p_in += p_pic->p[i_plane].i_pitch;
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                 }
 
                 p_out_end -= 2 * p_outpic->p[i_plane].i_pitch;
@@ -687,13 +714,13 @@ static void RenderBob( vout_thread_t *p_vout,
                         p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                                   p_pic->p[i_plane].i_pitch );
 
-                        p_out += p_pic->p[i_plane].i_pitch;
+                        p_out += p_outpic->p[i_plane].i_pitch;
 
                         p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                                   p_pic->p[i_plane].i_pitch );
 
                         p_in += 2 * p_pic->p[i_plane].i_pitch;
-                        p_out += p_pic->p[i_plane].i_pitch;
+                        p_out += p_outpic->p[i_plane].i_pitch;
                     }
                 }
                 else
@@ -703,7 +730,7 @@ static void RenderBob( vout_thread_t *p_vout,
                         p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                                   p_pic->p[i_plane].i_pitch );
 
-                        p_out += p_pic->p[i_plane].i_pitch;
+                        p_out += p_outpic->p[i_plane].i_pitch;
                         p_in += 2 * p_pic->p[i_plane].i_pitch;
                     }
                 }
@@ -715,7 +742,7 @@ static void RenderBob( vout_thread_t *p_vout,
                 if( i_field == 0 )
                 {
                     p_in += p_pic->p[i_plane].i_pitch;
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                     p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                               p_pic->p[i_plane].i_pitch );
                 }
@@ -751,7 +778,7 @@ static void RenderLinear( vout_thread_t *p_vout,
             p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                       p_pic->p[i_plane].i_pitch );
             p_in += p_pic->p[i_plane].i_pitch;
-            p_out += p_pic->p[i_plane].i_pitch;
+            p_out += p_outpic->p[i_plane].i_pitch;
         }
 
         p_out_end -= 2 * p_outpic->p[i_plane].i_pitch;
@@ -761,13 +788,13 @@ static void RenderLinear( vout_thread_t *p_vout,
             p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                       p_pic->p[i_plane].i_pitch );
 
-            p_out += p_pic->p[i_plane].i_pitch;
+            p_out += p_outpic->p[i_plane].i_pitch;
 
             Merge( p_out, p_in, p_in + 2 * p_pic->p[i_plane].i_pitch,
                    p_pic->p[i_plane].i_pitch );
 
             p_in += 2 * p_pic->p[i_plane].i_pitch;
-            p_out += p_pic->p[i_plane].i_pitch;
+            p_out += p_outpic->p[i_plane].i_pitch;
         }
 
         p_vout->p_vlc->pf_memcpy( p_out, p_in,
@@ -777,7 +804,7 @@ static void RenderLinear( vout_thread_t *p_vout,
         if( i_field == 0 )
         {
             p_in += p_pic->p[i_plane].i_pitch;
-            p_out += p_pic->p[i_plane].i_pitch;
+            p_out += p_outpic->p[i_plane].i_pitch;
             p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                       p_pic->p[i_plane].i_pitch );
         }
@@ -807,7 +834,7 @@ static void RenderMean( vout_thread_t *p_vout,
             Merge( p_out, p_in, p_in + p_pic->p[i_plane].i_pitch,
                    p_pic->p[i_plane].i_pitch );
 
-            p_out += p_pic->p[i_plane].i_pitch;
+            p_out += p_outpic->p[i_plane].i_pitch;
             p_in += 2 * p_pic->p[i_plane].i_pitch;
         }
     }
@@ -838,7 +865,7 @@ static void RenderBlend( vout_thread_t *p_vout,
                 /* First line: simple copy */
                 p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                           p_pic->p[i_plane].i_pitch );
-                p_out += p_pic->p[i_plane].i_pitch;
+                p_out += p_outpic->p[i_plane].i_pitch;
 
                 /* Remaining lines: mean value */
                 for( ; p_out < p_out_end ; )
@@ -846,7 +873,7 @@ static void RenderBlend( vout_thread_t *p_vout,
                     Merge( p_out, p_in, p_in + p_pic->p[i_plane].i_pitch,
                            p_pic->p[i_plane].i_pitch );
 
-                    p_out += p_pic->p[i_plane].i_pitch;
+                    p_out += p_outpic->p[i_plane].i_pitch;
                     p_in += p_pic->p[i_plane].i_pitch;
                 }
                 break;
@@ -855,7 +882,7 @@ static void RenderBlend( vout_thread_t *p_vout,
                 /* First line: simple copy */
                 p_vout->p_vlc->pf_memcpy( p_out, p_in,
                                           p_pic->p[i_plane].i_pitch );
-                p_out += p_pic->p[i_plane].i_pitch;
+                p_out += p_outpic->p[i_plane].i_pitch;
 
                 /* Remaining lines: mean value */
                 if( i_plane == Y_PLANE )
@@ -865,7 +892,7 @@ static void RenderBlend( vout_thread_t *p_vout,
                         Merge( p_out, p_in, p_in + p_pic->p[i_plane].i_pitch,
                                p_pic->p[i_plane].i_pitch );
 
-                        p_out += p_pic->p[i_plane].i_pitch;
+                        p_out += p_outpic->p[i_plane].i_pitch;
                         p_in += p_pic->p[i_plane].i_pitch;
                     }
                 }
@@ -877,7 +904,7 @@ static void RenderBlend( vout_thread_t *p_vout,
                         Merge( p_out, p_in, p_in + p_pic->p[i_plane].i_pitch,
                                p_pic->p[i_plane].i_pitch );
 
-                        p_out += p_pic->p[i_plane].i_pitch;
+                        p_out += p_outpic->p[i_plane].i_pitch;
                         p_in += 2*p_pic->p[i_plane].i_pitch;
                     }
                 }
@@ -918,8 +945,8 @@ static void MergeGeneric( void *_p_dest, const void *_p_s1,
 }
 
 #if defined(CAN_COMPILE_MMXEXT)
-static void MergeMMX( void *_p_dest, const void *_p_s1, const void *_p_s2,
-                      size_t i_bytes )
+static void MergeMMXEXT( void *_p_dest, const void *_p_s1, const void *_p_s2,
+                         size_t i_bytes )
 {
     uint8_t* p_dest = (uint8_t*)_p_dest;
     const uint8_t *p_s1 = (const uint8_t *)_p_s1;
@@ -929,6 +956,35 @@ static void MergeMMX( void *_p_dest, const void *_p_s1, const void *_p_s2,
     {
         __asm__  __volatile__( "movq %2,%%mm1;"
                                "pavgb %1, %%mm1;"
+                               "movq %%mm1, %0" :"=m" (*p_dest):
+                                                 "m" (*p_s1),
+                                                 "m" (*p_s2) );
+        p_dest += 8;
+        p_s1 += 8;
+        p_s2 += 8;
+    }
+
+    p_end += 8;
+
+    while( p_dest < p_end )
+    {
+        *p_dest++ = ( (uint16_t)(*p_s1++) + (uint16_t)(*p_s2++) ) >> 1;
+    }
+}
+#endif
+
+#if defined(CAN_COMPILE_3DNOW)
+static void Merge3DNow( void *_p_dest, const void *_p_s1, const void *_p_s2,
+                        size_t i_bytes )
+{
+    uint8_t* p_dest = (uint8_t*)_p_dest;
+    const uint8_t *p_s1 = (const uint8_t *)_p_s1;
+    const uint8_t *p_s2 = (const uint8_t *)_p_s2;
+    uint8_t* p_end = p_dest + i_bytes - 8;
+    while( p_dest < p_end )
+    {
+        __asm__  __volatile__( "movq %2,%%mm1;"
+                               "pavgusb %1, %%mm1;"
                                "movq %%mm1, %0" :"=m" (*p_dest):
                                                  "m" (*p_s1),
                                                  "m" (*p_s2) );
@@ -984,6 +1040,13 @@ static void MergeSSE2( void *_p_dest, const void *_p_s1, const void *_p_s2,
 static void EndMMX( void )
 {
     __asm__ __volatile__( "emms" :: );
+}
+#endif
+
+#if defined(CAN_COMPILE_3DNOW)
+static void End3DNow( void )
+{
+    __asm__ __volatile__( "femms" :: );
 }
 #endif
 

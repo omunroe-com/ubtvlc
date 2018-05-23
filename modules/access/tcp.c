@@ -2,7 +2,7 @@
  * tcp.c: TCP input module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: tcp.c 12706 2005-09-29 14:30:26Z jpsaman $
+ * $Id: tcp.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -36,8 +36,8 @@
  *****************************************************************************/
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for TCP streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for TCP streams. This " \
+    "value should be set in milliseconds." )
 
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -110,7 +110,7 @@ static int Open( vlc_object_t *p_this )
     p_access->info.i_seekpoint = 0;
     p_access->p_sys = p_sys = malloc( sizeof( access_sys_t ) );
 
-    p_sys->fd = net_OpenTCP( p_access, psz_dup, atoi( psz_parser ) );
+    p_sys->fd = net_ConnectTCP( p_access, psz_dup, atoi( psz_parser ) );
     free( psz_dup );
 
     if( p_sys->fd < 0 )

@@ -2,10 +2,10 @@
  * item-ext.c : Playlist item management functions (act on the playlist)
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: item-ext.c 12493 2005-09-08 18:18:54Z bigben $
+ * $Id: item-ext.c 14725 2006-03-11 21:19:12Z dionoea $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
- *          Clément Stenac <zorglub@videolan.org>
+ *          ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
@@ -243,6 +243,12 @@ int playlist_AddItem( playlist_t *p_playlist, playlist_item_t *p_item,
         p_playlist->status.i_status = PLAYLIST_RUNNING;
     }
 
+    if( i_mode & PLAYLIST_PREPARSE &&
+        var_CreateGetBool( p_playlist, "auto-preparse" ) )
+    {
+        playlist_PreparseEnqueue( p_playlist, &p_item->input );
+    }
+
     vlc_mutex_unlock( &p_playlist->object_lock );
 
     if( b_end == VLC_FALSE )
@@ -362,6 +368,11 @@ int playlist_NodeAddItem( playlist_t *p_playlist, playlist_item_t *p_item,
             input_StopThread( p_playlist->p_input );
         }
         p_playlist->status.i_status = PLAYLIST_RUNNING;
+    }
+    if( i_mode & PLAYLIST_PREPARSE &&
+        var_CreateGetBool( p_playlist, "auto-preparse" ) )
+    {
+        playlist_PreparseEnqueue( p_playlist, &p_item->input );
     }
 
     vlc_mutex_unlock( &p_playlist->object_lock );
@@ -867,6 +878,8 @@ int playlist_Move( playlist_t * p_playlist, int i_pos, int i_newpos )
 /**
  * Moves an item
  *
+ * This function must be entered with the playlist lock
+ *
  * \param p_playlist the playlist
  * \param p_item the item to move
  * \param p_node the new parent of the item
@@ -879,36 +892,40 @@ int playlist_TreeMove( playlist_t * p_playlist, playlist_item_t *p_item,
 {
     int i;
     playlist_item_t *p_detach = NULL;
-#if 0
-    if( i_view == ALL_VIEWS )
-    {
-        for( i = 0 ; i < p_playlist->i_views; i++ )
-        {
-            playlist_TreeMove( p_playlist, p_item, p_node, i_newpos,
-                               p_playlist->pp_views[i] );
-        }
-    }
-#endif
+    struct item_parent_t *p_parent;
 
-    /* Find the parent */
+    if( p_node->i_children == -1 ) return VLC_EGENERIC;
+
+    /* Detach from the parent */
     for( i = 0 ; i< p_item->i_parents; i++ )
     {
         if( p_item->pp_parents[i]->i_view == i_view )
         {
+            int j;
             p_detach = p_item->pp_parents[i]->p_parent;
-            break;
+            for( j = 0; j < p_detach->i_children; j++ )
+            {
+                if( p_detach->pp_children[j] == p_item ) break;
+            }
+            REMOVE_ELEM( p_detach->pp_children, p_detach->i_children, j );
+            p_detach->i_serial++;
+            free( p_item->pp_parents[i] );
+            REMOVE_ELEM( p_item->pp_parents, p_item->i_parents, i );
+            i--;
         }
     }
-    if( p_detach == NULL )
-    {
-        msg_Err( p_playlist, "item not found in view %i", i_view );
-        return VLC_EGENERIC;
-    }
-
-    /* Detach from the parent */
-//    playlist_NodeDetach( p_detach, p_item );
 
     /* Attach to new parent */
+    INSERT_ELEM( p_node->pp_children, p_node->i_children, i_newpos, p_item );
+
+    p_parent = malloc( sizeof( struct item_parent_t ) );
+    p_parent->p_parent = p_node;
+    p_parent->i_view = i_view;
+
+    INSERT_ELEM( p_item->pp_parents, p_item->i_parents, p_item->i_parents,
+                 p_parent );
+    p_node->i_serial++;
+    p_item->i_serial++;
 
     return VLC_SUCCESS;
 }

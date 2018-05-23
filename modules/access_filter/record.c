@@ -1,8 +1,8 @@
 /*****************************************************************************
  * record.c
  *****************************************************************************
- * Copyright (C) 2005 the VideoLAN team
- * $Id: demux.c 7546 2004-04-29 13:53:29Z gbazin $
+ * Copyright (C) 2005-2006 the VideoLAN team
+ * $Id: record.c 15138 2006-04-07 21:45:01Z xtophe $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -32,6 +32,7 @@
 
 #include "vlc_keys.h"
 #include <vlc_osd.h>
+#include "charset.h"
 #include <errno.h>
 #include <time.h>
 
@@ -41,7 +42,7 @@
 
 #define RECORD_PATH_TXT N_("Record directory")
 #define RECORD_PATH_LONGTXT N_( \
-    "Allows you to specify the directory where the record will be stored" )
+    "Directory where the record will be stored." )
 
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -304,6 +305,7 @@ static void Notify( access_t *p_access, vlc_bool_t b_dump )
     vout_thread_t *p_vout;
 
     p_vout = vlc_object_find( p_access, VLC_OBJECT_VOUT, FIND_ANYWHERE );
+    if( !p_vout ) return;
 
     if( p_vout != p_sys->p_vout )
     {
@@ -356,7 +358,7 @@ static void Dump( access_t *p_access, uint8_t *p_buffer, int i_buffer )
     if( !p_sys->f )
     {
         input_thread_t *p_input;
-        char *psz_name = NULL;
+        char *psz_name = NULL, *psz;
         time_t t = time(NULL);
         struct tm l;
 
@@ -394,17 +396,45 @@ static void Dump( access_t *p_access, uint8_t *p_buffer, int i_buffer )
         if( psz_name == NULL )
             psz_name = strdup( "Unknown" );
 
-        asprintf( &p_sys->psz_file, "%s/%s %d-%d-%d %.2dh%.2dm%.2ds.%s",
-                  p_sys->psz_path, psz_name,
+        asprintf( &p_sys->psz_file, "%s %d-%d-%d %.2dh%.2dm%.2ds.%s",
+                  psz_name,
                   l.tm_mday, l.tm_mon+1, l.tm_year+1900,
                   l.tm_hour, l.tm_min, l.tm_sec,
                   p_sys->psz_ext );
 
         free( psz_name );
 
+        /* Remove all forbidden characters (except (back)slashes) */
+        for( psz = p_sys->psz_file; *psz; psz++ )
+        {
+            unsigned char c = (unsigned char)*psz;
+
+            /* Even if many OS accept non printable characters, we remove
+             * them to avoid confusing users */
+            if( ( c < 32 ) || ( c == 127 ) )
+                *psz = '_';
+#if defined (WIN32) || defined (UNDER_CE)
+            /* Windows has a lot of forbidden characters, even if it has
+             * fewer than DOS. */
+            if( strchr( "\"*:<>?|", c ) != NULL )
+                *psz = '_';
+#endif
+        }
+
+        psz_name=strdup(p_sys->psz_file);
+
+#if defined (WIN32) || defined (UNDER_CE)
+#define DIR_SEP "\\"
+#else
+#define DIR_SEP "/"
+#endif
+        asprintf(&p_sys->psz_file, "%s" DIR_SEP "%s",
+                 p_sys->psz_path, psz_name);
+        free(psz_name);
+
         msg_Dbg( p_access, "dump in file '%s'", p_sys->psz_file );
 
-        p_sys->f = fopen( p_sys->psz_file, "wb" );
+        p_sys->f = utf8_fopen( p_sys->psz_file, "wb" );
         if( p_sys->f == NULL )
         {
             msg_Err( p_access, "cannot open file '%s' (%s)",

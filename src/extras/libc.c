@@ -2,7 +2,7 @@
  * libc.c: Extra libc function for some systems.
  *****************************************************************************
  * Copyright (C) 2002 the VideoLAN team
- * $Id: libc.c 12505 2005-09-09 22:10:57Z gbazin $
+ * $Id: libc.c 14953 2006-03-28 20:29:28Z zorglub $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Samuel Hocevar <sam@zoy.org>
@@ -22,7 +22,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <string.h>                                              /* strdup() */
 #include <stdlib.h>
@@ -182,7 +182,7 @@ char * vlc_strcasestr( const char *psz_big, const char *psz_little )
 /*****************************************************************************
  * vasprintf:
  *****************************************************************************/
-#if !defined(HAVE_VASPRINTF) || defined(SYS_DARWIN) || defined(SYS_BEOS)
+#if !defined(HAVE_VASPRINTF) || defined(__APPLE__) || defined(SYS_BEOS)
 int vlc_vasprintf(char **strp, const char *fmt, va_list ap)
 {
     /* Guess we need no more than 100 bytes. */
@@ -228,7 +228,7 @@ int vlc_vasprintf(char **strp, const char *fmt, va_list ap)
 /*****************************************************************************
  * asprintf:
  *****************************************************************************/
-#if !defined(HAVE_ASPRINTF) || defined(SYS_DARWIN) || defined(SYS_BEOS)
+#if !defined(HAVE_ASPRINTF) || defined(__APPLE__) || defined(SYS_BEOS)
 int vlc_asprintf( char **strp, const char *fmt, ... )
 {
     va_list args;
@@ -340,6 +340,19 @@ int64_t vlc_strtoll( const char *nptr, char **endptr, int base )
 int64_t vlc_atoll( const char *nptr )
 {
     return strtoll( nptr, (char **)NULL, 10 );
+}
+#endif
+
+/*****************************************************************************
+ * lldiv: returns quotient and remainder
+ *****************************************************************************/
+#if defined(SYS_BEOS)
+lldiv_t vlc_lldiv( long long numer, long long denom )
+{
+    lldiv_t d;
+    d.quot = numer / denom;
+    d.rem  = numer % denom;
+    return d;
 }
 #endif
 
@@ -498,6 +511,7 @@ int vlc_scandir( const char *name, struct dirent ***namelist,
 }
 #endif
 
+#if defined (WIN32) || !defined (HAVE_SHARED_LIBVLC)
 /*****************************************************************************
  * dgettext: gettext for plugins.
  *****************************************************************************/
@@ -510,6 +524,7 @@ char *vlc_dgettext( const char *package, const char *msgid )
     return (char *)msgid;
 #endif
 }
+#endif
 
 /*****************************************************************************
  * count_utf8_string: returns the number of characters in the string.
@@ -529,17 +544,14 @@ static int count_utf8_string( const char *psz_string )
  * wraptext: inserts \n at convenient places to wrap the text.
  *           Returns the modified string in a new buffer.
  *****************************************************************************/
-char *vlc_wraptext( const char *psz_text, int i_line, vlc_bool_t b_utf8 )
+char *vlc_wraptext( const char *psz_text, int i_line )
 {
     int i_len;
     char *psz_line, *psz_new_text;
 
     psz_line = psz_new_text = strdup( psz_text );
 
-    if( b_utf8 )
-        i_len = count_utf8_string( psz_text );
-    else
-        i_len = strlen( psz_text );
+    i_len = count_utf8_string( psz_text );
 
     while( i_len > i_line )
     {
@@ -548,10 +560,7 @@ char *vlc_wraptext( const char *psz_text, int i_line, vlc_bool_t b_utf8 )
         int i_count = 0;
         while( i_count <= i_line && *psz_parser != '\n' )
         {
-            if( b_utf8 )
-            {
-                while( *((unsigned char *)psz_parser) >= 0x80UL ) psz_parser++;
-            }
+            while( *((unsigned char *)psz_parser) >= 0x80UL ) psz_parser++;
             psz_parser++;
             i_count++;
         }
@@ -565,10 +574,7 @@ char *vlc_wraptext( const char *psz_text, int i_line, vlc_bool_t b_utf8 )
         /* Find the furthest space. */
         while( psz_parser > psz_line && *psz_parser != ' ' )
         {
-            if( b_utf8 )
-            {
-                while( *((unsigned char *)psz_parser) >= 0x80UL ) psz_parser--;
-            }
+            while( *((unsigned char *)psz_parser) >= 0x80UL ) psz_parser--;
             psz_parser--;
             i_count--;
         }
@@ -583,10 +589,7 @@ char *vlc_wraptext( const char *psz_text, int i_line, vlc_bool_t b_utf8 )
         /* Wrapping has failed. Find the first space or newline */
         while( i_count < i_len && *psz_parser != ' ' && *psz_parser != '\n' )
         {
-            if( b_utf8 )
-            {
-                while( *((unsigned char *)psz_parser) >= 0x80UL ) psz_parser++;
-            }
+            while( *((unsigned char *)psz_parser) >= 0x80UL ) psz_parser++;
             psz_parser++;
             i_count++;
         }
@@ -610,11 +613,12 @@ vlc_iconv_t vlc_iconv_open( const char *tocode, const char *fromcode )
 #endif
 }
 
-size_t vlc_iconv( vlc_iconv_t cd, char **inbuf, size_t *inbytesleft,
+size_t vlc_iconv( vlc_iconv_t cd, const char **inbuf, size_t *inbytesleft,
                   char **outbuf, size_t *outbytesleft )
 {
 #if defined(HAVE_ICONV)
-    return iconv( cd, inbuf, inbytesleft, outbuf, outbytesleft );
+    return iconv( cd, (ICONV_CONST char **)inbuf, inbytesleft,
+                  outbuf, outbytesleft );
 #else
     int i_bytes;
 
@@ -892,7 +896,7 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
 
         tv.tv_sec = 0;
         tv.tv_usec = 10000;
-        
+
         i_ret = select( pi_stdin[0] > pi_stdout[0] ? pi_stdin[0] + 1 :
                         pi_stdout[0] + 1, &readfds, &writefds, NULL, &tv );
         if ( i_ret > 0 )
@@ -954,10 +958,10 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
     }
 
 #elif defined( WIN32 ) && !defined( UNDER_CE )
-    SECURITY_ATTRIBUTES saAttr; 
-    PROCESS_INFORMATION piProcInfo; 
+    SECURITY_ATTRIBUTES saAttr;
+    PROCESS_INFORMATION piProcInfo;
     STARTUPINFO siStartInfo;
-    BOOL bFuncRetn = FALSE; 
+    BOOL bFuncRetn = FALSE;
     HANDLE hChildStdinRd, hChildStdinWr, hChildStdoutRd, hChildStdoutWr;
     DWORD i_status;
     char *psz_cmd, *p_env, *p;
@@ -965,14 +969,14 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
     int i_size;
 
     /* Set the bInheritHandle flag so pipe handles are inherited. */
-    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-    saAttr.bInheritHandle = TRUE; 
-    saAttr.lpSecurityDescriptor = NULL; 
+    saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
 
     /* Create a pipe for the child process's STDOUT. */
-    if ( !CreatePipe( &hChildStdoutRd, &hChildStdoutWr, &saAttr, 0 ) ) 
+    if ( !CreatePipe( &hChildStdoutRd, &hChildStdoutWr, &saAttr, 0 ) )
     {
-        msg_Err( p_object, "stdout pipe creation failed" ); 
+        msg_Err( p_object, "stdout pipe creation failed" );
         return -1;
     }
 
@@ -980,9 +984,9 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
     SetHandleInformation( hChildStdoutRd, HANDLE_FLAG_INHERIT, 0 );
 
     /* Create a pipe for the child process's STDIN. */
-    if ( !CreatePipe( &hChildStdinRd, &hChildStdinWr, &saAttr, 0 ) ) 
+    if ( !CreatePipe( &hChildStdinRd, &hChildStdinWr, &saAttr, 0 ) )
     {
-        msg_Err( p_object, "stdin pipe creation failed" ); 
+        msg_Err( p_object, "stdin pipe creation failed" );
         return -1;
     }
 
@@ -991,10 +995,10 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
 
     /* Set up members of the PROCESS_INFORMATION structure. */
     ZeroMemory( &piProcInfo, sizeof(PROCESS_INFORMATION) );
- 
+
     /* Set up members of the STARTUPINFO structure. */
     ZeroMemory( &siStartInfo, sizeof(STARTUPINFO) );
-    siStartInfo.cb = sizeof(STARTUPINFO); 
+    siStartInfo.cb = sizeof(STARTUPINFO);
     siStartInfo.hStdError = hChildStdoutWr;
     siStartInfo.hStdOutput = hChildStdoutWr;
     siStartInfo.hStdInput = hChildStdinRd;
@@ -1041,25 +1045,25 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
         ppsz_parser++;
     }
     *p = '\0';
- 
+
     /* Create the child process. */
     bFuncRetn = CreateProcess( NULL,
-          psz_cmd,       // command line 
-          NULL,          // process security attributes 
-          NULL,          // primary thread security attributes 
-          TRUE,          // handles are inherited 
-          0,             // creation flags 
+          psz_cmd,       // command line
+          NULL,          // process security attributes
+          NULL,          // primary thread security attributes
+          TRUE,          // handles are inherited
+          0,             // creation flags
           p_env,
           psz_cwd,
-          &siStartInfo,  // STARTUPINFO pointer 
-          &piProcInfo ); // receives PROCESS_INFORMATION 
+          &siStartInfo,  // STARTUPINFO pointer
+          &piProcInfo ); // receives PROCESS_INFORMATION
 
     free( psz_cmd );
     free( p_env );
-   
-    if ( bFuncRetn == 0 ) 
+
+    if ( bFuncRetn == 0 )
     {
-        msg_Err( p_object, "child creation failed" ); 
+        msg_Err( p_object, "child creation failed" );
         return -1;
     }
 
@@ -1079,7 +1083,7 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
     /* Close the write end of the pipe before reading from the
      * read end of the pipe. */
     CloseHandle(hChildStdoutWr);
- 
+
     /* Read output from the child process. */
     *pi_data = 0;
     *pp_data = malloc( 1025 );  /* +1 for \0 */
@@ -1087,10 +1091,10 @@ int __vlc_execve( vlc_object_t *p_object, int i_argc, char **ppsz_argv,
     while ( !p_object->b_die )
     {
         DWORD i_read;
-        if ( !ReadFile( hChildStdoutRd, &(*pp_data)[*pi_data], 1024, &i_read, 
+        if ( !ReadFile( hChildStdoutRd, &(*pp_data)[*pi_data], 1024, &i_read,
                         NULL )
               || i_read == 0 )
-            break; 
+            break;
         *pi_data += i_read;
         *pp_data = realloc( *pp_data, *pi_data + 1025 );
     }

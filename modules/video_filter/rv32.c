@@ -2,7 +2,7 @@
  * rv32.c: conversion plugin to RV32 format.
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: rv32.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: rv32.c 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Author: Cyril Deguet <asmax@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************

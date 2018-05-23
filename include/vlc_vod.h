@@ -2,7 +2,7 @@
  * vlc_vod.h: interface for VoD server modules
  *****************************************************************************
  * Copyright (C) 2000, 2001 the VideoLAN team
- * $Id: vlc_vod.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc_vod.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_VOD_H
@@ -32,13 +32,13 @@ struct vod_t
     module_t  *p_module;
     vod_sys_t *p_sys;
 
-    vod_media_t * (*pf_media_new)   ( vod_t *, char *, input_item_t * );
+    vod_media_t * (*pf_media_new)   ( vod_t *, const char *, input_item_t * );
     void          (*pf_media_del)   ( vod_t *, vod_media_t * );
     int           (*pf_media_add_es)( vod_t *, vod_media_t *, es_format_t * );
     void          (*pf_media_del_es)( vod_t *, vod_media_t *, es_format_t * );
 
     /* Owner properties */
-    int (*pf_media_control) ( void *, vod_media_t *, char *, int, va_list );
+    int (*pf_media_control) ( void *, vod_media_t *, const char *, int, va_list );
     void *p_data;
 };
 

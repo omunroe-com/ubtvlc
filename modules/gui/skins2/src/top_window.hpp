@@ -2,10 +2,10 @@
  * top_window.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: top_window.hpp 12912 2005-10-22 11:57:29Z asmax $
+ * $Id: top_window.hpp 15481 2006-04-30 18:07:40Z asmax $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
- *          Olivier Teulière <ipkiss@via.ecp.fr>
+ *          Olivier TeuliÃ¨re <ipkiss@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef TOP_WINDOW_HPP
@@ -50,6 +50,7 @@ class TopWindow: public GenericWindow
         /// Methods to process OS events.
         virtual void processEvent( EvtRefresh &rEvtRefresh );
         virtual void processEvent( EvtFocus &rEvtFocus );
+        virtual void processEvent( EvtMenu &rEvtMenu );
         virtual void processEvent( EvtMotion &rEvtMotion );
         virtual void processEvent( EvtMouse &rEvtMouse );
         virtual void processEvent( EvtLeave &rEvtLeave );
@@ -83,6 +84,9 @@ class TopWindow: public GenericWindow
     protected:
         /// Actually show the window
         virtual void innerShow();
+
+        /// Actually hide the window
+        virtual void innerHide();
 
     private:
         /// Change the active layout

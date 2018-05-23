@@ -1,6 +1,7 @@
 NULL =
 
-EXTRA_DIST = $(DIST_rsrc) $(DIST_fonts)
+EXTRA_DIST = $(DIST_rsrc) $(DIST_fonts) \
+	$(skins2_default_vlt_FILES)
 
 pkgdatadir = $(datadir)/vlc
 
@@ -9,6 +10,7 @@ dist_pkgdata_DATA = \
 	$(DIST_icons16) \
 	$(DIST_icons32) \
 	$(DIST_icons48) \
+	$(DIST_icons128) \
 	$(NULL)
 
 nobase_dist_pkgdata_DATA = \
@@ -18,17 +20,21 @@ nobase_dist_pkgdata_DATA = \
 	$(DIST_osdmenu_dvd) \
 	$(NULL)
 
+nobase_pkgdata_DATA = skins2/default.vlt
+
+skins2/default.vlt: $(skins2_default_vlt_FILES)
+
+MOSTLYCLEANFILES = $(nobase_pkgdata_DATA)
+
 DIST_fonts = \
 	$(NULL)
 
 DIST_rsrc = \
-	vlc.icns \
 	newres.h \
 	resource.h \
 	vlc_wince_rc.rc \
 	vlc_beos.rsrc \
 	vlc_win32_rc.rc \
-	vlc-icons.xcf \
 	$(NULL)
 
 DIST_pda = \
@@ -43,60 +49,139 @@ DIST_pda = \
         $(NULL)
 
 DIST_icons16 = \
-	gnome-vlc16x16.png \
-	gvlc16x16.png \
-	kvlc16x16.png \
-	qvlc16x16.png \
 	vlc16x16.png \
 	vlc16x16.xpm \
 	$(NULL)
 
 DIST_icons32 = \
-	gnome-vlc32x32.png \
-	gnome-vlc32x32.xpm \
-	gvlc32x32.png \
-	gvlc32x32.xpm \
-	kvlc32x32.png \
-	kvlc32x32.xpm \
-	qvlc32x32.png \
-	qvlc32x32.xpm \
 	vlc32x32.png \
 	vlc32x32.xpm \
 	$(NULL)
 
 DIST_icons48 = \
-	gnome-vlc48x48.png \
-	gvlc48x48.ico \
-	gvlc48x48.png \
-	kvlc48x48.png \
-	qvlc48x48.png \
-	vlc48x48new.ico \
+	vlc48x48.ico \
 	vlc48x48.png \
 	$(NULL)
 
-DIST_skins2 = \
-	skins2/default.vlt \
-	\
-	skins2/fonts/FreeSans.ttf \
-	skins2/skin.dtd \
-	skins2/skin.catalog \
+DIST_icons128 = \
+	vlc128x128.png \
 	$(NULL)
 
+DIST_skins2 = \
+	skins2/fonts/FreeSans.ttf \
+	skins2/fonts/FreeSansBold.ttf \
+	skins2/skin.dtd \
+	skins2/skin.catalog \
+	skins2/winamp2.xml \
+	$(NULL)
+
+skins2_default_vlt_FILES = \
+        skins2/default/main/pause_over.png \
+        skins2/default/main/main_up.png \
+        skins2/default/main/timeslider.png \
+        skins2/default/main/main_down.png \
+        skins2/default/main/main.png \
+        skins2/default/main/dvd_prevtitle.png \
+        skins2/default/main/dvd_nexttitle.png \
+        skins2/default/main/dvd_nextchapter.png \
+        skins2/default/main/pause_up.png \
+        skins2/default/main/main_over.png \
+        skins2/default/main/pause_down.png \
+        skins2/default/main/dvd_prevchapter.png \
+        skins2/default/main/vol_bg.png \
+        skins2/default/main/vol_mask.png \
+        skins2/default/main/vol_slider.png \
+        skins2/default/main/dvd_menu.png \
+        skins2/default/switch.png \
+        skins2/default/font.otf \
+        skins2/default/credits.png \
+        skins2/default/theme.xml \
+        skins2/default/playlist/plscroller.png \
+        skins2/default/playlist/playlist_down.png \
+        skins2/default/playlist/playtreeglyphs.png \
+        skins2/default/playlist/playlist_up.png \
+        skins2/default/playlist/playlist_over.png \
+        skins2/default/playlist/playlist.png \
+        skins2/default/minimal.png \
+        skins2/default/equalizer.png
+
 DIST_http = \
-	http/index.html \
-	http/info.html \
-	http/admin/index.html \
-	http/admin/browse.html \
-	http/admin/dboxfiles.html \
-	http/admin/.access \
-	http/vlm/edit.html \
-	http/vlm/index.html \
-	http/vlm/new.html \
-	http/style.css \
-	http/webcam.html \
+	http/.hosts \
+	http/dialogs/.hosts \
+	http/dialogs/browse \
+	http/dialogs/footer \
+	http/dialogs/input \
+	http/dialogs/main \
+	http/dialogs/mosaic \
+	http/dialogs/playlist \
+	http/dialogs/sout \
+	http/dialogs/vlm \
 	http/favicon.ico \
-	http/cone_minus.png \
-	http/cone_plus.png \
+	http/images/delete.png \
+	http/images/delete_small.png \
+	http/images/eject.png \
+	http/images/empty.png \
+	http/images/fullscreen.png \
+	http/images/help.png \
+	http/images/info.png \
+	http/images/loop.png \
+	http/images/minus.png \
+	http/images/next.png \
+	http/images/pause.png \
+	http/images/play.png \
+	http/images/playlist.png \
+	http/images/playlist_small.png \
+	http/images/plus.png \
+	http/images/prev.png \
+	http/images/refresh.png \
+	http/images/repeat.png \
+	http/images/sd.png \
+	http/images/shuffle.png \
+	http/images/slider_bar.png \
+	http/images/slider_left.png \
+	http/images/slider_point.png \
+	http/images/slider_right.png \
+	http/images/slow.png \
+	http/images/sort.png \
+	http/images/sout.png \
+	http/images/speaker.png \
+	http/images/speaker_mute.png \
+	http/images/stop.png \
+	http/images/vlc16x16.png \
+	http/images/volume_down.png \
+	http/images/volume_up.png \
+	http/images/white.png \
+	http/images/white_cross_small.png \
+	http/index.html \
+	http/js/functions.js \
+	http/js/mosaic.js \
+	http/js/vlm.js \
+	http/mosaic.html \
+	http/old/.hosts \
+	http/old/admin/.access \
+	http/old/admin/browse.html \
+	http/old/admin/dboxfiles.html \
+	http/old/admin/index.html \
+	http/old/cone_minus.png \
+	http/old/cone_plus.png \
+	http/old/index.html \
+	http/old/info.html \
+	http/old/style.css \
+	http/old/vlm/edit.html \
+	http/old/vlm/index.html \
+	http/old/vlm/new.html \
+	http/old/vlm/show.html \
+	http/old/webcam.html \
+	http/requests/browse.xml \
+	http/requests/playlist.xml \
+	http/requests/status.xml \
+	http/requests/vlm.xml \
+	http/requests/vlm_cmd.xml \
+	http/requests/readme \
+	http/style.css \
+	http/iehacks.css \
+	http/vlm.html \
+	http/vlm_export.html \
 	$(NULL)
 
 DIST_osdmenu_default = \
@@ -162,4 +247,8 @@ DIST_osdmenu_dvd = \
 	osdmenu/dvd/volume/volume05.png \
 	osdmenu/dvd/unselect/barroff.png \
 	$(NULL)
+
+skins2/%.vlt:
+	mkdir -p skins2
+	tar cvvzf $@ --exclude .svn -C $(srcdir)/skins2 $*/
 

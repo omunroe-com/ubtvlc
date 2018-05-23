@@ -30,12 +30,60 @@
 #include <inttypes.h>
 #endif
 #include <stdarg.h>
+#include <stdlib.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
 #define X264_VERSION "" // no configure script for msvc
 #endif
 
+/* threads */
+#ifdef __WIN32__
+#include <windows.h>
+#define pthread_t               HANDLE
+#define pthread_create(t,u,f,d) *(t)=CreateThread(NULL,0,f,d,0,NULL)
+#define pthread_join(t,s)       { WaitForSingleObject(t,INFINITE); \
+                                  CloseHandle(t); } 
+#define HAVE_PTHREAD 1
+
+#elif defined(SYS_BEOS)
+#include <kernel/OS.h>
+#define pthread_t               thread_id
+#define pthread_create(t,u,f,d) { *(t)=spawn_thread(f,"",10,d); \
+                                  resume_thread(*(t)); }
+#define pthread_join(t,s)       { long tmp; \
+                                  wait_for_thread(t,(s)?(long*)(s):&tmp); }
+#define HAVE_PTHREAD 1
+
+#elif defined(HAVE_PTHREAD)
+#include <pthread.h>
+#endif
+
+/****************************************************************************
+ * Macros
+ ****************************************************************************/
+#define X264_MIN(a,b) ( (a)<(b) ? (a) : (b) )
+#define X264_MAX(a,b) ( (a)>(b) ? (a) : (b) )
+#define X264_MIN3(a,b,c) X264_MIN((a),X264_MIN((b),(c)))
+#define X264_MAX3(a,b,c) X264_MAX((a),X264_MAX((b),(c)))
+#define X264_MIN4(a,b,c,d) X264_MIN((a),X264_MIN3((b),(c),(d)))
+#define X264_MAX4(a,b,c,d) X264_MAX((a),X264_MAX3((b),(c),(d)))
+#define XCHG(type,a,b) { type t = a; a = b; b = t; }
+#define FIX8(f) ((int)(f*(1<<8)+.5))
+
+#if defined(__GNUC__) && (__GNUC__ > 3 || __GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#define UNUSED __attribute__((unused))
+#else
+#define UNUSED
+#endif
+
+#define X264_BFRAME_MAX 16
+#define X264_SLICE_MAX 4
+#define X264_NAL_MAX (4 + X264_SLICE_MAX)
+
+/****************************************************************************
+ * Includes
+ ****************************************************************************/
 #include "x264.h"
 #include "bs.h"
 #include "set.h"
@@ -47,15 +95,6 @@
 #include "cabac.h"
 #include "csp.h"
 #include "quant.h"
-
-/****************************************************************************
- * Macros
- ****************************************************************************/
-#define X264_MIN(a,b) ( (a)<(b) ? (a) : (b) )
-#define X264_MAX(a,b) ( (a)>(b) ? (a) : (b) )
-#define X264_ABS(a)   ( (a)< 0 ? -(a) : (a) )
-#define X264_MIN3(a,b,c) X264_MIN((a),X264_MIN((b),(c)))
-#define X264_MIN4(a,b,c,d) X264_MIN((a),X264_MIN3((b),(c),(d)))
 
 /****************************************************************************
  * Generals functions
@@ -74,8 +113,14 @@ char *x264_slurp_file( const char *filename );
 /* mdate: return the current date in microsecond */
 int64_t x264_mdate( void );
 
+/* x264_param2string: return a (malloced) string containing most of
+ * the encoding options */
+char *x264_param2string( x264_param_t *p, int b_res );
+
 /* log */
 void x264_log( x264_t *h, int i_level, const char *psz_fmt, ... );
+
+void x264_reduce_fraction( int *n, int *d );
 
 static inline int x264_clip3( int v, int i_min, int i_max )
 {
@@ -157,6 +202,7 @@ typedef struct
 
     int i_cabac_init_idc;
 
+    int i_qp;
     int i_qp_delta;
     int b_sp_for_swidth;
     int i_qs_delta;
@@ -198,10 +244,6 @@ static const int x264_scan8[16+2*4] =
  4   R R   L L L L
  5   R R
 */
-
-#define X264_BFRAME_MAX 16
-#define X264_SLICE_MAX 4
-#define X264_NAL_MAX (4 + X264_SLICE_MAX)
 
 typedef struct x264_ratecontrol_t   x264_ratecontrol_t;
 typedef struct x264_vlc_table_t     x264_vlc_table_t;
@@ -247,6 +289,12 @@ struct x264_t
     int             dequant8_mf[2][6][8][8];
     int             quant4_mf[4][6][4][4];
     int             quant8_mf[2][6][8][8];
+    int             unquant4_mf[4][52][16];
+    int             unquant8_mf[2][52][64];
+
+    uint32_t        nr_residual_sum[2][64];
+    uint32_t        nr_offset[2][64];
+    uint32_t        nr_count[2];
 
     /* Slice header */
     x264_slice_header_t sh;
@@ -276,6 +324,7 @@ struct x264_t
         int i_max_ref0;
         int i_max_ref1;
         int i_delay;    /* Number of frames buffered for B reordering */
+        int b_have_lowres;  /* Whether 1/2 resolution luma planes are being used */
     } frames;
 
     /* current frame being encoded */
@@ -328,9 +377,16 @@ struct x264_t
         int     i_me_method;
         int     i_subpel_refine;
         int     b_chroma_me;
+        int     b_trellis;
+        int     b_noise_reduction;
+
         /* Allowed qpel MV range to stay within the picture + emulated edge pixels */
         int     mv_min[2];
         int     mv_max[2];
+        /* Subpel MV range for motion search.
+         * same mv_min/max but includes levels' i_mv_range. */
+        int     mv_min_spel[2];
+        int     mv_max_spel[2];
         /* Fullpel MV range for motion search */
         int     mv_min_fpel[2];
         int     mv_max_fpel[2];
@@ -372,6 +428,12 @@ struct x264_t
 
         struct
         {
+            /* space for p_fenc and p_fdec */
+#define FENC_STRIDE 16
+#define FDEC_STRIDE 32
+            DECLARE_ALIGNED( uint8_t, fenc_buf[24*FENC_STRIDE], 16 );
+            DECLARE_ALIGNED( uint8_t, fdec_buf[27*FDEC_STRIDE], 16 );
+
             /* pointer over mb of the frame to be compressed */
             uint8_t *p_fenc[3];
 
@@ -380,8 +442,9 @@ struct x264_t
 
             /* pointer over mb of the references */
             uint8_t *p_fref[2][16][4+2]; /* last: lN, lH, lV, lHV, cU, cV */
+            uint16_t *p_integral[2][16];
 
-            /* common stride */
+            /* fref stride */
             int     i_stride[3];
         } pic;
 
@@ -418,6 +481,8 @@ struct x264_t
         int     i_last_dqp; /* last delta qp */
         int     b_variable_qp; /* whether qp is allowed to vary per macroblock */
         int     b_lossless;
+        int     b_direct_auto_read; /* take stats for --direct auto from the 2pass log */
+        int     b_direct_auto_write; /* analyse direct modes, to use and/or save */
 
         /* B_direct and weighted prediction */
         int     dist_scale_factor[16][16];
@@ -429,10 +494,6 @@ struct x264_t
 
     /* rate control encoding only */
     x264_ratecontrol_t *rc;
-
-    int i_last_inter_size;
-    int i_last_intra_size;
-    int i_last_intra_qp;
 
     /* stats */
     struct
@@ -453,16 +514,20 @@ struct x264_t
             int i_mb_count_p;
             int i_mb_count_skip;
             int i_mb_count_8x8dct[2];
+            int i_mb_count_size[7];
+            int i_mb_count_ref[16];
             /* Estimated (SATD) cost as Intra/Predicted frame */
             /* XXX: both omit the cost of MBs coded as P_SKIP */
             int i_intra_cost;
             int i_inter_cost;
+            /* Adaptive direct mv pred */
+            int i_direct_score[2];
         } frame;
 
         /* Cummulated stats */
 
         /* per slice info */
-        int   i_slice_count[5];
+        int     i_slice_count[5];
         int64_t i_slice_size[5];
         int     i_slice_qp[5];
         /* */
@@ -474,6 +539,11 @@ struct x264_t
         /* */
         int64_t i_mb_count[5][19];
         int64_t i_mb_count_8x8dct[2];
+        int64_t i_mb_count_size[2][7];
+        int64_t i_mb_count_ref[2][16];
+        /* */
+        int     i_direct_score[2];
+        int     i_direct_frames[2];
 
     } stat;
 
@@ -488,6 +558,7 @@ struct x264_t
     x264_dct_function_t   dctf;
     x264_csp_function_t   csp;
     x264_quant_function_t quantf;
+    x264_deblock_function_t loopf;
 
     /* vlc table for decoding purpose only */
     x264_vlc_table_t *x264_coeff_token_lookup[5];
@@ -500,6 +571,9 @@ struct x264_t
     struct visualize_t *visualize;
 #endif
 };
+
+// included at the end because it needs x264_t
+#include "macroblock.h"
 
 #endif
 

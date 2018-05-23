@@ -2,7 +2,7 @@
  * fake.c : Fake video input for VLC
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: fake.c 11948 2005-08-01 17:58:22Z massiot $
+ * $Id: fake.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Author: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -39,19 +39,19 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for fake streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for fake streams. This " \
+    "value should be set in milliseconds." )
 #define FPS_TEXT N_("Framerate")
 #define FPS_LONGTEXT N_( \
-    "Specifies the number of frames per second (eg. 24, 25, 29.97, 30).")
+    "Number of frames per second (eg. 24, 25, 29.97, 30).")
 #define ID_TEXT N_("ID")
 #define ID_LONGTEXT N_( \
-    "Allows you to set the ID of the fake elementary stream for use in " \
+    "Set the ID of the fake elementary stream for use in " \
     "#duplicate{} constructs (default 0).")
 #define DURATION_TEXT N_("Duration in ms")
 #define DURATION_LONGTEXT N_( \
-    "Specifies the duration of the fake streaming before faking an " \
-    "end-of-file (default 0 means the stream is unlimited).")
+    "Duration of the fake streaming before faking an " \
+    "end-of-file (default is 0, meaning that the stream is unlimited).")
 
 vlc_module_begin();
     set_shortname( _("Fake") );

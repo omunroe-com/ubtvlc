@@ -2,7 +2,7 @@
  * macosx_tooltip.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: macosx_tooltip.hpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: macosx_tooltip.hpp 14187 2006-02-07 16:37:40Z courmisch $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef MACOSX_TOOLTIP_HPP
@@ -37,10 +37,10 @@ class MacOSXTooltip: public OSTooltip
 
         virtual ~MacOSXTooltip();
 
-        // Show the tooltip
+        /// Show the tooltip
         virtual void show( int left, int top, OSGraphics &rText );
 
-        // Hide the tooltip
+        /// Hide the tooltip
         virtual void hide();
 
     private:

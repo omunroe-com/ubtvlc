@@ -2,7 +2,7 @@
  * crop.c : Crop video plugin for vlc
  *****************************************************************************
  * Copyright (C) 2002, 2003 the VideoLAN team
- * $Id: crop.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: crop.c 14977 2006-03-30 08:40:51Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -55,7 +55,7 @@ static int  SendEvents( vlc_object_t *, char const *,
 #define GEOMETRY_LONGTEXT N_("Set the geometry of the zone to crop. This is set as <width> x <height> + <left offset> + <top offset>.")
 
 #define AUTOCROP_TEXT N_("Automatic cropping")
-#define AUTOCROP_LONGTEXT N_("Activate automatic black border cropping.")
+#define AUTOCROP_LONGTEXT N_("Automatic black border cropping.")
 
 vlc_module_begin();
     set_description( _("Crop video filter") );
@@ -146,6 +146,7 @@ static int Init( vout_thread_t *p_vout )
     p_vout->output.i_width  = p_vout->render.i_width;
     p_vout->output.i_height = p_vout->render.i_height;
     p_vout->output.i_aspect = p_vout->render.i_aspect;
+    p_vout->fmt_out = p_vout->fmt_in;
 
     /* Shall we use autocrop ? */
     p_vout->p_sys->b_autocrop = config_GetInt( p_vout, "autocrop" );
@@ -232,9 +233,10 @@ static int Init( vout_thread_t *p_vout )
     }
     else
     {
-        p_vout->p_sys->i_width  = p_vout->output.i_width;
-        p_vout->p_sys->i_height = p_vout->output.i_height;
-        p_vout->p_sys->i_x = p_vout->p_sys->i_y = 0;
+        p_vout->p_sys->i_width  = p_vout->fmt_out.i_visible_width;
+        p_vout->p_sys->i_height = p_vout->fmt_out.i_visible_height;
+        p_vout->p_sys->i_x = p_vout->fmt_out.i_x_offset;
+        p_vout->p_sys->i_y = p_vout->fmt_out.i_y_offset;
     }
 
     /* Pheeew. Parsing done. */
@@ -244,9 +246,9 @@ static int Init( vout_thread_t *p_vout )
                      p_vout->p_sys->b_autocrop ? "" : "not " );
 
     /* Set current output image properties */
-    p_vout->p_sys->i_aspect = p_vout->output.i_aspect
-                            * p_vout->output.i_height / p_vout->p_sys->i_height
-                            * p_vout->p_sys->i_width / p_vout->output.i_width;
+    p_vout->p_sys->i_aspect = p_vout->fmt_out.i_aspect
+           * p_vout->fmt_out.i_visible_height / p_vout->p_sys->i_height
+           * p_vout->p_sys->i_width / p_vout->fmt_out.i_visible_width;
 
     fmt.i_width = fmt.i_visible_width = p_vout->p_sys->i_width;
     fmt.i_height = fmt.i_visible_height = p_vout->p_sys->i_height;

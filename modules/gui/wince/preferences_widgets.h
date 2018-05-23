@@ -2,7 +2,7 @@
  * preferences_widgets.h : WinCE gui plugin for VLC
  *****************************************************************************
  * Copyright (C) 2000-2003 the VideoLAN team
- * $Id: preferences_widgets.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: preferences_widgets.h 14123 2006-02-01 19:32:40Z courmisch $
  *
  * Authors: Marodon Cedric <cedric_marodon@yahoo.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 class ConfigControl
@@ -30,8 +30,9 @@ public:
 
     virtual int GetIntValue() {return 0;}
     virtual float GetFloatValue() {return 0;}
-    virtual char *GetPszValue() {return GetName();} // faux retourne nom associé à parent
-        // mettre dans constructeur et dans private le nom du panel associé à HWND
+    virtual char *GetPszValue() {return GetName();}
+    // FIXME returns name corresponding to parent
+    // put the panel name corresponding to HWND into the constructor and make it private
 
     char *GetName();
     int GetType();

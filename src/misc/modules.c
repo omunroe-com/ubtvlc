@@ -2,7 +2,7 @@
  * modules.c : Builtin and plugin modules management functions
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: modules.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: modules.c 15084 2006-04-03 14:06:19Z xtophe $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Ethan C. Baldridge <BaldridgeE@cadmus.com>
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* Some faulty libcs have a broken struct dirent when _FILE_OFFSET_BITS
@@ -79,6 +79,7 @@
 #include "vlc_error.h"
 
 #include "vlc_interface.h"
+#include "vlc_interaction.h"
 #include "intf_eject.h"
 
 #include "vlc_playlist.h"
@@ -97,6 +98,7 @@
 #include "vlc_tls.h"
 #include "vlc_md5.h"
 #include "vlc_xml.h"
+#include "vlc_url.h"
 
 #include "iso_lang.h"
 #include "charset.h"
@@ -107,6 +109,9 @@
 
 #include "vlc_image.h"
 #include "vlc_osd.h"
+
+#include "vlc_update.h"
+#include "vlc_strings.h"
 
 #if defined( _MSC_VER ) && defined( UNDER_CE )
 #    include "modules_builtin_evc.h"
@@ -677,7 +682,7 @@ module_t * __module_Need( vlc_object_t *p_this, const char *psz_capability,
 
     if( p_module != NULL )
     {
-        msg_Dbg( p_module, "using %s module \"%s\"",
+        msg_Dbg( p_this, "using %s module \"%s\"",
                  psz_capability, p_module->psz_object_name );
     }
     else if( p_first == NULL )
@@ -688,7 +693,7 @@ module_t * __module_Need( vlc_object_t *p_this, const char *psz_capability,
                  psz_capability, (psz_name && *psz_name) ? psz_name : "any" );
         }
         else
-        {  
+        {
             msg_Err( p_this, "no %s module matched \"%s\"",
                  psz_capability, (psz_name && *psz_name) ? psz_name : "any" );
         }
@@ -727,7 +732,7 @@ void __module_Unneed( vlc_object_t * p_this, module_t * p_module )
         p_module->pf_deactivate( p_this );
     }
 
-    msg_Dbg( p_module, "unlocking module \"%s\"", p_module->psz_object_name );
+    msg_Dbg( p_this, "removing module \"%s\"", p_module->psz_object_name );
 
     vlc_object_release( p_module );
 
@@ -762,7 +767,7 @@ static void AllocateAllPlugins( vlc_object_t *p_this )
     {
         if( !(*ppsz_path)[0] ) continue;
 
-#if defined( SYS_BEOS ) || defined( SYS_DARWIN ) || defined( WIN32 )
+#if defined( SYS_BEOS ) || defined( __APPLE__ ) || defined( WIN32 )
 
         /* Handle relative as well as absolute paths */
 #ifdef WIN32
@@ -875,8 +880,9 @@ static void AllocatePluginDir( vlc_object_t *p_this, const char *psz_dir,
         sprintf( psz_path, "%s\\%s", psz_dir, finddata.cFileName );
 #endif
 
-        /* Skip ".", ".." and anything starting with "." */
-        if( !*finddata.cFileName || *finddata.cFileName == '.' )
+        /* Skip ".", ".." */
+        if( !*finddata.cFileName || !strcmp( finddata.cFileName, "." )
+         || !strcmp( finddata.cFileName, ".." ) )
         {
             if( !FindNextFile( handle, &finddata ) ) break;
             continue;
@@ -940,8 +946,9 @@ static void AllocatePluginDir( vlc_object_t *p_this, const char *psz_dir,
         unsigned int i_len;
         int i_stat;
 
-        /* Skip ".", ".." and anything starting with "." */
-        if( !*file->d_name || *file->d_name == '.' )
+        /* Skip ".", ".." */
+        if( !*file->d_name || !strcmp( file->d_name, "." )
+         || !strcmp( file->d_name, ".." ) )
         {
             continue;
         }
@@ -1301,7 +1308,7 @@ static int CallEntry( module_t * p_module )
     {
         /* With a well-written module we shouldn't have to print an
          * additional error message here, but just make sure. */
-        msg_Err( p_module, "failed calling symbol \"%s\" in file `%s'",
+        msg_Err( p_module, "Failed to call symbol \"%s\" in file `%s'",
                            psz_name, p_module->psz_filename );
         return -1;
     }
@@ -1622,7 +1629,7 @@ static void CacheLoad( vlc_object_t *p_this )
 
     msg_Dbg( p_this, "loading plugins cache file %s", psz_filename );
 
-    file = fopen( psz_filename, "rb" );
+    file = utf8_fopen( psz_filename, "rb" );
     if( !file )
     {
         msg_Warn( p_this, "could not open plugins cache file %s for reading",
@@ -1944,7 +1951,7 @@ static void CacheSave( vlc_object_t *p_this )
 
     strcat( psz_filename, "/CACHEDIR.TAG" );
 
-    file = fopen( psz_filename, "wb" );
+    file = utf8_fopen( psz_filename, "wb" );
     if( file )
     {
         fwrite( psz_tag, 1, strlen(psz_tag), file );
@@ -1956,7 +1963,7 @@ static void CacheSave( vlc_object_t *p_this )
 
     msg_Dbg( p_this, "saving plugins cache file %s", psz_filename );
 
-    file = fopen( psz_filename, "wb" );
+    file = utf8_fopen( psz_filename, "wb" );
     if( !file )
     {
         msg_Warn( p_this, "could not open plugins cache file %s for writing",
@@ -2123,17 +2130,11 @@ void CacheSaveConfig( module_t *p_module, FILE *file )
 static char *CacheName( void )
 {
     static char psz_cachename[32];
-    static vlc_bool_t b_initialised = VLC_FALSE;
 
-    if( !b_initialised )
-    {
-        /* Code int size, pointer size and endianness in the filename */
-        int32_t x = 0xbe00001e;
-        sprintf( psz_cachename, "plugins-%.2x%.2x%.2x.dat", sizeof(int),
-                 sizeof(void *), (unsigned int)((unsigned char *)&x)[0] );
-        b_initialised = VLC_TRUE;
-    }
-
+    /* Code int size, pointer size and endianness in the filename */
+    int32_t x = 0xbe00001e;
+    sprintf( psz_cachename, "plugins-%.2x%.2x%.2x.dat", sizeof(int),
+             sizeof(void *), (unsigned int)((unsigned char *)&x)[0] );
     return psz_cachename;
 }
 

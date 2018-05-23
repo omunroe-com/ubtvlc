@@ -5,7 +5,7 @@
  *                         Organisation (CSIRO) Australia
  * Copyright (C) 2004 the VideoLAN team
  *
- * $Id: cmml.c 12412 2005-08-27 16:40:23Z jpsaman $
+ * $Id: cmml.c 14989 2006-03-30 22:58:23Z xtophe $
  *
  * Author: Andre Pang <Andre.Pang@csiro.au>
  *
@@ -21,7 +21,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -98,7 +98,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     p_dec->pf_decode_sub = DecodeBlock;
 
 #ifdef CMML_DEBUG
-    msg_Dbg( p_dec, "I am at %p", p_dec );
+    msg_Dbg( p_dec, "i am at %p", p_dec );
 #endif
 
     /* Allocate the memory needed to store the decoder's structure */
@@ -128,7 +128,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     vlc_object_release( p_input );
 
     /* initialise the CMML responder interface */
-    p_sys->p_intf = intf_Create( p_dec, "cmml" );
+    p_sys->p_intf = intf_Create( p_dec, "cmml", 0, NULL );
     p_sys->p_intf->b_block = VLC_FALSE;
     intf_RunThread( p_sys->p_intf );
 

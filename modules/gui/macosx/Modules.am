@@ -7,6 +7,8 @@ SOURCES_macosx = \
 	controls.m \
 	equalizer.m \
 	equalizer.h \
+	interaction.m \
+	interaction.h \
 	intf.m \
 	intf.h \
 	macosx.m \
@@ -34,5 +36,9 @@ SOURCES_macosx = \
 	extended.m \
 	bookmarks.h \
 	bookmarks.m \
+	embeddedwindow.h \
+	embeddedwindow.m \
+	update.h \
+	update.m \
 	$(NULL)
 

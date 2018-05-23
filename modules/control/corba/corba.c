@@ -2,7 +2,7 @@
  * corba.c : CORBA (ORBit) remote control plugin for vlc
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: corba.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: corba.c 14976 2006-03-30 08:36:49Z zorglub $
  *
  * Authors: Olivier Aubert <oaubert@lisi.univ-lyon1.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -27,8 +27,8 @@
 /* For CORBA */
 #include "MediaControl.h"
 #include "orbit/poa/portableserver-poa-type.h"
-#include "mediacontrol-core.h"
 
+#include <vlc/control.h>
 #include <vlc/vlc.h>
 #include <vlc/intf.h>
 #include <vlc/vout.h>
@@ -686,9 +686,15 @@ set_category( CAT_INTERFACE );
 set_subcategory( SUBCAT_INTERFACE_CONTROL );
 add_category_hint( N_( "Corba control" ), NULL, VLC_FALSE );
 
+#define REACTIVITY_TEXT N_("Reactivity" )
+#define REACTIVITY_LONGTEXT N_( \
+        "The corba interface will handle events every 50ms/Reactivity. " \
+        "5000 appears to be a sensible value." )
+
 set_description( _( "corba control module" ) );
 set_capability( "interface", 10 );
-add_integer( "corba-reactivity", 5000, NULL, "Internal reactivity factor", "Internal reactivity factor ( gtk timeout is INTF_IDLE_SLEEP / factor )", VLC_TRUE );
+add_integer( "corba-reactivity", 5000, NULL, REACTIVITY_TEXT,
+              REACTIVITY_LONGTEXT, VLC_TRUE );
 set_callbacks( Open, Close );
 vlc_module_end();
 
@@ -831,6 +837,8 @@ static void Run( intf_thread_t *p_intf )
     /* We write the IOR in a file. */
     {
         FILE* fp;
+        /* no need for Unicode transliteration as long as VLC_IOR_FILE
+          is pure ASCII */
         fp = fopen( VLC_IOR_FILE, "w" );
         if( fp == NULL )
         {
@@ -843,7 +851,7 @@ static void Run( intf_thread_t *p_intf )
             msg_Warn( p_intf, "IOR written to %s", VLC_IOR_FILE );
         }
     }
-  
+
     root_poa_manager = PortableServer_POA__get_the_POAManager( root_poa, ev );
     handle_exception( "Exception during POAManager resolution" );
 

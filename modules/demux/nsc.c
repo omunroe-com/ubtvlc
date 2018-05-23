@@ -2,7 +2,7 @@
  * nsc.c: NSC file demux and encoding decoder
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: nsc.c 12923 2005-10-23 09:25:27Z courmisch $
+ * $Id: nsc.c 14790 2006-03-18 02:06:16Z xtophe $
  *
  * Authors: Jon Lech Johansen <jon@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -211,7 +211,7 @@ char *nscdec( vlc_object_t *p_demux, char* p_encoded )
     buf16 = (unsigned char *)malloc( buf16_size );
     if( buf16 == NULL )
     {
-        msg_Err( p_demux, "Out of memory" );
+        msg_Err( p_demux, "out of memory" );
         return NULL;
     }
 
@@ -229,7 +229,7 @@ char *nscdec( vlc_object_t *p_demux, char* p_encoded )
     buf8 = (char *)malloc( buf8_size + 1 );
     if( buf8 == NULL )
     {
-        msg_Err( p_demux, "Out of memory" );
+        msg_Err( p_demux, "out of memory" );
         free( (void *)buf16 );
         return NULL;
     }
@@ -274,13 +274,13 @@ static int DemuxOpen( vlc_object_t * p_this )
 
     if ( i_size > 0 )
     {
-        while ( i_size && strncasecmp( p_peek, "NSC Format Version=",
+        while ( i_size && strncasecmp( (char *)p_peek, "NSC Format Version=",
                                        (int) sizeof("NSC Format Version=") - 1 ) )
         {
             p_peek++;
             i_size--;
         }
-        if ( !strncasecmp( p_peek, "NSC Format Version=",
+        if ( !strncasecmp( (char *)p_peek, "NSC Format Version=",
                            (int) sizeof("NSC Format Version=") -1 ) )
         {
             p_demux->pf_demux = Demux;

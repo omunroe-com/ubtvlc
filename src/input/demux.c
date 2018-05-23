@@ -2,7 +2,7 @@
  * demux.c
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: demux.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: demux.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include <stdlib.h>
@@ -75,9 +75,10 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
 
     if( s && *psz_module == '\0' && strrchr( p_demux->psz_path, '.' ) )
     {
-        /* XXX: add only file without any problem here and with strong detection.
-         *  - no .mp3, .a52, ... (aac is added as it works only by file ext anyway
-         *  - wav can't be added 'cause of a52 and dts in them as raw audio
+       /* XXX: add only file without any problem here and with strong detection.
+        *  - no .mp3, .a52, ... (aac is added as it works only by file ext
+        *     anyway
+        *  - wav can't be added 'cause of a52 and dts in them as raw audio
          */
          static struct { char *ext; char *demux; } exttodemux[] =
          {
@@ -99,7 +100,7 @@ demux_t *__demux2_New( vlc_object_t *p_obj,
             { NULL,  NULL },
         };
         /* Here, we don't mind if it does not work, it must be quick */
-        static struct { char *ext; char *demux; } exttodemux_quick[] = 
+        static struct { char *ext; char *demux; } exttodemux_quick[] =
         {
             { "mp3", "mpga" },
             { "ogg", "ogg" },
@@ -312,6 +313,9 @@ stream_t *__stream_DemuxNew( vlc_object_t *p_obj, char *psz_demux,
     s->pf_read   = DStreamRead;
     s->pf_peek   = DStreamPeek;
     s->pf_control= DStreamControl;
+
+    s->i_char_width = 1;
+    s->b_little_endian = VLC_FALSE;
 
     s->p_sys = malloc( sizeof( d_stream_sys_t) );
     p_sys = (d_stream_sys_t*)s->p_sys;
@@ -560,7 +564,7 @@ static void SkipID3Tag( demux_t *p_demux )
     /* Skip the entire tag */
     stream_Read( p_demux->s, NULL, i_size );
 
-    msg_Dbg( p_demux, "ID3v2.%d revision %d tag found, skiping %d bytes",
+    msg_Dbg( p_demux, "ID3v2.%d revision %d tag found, skipping %d bytes",
              version, revision, i_size );
 
     return;

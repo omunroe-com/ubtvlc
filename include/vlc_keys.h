@@ -2,7 +2,7 @@
  * vlc_keys.h: keycode defines
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: vlc_keys.h 12836 2005-10-15 13:23:08Z sigmunau $
+ * $Id: vlc_keys.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #define KEY_MODIFIER         0xFF000000
@@ -200,14 +200,14 @@ static inline int StringToKey( char *psz_key )
 #define ACTIONID_NAV_DOWN              15
 #define ACTIONID_NAV_LEFT              16
 #define ACTIONID_NAV_RIGHT             17
-#define ACTIONID_JUMP_BACKWARD_3SEC    18
-#define ACTIONID_JUMP_FORWARD_3SEC     19
-#define ACTIONID_JUMP_BACKWARD_10SEC   20
-#define ACTIONID_JUMP_FORWARD_10SEC    21
-#define ACTIONID_JUMP_BACKWARD_1MIN    22
-#define ACTIONID_JUMP_FORWARD_1MIN     23
-#define ACTIONID_JUMP_BACKWARD_5MIN    24
-#define ACTIONID_JUMP_FORWARD_5MIN     25
+#define ACTIONID_JUMP_BACKWARD_EXTRASHORT 18
+#define ACTIONID_JUMP_FORWARD_EXTRASHORT  19
+#define ACTIONID_JUMP_BACKWARD_SHORT   20
+#define ACTIONID_JUMP_FORWARD_SHORT    21
+#define ACTIONID_JUMP_BACKWARD_MEDIUM  22
+#define ACTIONID_JUMP_FORWARD_MEDIUM   23
+#define ACTIONID_JUMP_BACKWARD_LONG    24
+#define ACTIONID_JUMP_FORWARD_LONG     25
 #define ACTIONID_POSITION              26
 #define ACTIONID_VOL_MUTE              27
 /* let ACTIONID_SET_BOOMARK* and ACTIONID_PLAY_BOOKMARK* be contiguous */
@@ -252,3 +252,7 @@ static inline int StringToKey( char *psz_key )
 #define ACTIONID_AUDIODELAY_DOWN       63
 #define ACTIONID_SNAPSHOT              64
 #define ACTIONID_RECORD                65
+#define ACTIONID_DISC_MENU             66
+#define ACTIONID_ASPECT_RATIO          67
+#define ACTIONID_CROP                  68
+#define ACTIONID_DEINTERLACE           69

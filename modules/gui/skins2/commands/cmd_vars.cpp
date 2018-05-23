@@ -2,7 +2,7 @@
  * cmd_vars.cpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: cmd_vars.cpp 12949 2005-10-23 17:42:16Z asmax $
+ * $Id: cmd_vars.cpp 14255 2006-02-12 11:18:43Z zorglub $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -18,12 +18,13 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #include "cmd_vars.hpp"
 #include "../src/vlcproc.hpp"
 #include "../utils/var_text.hpp"
+#include "../vars/equalizer.hpp"
 #include "../vars/playlist.hpp"
 #include "../vars/playtree.hpp"
 
@@ -47,9 +48,35 @@ void CmdPlaytreeUpdate::execute()
 {
     // Notify  the playtree variable
     Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
-    rVar.onUpdate( m_id );
+    rVar.onUpdateItem( m_id );
 }
 
+bool CmdPlaytreeUpdate::checkRemove( CmdGeneric *pQueuedCommand ) const
+{
+
+    CmdPlaytreeUpdate *pUpdateCommand = (CmdPlaytreeUpdate *)(pQueuedCommand);
+    //CmdPlaytreeUpdate *pUpdateCommand = dynamic_cast<CmdPlaytreeUpdate *>(pQueuedCommand);
+    if( m_id == pUpdateCommand->m_id )
+    {
+        return true;
+    }
+    return false;
+}
+
+
+void CmdPlaytreeAppend::execute()
+{
+    // Notify  the playtree variable
+    Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    rVar.onAppend( m_pAdd );
+}
+
+void CmdPlaytreeDelete::execute()
+{
+    // Notify  the playtree variable
+    Playtree &rVar = VlcProc::instance( getIntf() )->getPlaytreeVar();
+    rVar.onDelete( m_id );
+}
 
 void CmdSetText::execute()
 {
@@ -57,3 +84,16 @@ void CmdSetText::execute()
     m_rText.set( m_value );
 }
 
+
+void CmdSetEqBands::execute()
+{
+    // Change the equalizer bands
+    m_rEqBands.set( m_value );
+}
+
+
+void CmdSetEqPreamp::execute()
+{
+    // Change the preamp variable
+    m_rPreamp.set( m_value, false );
+}

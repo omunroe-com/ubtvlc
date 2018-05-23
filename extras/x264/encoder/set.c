@@ -21,30 +21,22 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
  *****************************************************************************/
 
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#else
-#include <inttypes.h>
-#endif
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdarg.h>
 #include <math.h>
 
-#include "x264.h"
 #include "common/common.h"
-#include "common/macroblock.h"
 #ifndef _MSC_VER
 #include "config.h"
 #endif
 
-static const uint8_t *const x264_cqm_jvt[6] =
+static void transpose( uint8_t *buf, int w )
 {
-    x264_cqm_jvt4i, x264_cqm_jvt4p,
-    x264_cqm_jvt4i, x264_cqm_jvt4p,
-    x264_cqm_jvt8i, x264_cqm_jvt8p
-};
+    int i, j;
+    for( i = 0; i < w; i++ )
+        for( j = 0; j < i; j++ )
+            XCHG( uint8_t, buf[w*i+j], buf[w*j+i] );
+}
 
 static void scaling_list_write( bs_t *s, x264_pps_t *pps, int idx )
 {
@@ -54,15 +46,31 @@ static void scaling_list_write( bs_t *s, x264_pps_t *pps, int idx )
     const uint8_t *def_list = (idx==CQM_4IC) ? pps->scaling_list[CQM_4IY]
                             : (idx==CQM_4PC) ? pps->scaling_list[CQM_4PY]
                             : x264_cqm_jvt[idx];
-    int j;
-    if( memcmp( list, def_list, len ) )
+    if( !memcmp( list, def_list, len ) )
+        bs_write( s, 1, 0 ); // scaling_list_present_flag
+    else if( !memcmp( list, x264_cqm_jvt[idx], len ) )
     {
         bs_write( s, 1, 1 ); // scaling_list_present_flag
-        for( j = 0; j < len; j++ )
-            bs_write_se( s, list[zigzag[j]] - (j>0 ? list[zigzag[j-1]] : 8) ); // delta
+        bs_write_se( s, -8 ); // use jvt list
     }
     else
-        bs_write( s, 1, 0 ); // scaling_list_present_flag
+    {
+        int j, run;
+        bs_write( s, 1, 1 ); // scaling_list_present_flag
+
+        // try run-length compression of trailing values
+        for( run = len; run > 1; run-- )
+            if( list[zigzag[run-1]] != list[zigzag[run-2]] )
+                break;
+        if( run < len && len - run < bs_size_se( (int8_t)-list[zigzag[run]] ) )
+            run = len;
+
+        for( j = 0; j < run; j++ )
+            bs_write_se( s, (int8_t)(list[zigzag[j]] - (j>0 ? list[zigzag[j-1]] : 8)) ); // delta
+
+        if( run < len )
+            bs_write_se( s, (int8_t)-list[zigzag[run]] );
+    }
 }
 
 void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param )
@@ -80,8 +88,11 @@ void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param )
         sps->i_profile_idc  = PROFILE_BASELINE;
     sps->i_level_idc = param->i_level_idc;
 
-    sps->b_constraint_set0  = 0;
-    sps->b_constraint_set1  = 0;
+    sps->b_constraint_set0  = sps->i_profile_idc == PROFILE_BASELINE;
+    /* x264 doesn't support the features that are in Baseline and not in Main,
+     * namely arbitrary_slice_order and slice_groups. */
+    sps->b_constraint_set1  = sps->i_profile_idc <= PROFILE_MAIN;
+    /* Never set constraint_set2, it is not necessary and not used in real world. */
     sps->b_constraint_set2  = 0;
 
     sps->i_log2_max_frame_num = 4;  /* at least 4 */
@@ -112,9 +123,7 @@ void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param )
         }
     }
 
-    sps->vui.i_num_reorder_frames = param->b_bframe_pyramid ? 2 : param->i_bframe ? 1 : 0;
-    sps->vui.i_max_dec_frame_buffering =
-    sps->i_num_ref_frames = X264_MIN(16, param->i_frame_reference + sps->vui.i_num_reorder_frames);
+    sps->b_vui = 1;
 
     sps->b_gaps_in_frame_num_value_allowed = 0;
     sps->i_mb_width = ( param->i_width + 15 ) / 16;
@@ -128,46 +137,71 @@ void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param )
         sps->b_direct8x8_inference = 1;
     }
 
-    if( param->i_width % 16 != 0 || param->i_height % 16 != 0 )
-    {
-        sps->b_crop = 1;
-        sps->crop.i_left    = 0;
-        sps->crop.i_right   = ( 16 - param->i_width % 16)/2;
-        sps->crop.i_top     = 0;
-        sps->crop.i_bottom  = ( 16 - param->i_height % 16)/2;
-    }
-    else
-    {
-        sps->b_crop = 0;
-        sps->crop.i_left    = 0;
-        sps->crop.i_right   = 0;
-        sps->crop.i_top     = 0;
-        sps->crop.i_bottom  = 0;
-    }
+    sps->crop.i_left   = 0;
+    sps->crop.i_top    = 0;
+    sps->crop.i_right  = (- param->i_width)  & 15;
+    sps->crop.i_bottom = (- param->i_height) & 15;
+    sps->b_crop = sps->crop.i_left  || sps->crop.i_top ||
+                  sps->crop.i_right || sps->crop.i_bottom;
 
-    sps->b_vui = 0;
     sps->vui.b_aspect_ratio_info_present = 0;
-
     if( param->vui.i_sar_width > 0 && param->vui.i_sar_height > 0 )
     {
         sps->vui.b_aspect_ratio_info_present = 1;
         sps->vui.i_sar_width = param->vui.i_sar_width;
         sps->vui.i_sar_height= param->vui.i_sar_height;
     }
-    sps->b_vui |= sps->vui.b_aspect_ratio_info_present;
+    
+    sps->vui.b_overscan_info_present = ( param->vui.i_overscan ? 1 : 0 );
+    if( sps->vui.b_overscan_info_present )
+        sps->vui.b_overscan_info = ( param->vui.i_overscan == 2 ? 1 : 0 );
+    
+    sps->vui.b_signal_type_present = 0;
+    sps->vui.i_vidformat = ( param->vui.i_vidformat <= 5 ? param->vui.i_vidformat : 5 );
+    sps->vui.b_fullrange = ( param->vui.b_fullrange ? 1 : 0 );
+    sps->vui.b_color_description_present = 0;
 
+    sps->vui.i_colorprim = ( param->vui.i_colorprim <=  9 ? param->vui.i_colorprim : 2 );
+    sps->vui.i_transfer  = ( param->vui.i_transfer  <= 11 ? param->vui.i_transfer  : 2 );
+    sps->vui.i_colmatrix = ( param->vui.i_colmatrix <=  9 ? param->vui.i_colmatrix : 2 );
+    if( sps->vui.i_colorprim != 2 ||
+        sps->vui.i_transfer  != 2 ||
+        sps->vui.i_colmatrix != 2 )
+    {
+        sps->vui.b_color_description_present = 1;
+    }
+
+    if( sps->vui.i_vidformat != 5 ||
+        sps->vui.b_fullrange ||
+        sps->vui.b_color_description_present )
+    {
+        sps->vui.b_signal_type_present = 1;
+    }
+    
+    /* FIXME: not sufficient for interlaced video */
+    sps->vui.b_chroma_loc_info_present = ( param->vui.i_chroma_loc ? 1 : 0 );
+    if( sps->vui.b_chroma_loc_info_present )
+    {
+        sps->vui.i_chroma_loc_top = param->vui.i_chroma_loc;
+        sps->vui.i_chroma_loc_bottom = param->vui.i_chroma_loc;
+    }
+
+    sps->vui.b_timing_info_present = 0;
     if( param->i_fps_num > 0 && param->i_fps_den > 0)
     {
         sps->vui.b_timing_info_present = 1;
-        /* The standard is confusing me, but this seems to work best
-           with other encoders */
         sps->vui.i_num_units_in_tick = param->i_fps_den;
-        sps->vui.i_time_scale = param->i_fps_num;
+        sps->vui.i_time_scale = param->i_fps_num * 2;
         sps->vui.b_fixed_frame_rate = 1;
     }
-    sps->b_vui |= sps->vui.b_timing_info_present;
 
-    sps->vui.b_bitstream_restriction = param->i_bframe > 0;
+    sps->vui.i_num_reorder_frames = param->b_bframe_pyramid ? 2 : param->i_bframe ? 1 : 0;
+    /* extra slot with pyramid so that we don't have to override the
+     * order of forgetting old pictures */
+    sps->vui.i_max_dec_frame_buffering =
+    sps->i_num_ref_frames = X264_MIN(16, param->i_frame_reference + sps->vui.i_num_reorder_frames + param->b_bframe_pyramid);
+
+    sps->vui.b_bitstream_restriction = 1;
     if( sps->vui.b_bitstream_restriction )
     {
         sps->vui.b_motion_vectors_over_pic_boundaries = 1;
@@ -176,7 +210,6 @@ void x264_sps_init( x264_sps_t *sps, int i_id, x264_param_t *param )
         sps->vui.i_log2_max_mv_length_horizontal =
         sps->vui.i_log2_max_mv_length_vertical = (int)(log(param->analyse.i_mv_range*4-1)/log(2)) + 1;
     }
-    sps->b_vui |= sps->vui.b_bitstream_restriction;
 }
 
 
@@ -236,10 +269,10 @@ void x264_sps_write( bs_t *s, x264_sps_t *sps )
     bs_write( s, 1, sps->b_crop );
     if( sps->b_crop )
     {
-        bs_write_ue( s, sps->crop.i_left );
-        bs_write_ue( s, sps->crop.i_right );
-        bs_write_ue( s, sps->crop.i_top );
-        bs_write_ue( s, sps->crop.i_bottom );
+        bs_write_ue( s, sps->crop.i_left   / 2 );
+        bs_write_ue( s, sps->crop.i_right  / 2 );
+        bs_write_ue( s, sps->crop.i_top    / 2 );
+        bs_write_ue( s, sps->crop.i_bottom / 2 );
     }
 
     bs_write( s, 1, sps->b_vui );
@@ -274,15 +307,30 @@ void x264_sps_write( bs_t *s, x264_sps_t *sps )
             }
         }
 
-        bs_write1( s, 0 );      /* overscan_info_present_flag */
+        bs_write1( s, sps->vui.b_overscan_info_present );
+        if( sps->vui.b_overscan_info_present )
+            bs_write1( s, sps->vui.b_overscan_info );
 
-        bs_write1( s, 0 );      /* video_signal_type_present_flag */
-#if 0
-        bs_write( s, 3, 5 );    /* unspecified video format */
-        bs_write1( s, 1 );      /* video full range flag */
-        bs_write1( s, 0 );      /* colour description present flag */
-#endif
-        bs_write1( s, 0 );      /* chroma_loc_info_present_flag */
+        bs_write1( s, sps->vui.b_signal_type_present );
+        if( sps->vui.b_signal_type_present )
+        {
+            bs_write( s, 3, sps->vui.i_vidformat );
+            bs_write1( s, sps->vui.b_fullrange );
+            bs_write1( s, sps->vui.b_color_description_present );
+            if( sps->vui.b_color_description_present )
+            {
+                bs_write( s, 8, sps->vui.i_colorprim );
+                bs_write( s, 8, sps->vui.i_transfer );
+                bs_write( s, 8, sps->vui.i_colmatrix );
+            }
+        }
+
+        bs_write1( s, sps->vui.b_chroma_loc_info_present );
+        if( sps->vui.b_chroma_loc_info_present )
+        {
+            bs_write_ue( s, sps->vui.i_chroma_loc_top );
+            bs_write_ue( s, sps->vui.i_chroma_loc_bottom );
+        }
 
         bs_write1( s, sps->vui.b_timing_info_present );
         if( sps->vui.b_timing_info_present )
@@ -322,48 +370,13 @@ void x264_pps_init( x264_pps_t *pps, int i_id, x264_param_t *param, x264_sps_t *
     pps->b_pic_order = 0;
     pps->i_num_slice_groups = 1;
 
-#if 0
-    if( pps->i_num_slice_groups > 1 )
-    {
-        pps->i_slice_group_map_type = 0;
-        if( pps->i_slice_group_map_type == 0 )
-        {
-            for( i = 0; i < pps->i_num_slice_groups; i++ )
-            {
-                pps->i_run_length[i] = 1;
-            }
-        }
-        else if( pps->i_slice_group_map_type == 2 )
-        {
-            for( i = 0; i < pps->i_num_slice_groups; i++ )
-            {
-                pps->i_top_left[i] = 0;
-                pps->i_bottom_right[i] = 0;
-            }
-        }
-        else if( pps->i_slice_group_map_type >= 3 &&
-                 pps->i_slice_group_map_type <= 5 )
-        {
-            pps->b_slice_group_change_direction = 0;
-            pps->i_slice_group_change_rate = 0;
-        }
-        else if( pps->i_slice_group_map_type == 6 )
-        {
-            pps->i_pic_size_in_map_units = 1;
-            for( i = 0; i < pps->i_pic_size_in_map_units; i++ )
-            {
-                pps->i_slice_group_id[i] = 0;
-            }
-        }
-    }
-#endif
     pps->i_num_ref_idx_l0_active = 1;
     pps->i_num_ref_idx_l1_active = 1;
 
     pps->b_weighted_pred = 0;
     pps->b_weighted_bipred = param->analyse.b_weighted_bipred ? 2 : 0;
 
-    pps->i_pic_init_qp = 26;
+    pps->i_pic_init_qp = param->rc.b_cbr ? 26 : param->rc.i_qp_constant;
     pps->i_pic_init_qs = 26;
 
     pps->i_chroma_qp_index_offset = param->analyse.i_chroma_qp_offset;
@@ -385,6 +398,13 @@ void x264_pps_init( x264_pps_t *pps, int i_id, x264_param_t *param, x264_sps_t *
             pps->scaling_list[i] = x264_cqm_jvt[i];
         break;
     case X264_CQM_CUSTOM:
+        /* match the transposed DCT & zigzag */
+        transpose( param->cqm_4iy, 4 );
+        transpose( param->cqm_4ic, 4 );
+        transpose( param->cqm_4py, 4 );
+        transpose( param->cqm_4pc, 4 );
+        transpose( param->cqm_8iy, 8 );
+        transpose( param->cqm_8py, 8 );
         pps->scaling_list[CQM_4IY] = param->cqm_4iy;
         pps->scaling_list[CQM_4IC] = param->cqm_4ic;
         pps->scaling_list[CQM_4PY] = param->cqm_4py;
@@ -407,47 +427,6 @@ void x264_pps_write( bs_t *s, x264_pps_t *pps )
     bs_write( s, 1, pps->b_cabac );
     bs_write( s, 1, pps->b_pic_order );
     bs_write_ue( s, pps->i_num_slice_groups - 1 );
-
-#if 0
-    if( pps->i_num_slice_groups > 1 )
-    {
-        int i;
-
-        bs_write_ue( s, pps->i_slice_group_map_type );
-        if( pps->i_slice_group_map_type == 0 )
-        {
-            for( i = 0; i < pps->i_num_slice_groups; i++ )
-            {
-                bs_write_ue( s, pps->i_run_length[i] - 1 );
-            }
-        }
-        else if( pps->i_slice_group_map_type == 2 )
-        {
-            for( i = 0; i < pps->i_num_slice_groups; i++ )
-            {
-                bs_write_ue( s, pps->i_top_left[i] );
-                bs_write_ue( s, pps->i_bottom_right[i] );
-            }
-        }
-        else if( pps->i_slice_group_map_type >= 3 &&
-                 pps->i_slice_group_map_type <= 5 )
-        {
-            bs_write( s, 1, pps->b_slice_group_change_direction );
-            bs_write_ue( s, pps->b_slice_group_change_direction - 1 );
-        }
-        else if( pps->i_slice_group_map_type == 6 )
-        {
-            bs_write_ue( s, pps->i_pic_size_in_map_units - 1 );
-            for( i = 0; i < pps->i_pic_size_in_map_units; i++ )
-            {
-                /* FIXME */
-                /* bs_write( s, ceil( log2( pps->i_pic_size_in_map_units +1 ) ),
-                 *              pps->i_slice_group_id[i] );
-                 */
-            }
-        }
-    }
-#endif
 
     bs_write_ue( s, pps->i_num_ref_idx_l0_active - 1 );
     bs_write_ue( s, pps->i_num_ref_idx_l1_active - 1 );
@@ -486,7 +465,7 @@ void x264_pps_write( bs_t *s, x264_pps_t *pps )
     bs_rbsp_trailing( s );
 }
 
-void x264_sei_version_write( bs_t *s )
+void x264_sei_version_write( x264_t *h, bs_t *s )
 {
     int i;
     // random ID number generated according to ISO-11578
@@ -494,16 +473,21 @@ void x264_sei_version_write( bs_t *s )
         0xdc, 0x45, 0xe9, 0xbd, 0xe6, 0xd9, 0x48, 0xb7,
         0x96, 0x2c, 0xd8, 0x20, 0xd9, 0x23, 0xee, 0xef
     };
-    char version[256];
+    char version[1200];
     int length;
-    sprintf( version, "x264 - core %d%s - H.264/MPEG-4 AVC codec - Copyleft 2005 - http://www.videolan.org/x264.html",
-             X264_BUILD, X264_VERSION );
+    char *opts = x264_param2string( &h->param, 0 );
+
+    sprintf( version, "x264 - core %d%s - H.264/MPEG-4 AVC codec - "
+             "Copyleft 2005 - http://www.videolan.org/x264.html - options: %s",
+             X264_BUILD, X264_VERSION, opts );
+    x264_free( opts );
     length = strlen(version)+1+16;
 
     bs_write( s, 8, 0x5 ); // payload_type = user_data_unregistered
-    while( length > 255 )
-        bs_write( s, 8, 255 ), length -= 255;
-    bs_write( s, 8, length ); // payload_size
+    // payload_size
+    for( i = 0; i <= length-255; i += 255 )
+        bs_write( s, 8, 255 );
+    bs_write( s, 8, length-i );
 
     for( i = 0; i < 16; i++ )
         bs_write( s, 8, uuid[i] );
@@ -511,4 +495,55 @@ void x264_sei_version_write( bs_t *s )
         bs_write( s, 8, version[i] );
 
     bs_rbsp_trailing( s );
+}
+
+const x264_level_t x264_levels[] =
+{
+    { 10,   1485,    99,   152064,     64,    175,  64, 64,  0, 0, 0, 1 },
+//  {"1b",  1485,    99,   152064,    128,    350,  64, 64,  0, 0, 0, 1 },
+    { 11,   3000,   396,   345600,    192,    500, 128, 64,  0, 0, 0, 1 },
+    { 12,   6000,   396,   912384,    384,   1000, 128, 64,  0, 0, 0, 1 },
+    { 13,  11880,   396,   912384,    768,   2000, 128, 64,  0, 0, 0, 1 },
+    { 20,  11880,   396,   912384,   2000,   2000, 128, 64,  0, 0, 0, 1 },
+    { 21,  19800,   792,  1824768,   4000,   4000, 256, 64,  0, 0, 0, 0 },
+    { 22,  20250,  1620,  3110400,   4000,   4000, 256, 64,  0, 0, 0, 0 },
+    { 30,  40500,  1620,  3110400,  10000,  10000, 256, 32, 22, 0, 1, 0 },
+    { 31, 108000,  3600,  6912000,  14000,  14000, 512, 16, 60, 1, 1, 0 },
+    { 32, 216000,  5120,  7864320,  20000,  20000, 512, 16, 60, 1, 1, 0 },
+    { 40, 245760,  8192, 12582912,  20000,  25000, 512, 16, 60, 1, 1, 0 },
+    { 41, 245760,  8192, 12582912,  50000,  62500, 512, 16, 24, 1, 1, 0 },
+    { 42, 522240,  8704, 13369344,  50000,  62500, 512, 16, 24, 1, 1, 1 },
+    { 50, 589824, 22080, 42393600, 135000, 135000, 512, 16, 24, 1, 1, 1 },
+    { 51, 983040, 36864, 70778880, 240000, 240000, 512, 16, 24, 1, 1, 1 },
+    { 0 }
+};
+
+void x264_validate_levels( x264_t *h )
+{
+    int mbs;
+
+    const x264_level_t *l = x264_levels;
+    while( l->level_idc != 0 && l->level_idc != h->param.i_level_idc )
+        l++;
+
+    mbs = h->sps->i_mb_width * h->sps->i_mb_height;
+    if( l->frame_size < mbs
+        || l->frame_size*8 < h->sps->i_mb_width * h->sps->i_mb_width
+        || l->frame_size*8 < h->sps->i_mb_height * h->sps->i_mb_height )
+        x264_log( h, X264_LOG_WARNING, "frame MB size (%dx%d) > level limit (%d)\n",
+                  h->sps->i_mb_width, h->sps->i_mb_height, l->frame_size );
+
+#define CHECK( name, limit, val ) \
+    if( (val) > (limit) ) \
+        x264_log( h, X264_LOG_WARNING, name " (%d) > level limit (%d)\n", (int)(val), (limit) );
+
+    CHECK( "DPB size", l->dpb, mbs * 384 * h->sps->i_num_ref_frames );
+    CHECK( "VBV bitrate", l->bitrate, h->param.rc.i_vbv_max_bitrate );
+    CHECK( "VBV buffer", l->cpb, h->param.rc.i_vbv_buffer_size );
+    CHECK( "MV range", l->mv_range, h->param.analyse.i_mv_range );
+
+    if( h->param.i_fps_den > 0 )
+        CHECK( "MB rate", l->mbps, (int64_t)mbs * h->param.i_fps_num / h->param.i_fps_den );
+
+    /* TODO check the rest of the limits */
 }

@@ -2,7 +2,7 @@
  * variables.h: variables handling
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: variables.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: variables.h 13991 2006-01-22 17:12:24Z zorglub $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**
@@ -162,6 +162,9 @@ VLC_EXPORT( int, __var_Change, ( vlc_object_t *, const char *, int, vlc_value_t 
 VLC_EXPORT( int, __var_Type, ( vlc_object_t *, const char * ) );
 VLC_EXPORT( int, __var_Set, ( vlc_object_t *, const char *, vlc_value_t ) );
 VLC_EXPORT( int, __var_Get, ( vlc_object_t *, const char *, vlc_value_t * ) );
+
+#define var_OptionParse(a,b) __var_OptionParse( VLC_OBJECT( a ) , b )
+VLC_EXPORT( void, __var_OptionParse, ( vlc_object_t *, const char * ) );
 
 /**
  * __var_Create() with automatic casting.

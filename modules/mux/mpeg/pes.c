@@ -2,7 +2,7 @@
  * pes.c: PES packetizer used by the MPEG multiplexers
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: pes.c 12798 2005-10-09 17:01:08Z fenrir $
+ * $Id: pes.c 15118 2006-04-06 17:54:21Z massiot $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -124,7 +124,7 @@ static inline int PESHeader( uint8_t *p_hdr, mtime_t i_pts, mtime_t i_dts,
                 bits_write( &bits, 1, 0x00 ); // dsm trick mode flag
                 bits_write( &bits, 1, 0x00 ); // additional copy info flag
                 bits_write( &bits, 1, 0x00 ); // pes crc flag
-                bits_write( &bits, 1, 0x00 ); // pes extention flags
+                bits_write( &bits, 1, 0x00 ); // pes extension flags
                 bits_write( &bits, 8, i_header_size ); // header size -> pts and dts
 
                 /* write pts */
@@ -288,6 +288,7 @@ int E_( EStoPES )( sout_instance_t *p_sout, block_t **pp_pes, block_t *p_es,
         if( p_es )
         {
             p_es = block_Realloc( p_es, i_pes_header, p_es->i_buffer );
+            p_data = p_es->p_buffer+i_pes_header;
             /* reuse p_es for first frame */
             *pp_pes = p_pes = p_es;
             /* don't touch i_dts, i_pts, i_length as are already set :) */

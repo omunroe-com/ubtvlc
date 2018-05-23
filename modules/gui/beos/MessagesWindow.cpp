@@ -2,7 +2,7 @@
  * MessagesWindow.cpp: beos interface
  *****************************************************************************
  * Copyright (C) 1999, 2000, 2001 the VideoLAN team
- * $Id: MessagesWindow.cpp 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: MessagesWindow.cpp 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /* BeOS headers */
@@ -135,7 +135,7 @@ MessagesWindow::MessagesWindow( intf_thread_t * _p_intf,
 {
     SetSizeLimits( 400, 2000, 200, 2000 );
 
-    p_sub = msg_Subscribe( p_intf );
+    p_sub = msg_Subscribe( p_intf, MSG_QUEUE_NORMAL );
     
     BRect rect, textRect;
 

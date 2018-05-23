@@ -2,7 +2,7 @@
  * libmp4.c : LibMP4 library for mp4 module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2004 the VideoLAN team
- * $Id: libmp4.c 12770 2005-10-06 19:12:22Z fenrir $
+ * $Id: libmp4.c 15203 2006-04-13 14:47:20Z hartman $
  *
  * Author: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <stdlib.h>                                      /* malloc(), free() */
 
@@ -225,7 +225,7 @@ int MP4_ReadBoxCommon( stream_t *p_stream, MP4_Box_t *p_box )
 /*****************************************************************************
  * MP4_NextBox : Go to the next box
  *****************************************************************************
- * if p_box == NULL, go to the next box in witch we are( at the begining ).
+ * if p_box == NULL, go to the next box in which we are( at the begining ).
  *****************************************************************************/
 static int MP4_NextBox( stream_t *p_stream, MP4_Box_t *p_box )
 {
@@ -248,6 +248,7 @@ static int MP4_NextBox( stream_t *p_stream, MP4_Box_t *p_box )
         if( p_box->i_size + p_box->i_pos >=
             p_box->p_father->i_size + p_box->p_father->i_pos )
         {
+            msg_Dbg( p_stream, "out of bound child" );
             return 0; /* out of bound */
         }
     }
@@ -582,30 +583,33 @@ static int MP4_ReadBox_hdlr( stream_t *p_stream, MP4_Box_t *p_box )
     MP4_GET4BYTES( i_reserved );
     MP4_GET4BYTES( i_reserved );
     MP4_GET4BYTES( i_reserved );
+    p_box->data.p_hdlr->psz_name = NULL;
 
-    p_box->data.p_hdlr->psz_name = calloc( sizeof( char ), i_read + 1 );
-
-    /* Yes, I love .mp4 :( */
-    if( p_box->data.p_hdlr->i_predefined == VLC_FOURCC( 'm', 'h', 'l', 'r' ) )
+    if( i_read > 0 )
     {
-        uint8_t i_len;
-        int i_copy;
+        p_box->data.p_hdlr->psz_name = calloc( sizeof( char ), i_read + 1 );
 
-        MP4_GET1BYTE( i_len );
-        i_copy = __MIN( i_read, i_len );
+        /* Yes, I love .mp4 :( */
+        if( p_box->data.p_hdlr->i_predefined == VLC_FOURCC( 'm', 'h', 'l', 'r' ) )
+        {
+            uint8_t i_len;
+            int i_copy;
 
-        memcpy( p_box->data.p_hdlr->psz_name, p_peek, i_copy );
-        p_box->data.p_hdlr->psz_name[i_copy] = '\0';
+            MP4_GET1BYTE( i_len );
+            i_copy = __MIN( i_read, i_len );
+
+            memcpy( p_box->data.p_hdlr->psz_name, p_peek, i_copy );
+            p_box->data.p_hdlr->psz_name[i_copy] = '\0';
+        }
+        else
+        {
+            memcpy( p_box->data.p_hdlr->psz_name, p_peek, i_read );
+            p_box->data.p_hdlr->psz_name[i_read] = '\0';
+        }
     }
-    else
-    {
-        memcpy( p_box->data.p_hdlr->psz_name, p_peek, i_read );
-        p_box->data.p_hdlr->psz_name[i_read] = '\0';
-    }
-
 
 #ifdef MP4_VERBOSE
-    msg_Dbg( p_stream, "read box: \"hdlr\" hanler type %4.4s name %s",
+    msg_Dbg( p_stream, "read box: \"hdlr\" handler type %4.4s name %s",
                        (char*)&p_box->data.p_hdlr->i_handler_type,
                        p_box->data.p_hdlr->psz_name );
 
@@ -1279,7 +1283,6 @@ static int MP4_ReadBox_sample_mp4s( stream_t *p_stream, MP4_Box_t *p_box )
 
 static int MP4_ReadBox_sample_text( stream_t *p_stream, MP4_Box_t *p_box )
 {
-    unsigned int i;
     int32_t t;
 
     MP4_READBOX_ENTER( MP4_Box_data_sample_text_t );
@@ -1332,9 +1335,6 @@ static int MP4_ReadBox_sample_text( stream_t *p_stream, MP4_Box_t *p_box )
 
 static int MP4_ReadBox_sample_tx3g( stream_t *p_stream, MP4_Box_t *p_box )
 {
-    unsigned int i;
-    int32_t t;
-
     MP4_READBOX_ENTER( MP4_Box_data_sample_text_t );
 
     MP4_GET4BYTES( p_box->data.p_sample_text->i_reserved1 );
@@ -2035,11 +2035,25 @@ static int MP4_ReadBox_drms( stream_t *p_stream, MP4_Box_t *p_box )
 
     if( p_drms_box && p_drms_box->data.p_sample_soun->p_drms )
     {
-        if( drms_init( p_drms_box->data.p_sample_soun->p_drms,
-                       p_box->i_type, p_peek, i_read ) )
+        int i_ret = drms_init( p_drms_box->data.p_sample_soun->p_drms,
+                               p_box->i_type, p_peek, i_read );
+        if( i_ret )
         {
-            msg_Err( p_stream, "drms_init( %4.4s ) failed",
-                     (char *)&p_box->i_type );
+            char *psz_error;
+
+            switch( i_ret )
+            {
+                case -1: psz_error = "unimplemented"; break;
+                case -2: psz_error = "invalid argument"; break;
+                case -3: psz_error = "could not get system key"; break;
+                case -4: psz_error = "could not get SCI data"; break;
+                case -5: psz_error = "no user key found in SCI data"; break;
+                case -6: psz_error = "invalid user key"; break;
+                default: psz_error = "unknown error"; break;
+            }
+
+            msg_Err( p_stream, "drms_init(%4.4s) failed (%s)",
+                     (char *)&p_box->i_type, psz_error );
 
             drms_free( p_drms_box->data.p_sample_soun->p_drms );
             p_drms_box->data.p_sample_soun->p_drms = NULL;

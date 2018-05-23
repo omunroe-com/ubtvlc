@@ -2,10 +2,10 @@
  * playlist.c : Playlist management functions
  *****************************************************************************
  * Copyright (C) 1999-2004 the VideoLAN team
- * $Id: playlist.c 12842 2005-10-15 17:55:46Z asmax $
+ * $Id: playlist.c 15025 2006-04-01 11:27:40Z fkuehne $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
- *          Clément Stenac <zorglub@videolan.org>
+ *          ClÃ©ment Stenac <zorglub@videolan.org>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 #include <stdlib.h>                                      /* free(), strtol() */
 #include <stdio.h>                                              /* sprintf() */
@@ -31,6 +31,8 @@
 #include <vlc/input.h>
 
 #include "vlc_playlist.h"
+
+#include "vlc_interaction.h"
 
 #define TITLE_CATEGORY N_( "By category" )
 #define TITLE_SIMPLE   N_( "Manually added" )
@@ -46,9 +48,6 @@ static void RunThread ( playlist_t * );
 static void RunPreparse( playlist_preparse_t * );
 static playlist_item_t * NextItem  ( playlist_t * );
 static int PlayItem  ( playlist_t *, playlist_item_t * );
-
-static int ItemChange( vlc_object_t *, const char *,
-                       vlc_value_t, vlc_value_t, void * );
 
 int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args );
 
@@ -174,9 +173,11 @@ playlist_t * __playlist_Create ( vlc_object_t *p_parent )
     p_playlist->request.b_request = VLC_FALSE;
     p_playlist->status.i_status = PLAYLIST_STOPPED;
 
-
     p_playlist->i_sort = SORT_ID;
     p_playlist->i_order = ORDER_NORMAL;
+
+    p_playlist->p_stats = (global_stats_t *)malloc( sizeof( global_stats_t ) );
+    vlc_mutex_init( p_playlist, &p_playlist->p_stats->lock );
 
     /* Finally, launch the thread ! */
     if( vlc_thread_create( p_playlist, "playlist", RunThread,
@@ -197,8 +198,12 @@ playlist_t * __playlist_Create ( vlc_object_t *p_parent )
         return NULL;
     }
 
+    // Preparse
     p_playlist->p_preparse->i_waiting = 0;
-    p_playlist->p_preparse->pp_waiting = NULL;
+    p_playlist->p_preparse->pi_waiting = NULL;
+
+    // Interaction
+    p_playlist->p_interaction = NULL;
 
     vlc_object_attach( p_playlist->p_preparse, p_playlist );
     if( vlc_thread_create( p_playlist->p_preparse, "preparser",
@@ -234,6 +239,11 @@ int playlist_Destroy( playlist_t * p_playlist )
                                           p_playlist->pp_sds[0]->psz_module );
     }
 
+    if( p_playlist->p_interaction )
+    {
+        intf_InteractionDestroy( p_playlist->p_interaction );
+    }
+
     vlc_thread_join( p_playlist->p_preparse );
     vlc_thread_join( p_playlist );
 
@@ -260,6 +270,9 @@ int playlist_Destroy( playlist_t * p_playlist )
         REMOVE_ELEM( p_playlist->pp_views, p_playlist->i_views, i );
         free( p_view );
     }
+
+    if( p_playlist->p_stats )
+        free( p_playlist->p_stats );
 
     vlc_mutex_destroy( &p_playlist->gc_lock );
     vlc_object_destroy( p_playlist->p_preparse );
@@ -364,8 +377,8 @@ int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args )
         i_view = (int)va_arg( args,int );
         p_node = (playlist_item_t *)va_arg( args, playlist_item_t * );
         p_item = (playlist_item_t *)va_arg( args, playlist_item_t * );
-        if ( p_node == NULL || (p_item != NULL && p_item->input.psz_uri
-                                                         == NULL ))
+        if ( p_node == NULL ) //|| (p_item != NULL && p_item->input.psz_uri
+                                //                         == NULL ))
         {
             p_playlist->status.i_status = PLAYLIST_STOPPED;
             p_playlist->request.b_request = VLC_TRUE;
@@ -378,10 +391,8 @@ int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args )
         p_playlist->request.p_node = p_node;
         p_playlist->request.p_item = p_item;
 
-        /* If we select a node, play only it.
-         * If we select an item, continue */
-        if( p_playlist->request.p_item == NULL ||
-            ! p_playlist->request.p_node->i_flags & PLAYLIST_SKIP_FLAG )
+        /* Don't go further if the node doesn't want to */
+        if( ! p_playlist->request.p_node->i_flags & PLAYLIST_SKIP_FLAG )
         {
             p_playlist->b_go_next = VLC_FALSE;
         }
@@ -468,7 +479,7 @@ int playlist_vaControl( playlist_t * p_playlist, int i_query, va_list args )
         break;
 
     default:
-        msg_Err( p_playlist, "unimplemented playlist query" );
+        msg_Err( p_playlist, "unknown playlist query" );
         return VLC_EBADVAR;
         break;
     }
@@ -480,10 +491,10 @@ int playlist_PreparseEnqueue( playlist_t *p_playlist,
                               input_item_t *p_item )
 {
     vlc_mutex_lock( &p_playlist->p_preparse->object_lock );
-    INSERT_ELEM( p_playlist->p_preparse->pp_waiting,
+    INSERT_ELEM( p_playlist->p_preparse->pi_waiting,
                  p_playlist->p_preparse->i_waiting,
                  p_playlist->p_preparse->i_waiting,
-                 p_item );
+                 p_item->i_id );
     vlc_mutex_unlock( &p_playlist->p_preparse->object_lock );
     return VLC_SUCCESS;
 }
@@ -495,10 +506,10 @@ void playlist_PreparseEnqueueItemSub( playlist_t *p_playlist,
     int i;
     if( p_item->i_children == -1 )
     {
-        INSERT_ELEM( p_playlist->p_preparse->pp_waiting,
+        INSERT_ELEM( p_playlist->p_preparse->pi_waiting,
                      p_playlist->p_preparse->i_waiting,
                      p_playlist->p_preparse->i_waiting,
-                     &(p_item->input) );
+                     (p_item->input.i_id) );
     }
     else
     {
@@ -548,7 +559,7 @@ static mtime_t ObjectGarbageCollector( playlist_t *p_playlist, int i_type,
             }
             if( i_type == VLC_OBJECT_VOUT )
             {
-                msg_Dbg( p_playlist, "garbage collector destroying 1 vout" );
+                msg_Dbg( p_playlist, "garbage collector destroys 1 vout" );
                 vlc_object_detach( p_obj );
                 vlc_object_release( p_obj );
                 vout_Destroy( (vout_thread_t *)p_obj );
@@ -575,6 +586,8 @@ static void RunThread ( playlist_t *p_playlist )
     mtime_t    i_vout_destroyed_date = 0;
     mtime_t    i_sout_destroyed_date = 0;
 
+    int i_loops = 0;
+
     playlist_item_t *p_autodelete_item = NULL;
 
     /* Tell above that we're ready */
@@ -582,6 +595,20 @@ static void RunThread ( playlist_t *p_playlist )
 
     while( !p_playlist->b_die )
     {
+        i_loops++;
+        if( p_playlist->p_interaction )
+        {
+            stats_TimerStart( p_playlist, "Interaction thread",
+                              STATS_TIMER_INTERACTION );
+            intf_InteractionManage( p_playlist );
+            stats_TimerStop( p_playlist, STATS_TIMER_INTERACTION );
+        }
+
+        if( i_loops %5 == 0 && p_playlist->p_stats )
+        {
+            stats_ComputeGlobalStats( p_playlist, p_playlist->p_stats );
+        }
+
         vlc_mutex_lock( &p_playlist->object_lock );
 
         /* First, check if we have something to do */
@@ -607,6 +634,14 @@ static void RunThread ( playlist_t *p_playlist )
         /* If there is an input, check that it doesn't need to die. */
         if( p_playlist->p_input )
         {
+            if( i_loops % 5 == 0 )
+            {
+                stats_ComputeInputStats( p_playlist->p_input,
+                                  p_playlist->p_input->input.p_item->p_stats );
+//                stats_DumpInputStats(
+//                            p_playlist->p_input->input.p_item->p_stats );
+            }
+
             /* This input is dead. Remove it ! */
             if( p_playlist->p_input->b_dead )
             {
@@ -678,8 +713,10 @@ static void RunThread ( playlist_t *p_playlist )
         {
             /* Start another input.
              * Get the next item to play */
+            stats_TimerStart( p_playlist, "Playlist walk",
+                              STATS_TIMER_PLAYLIST_WALK );
             p_item = NextItem( p_playlist );
-
+            stats_TimerStop( p_playlist, STATS_TIMER_PLAYLIST_WALK );
 
             /* We must stop */
             if( p_item == NULL )
@@ -821,11 +858,40 @@ static void RunPreparse ( playlist_preparse_t *p_obj )
 
         if( p_obj->i_waiting > 0 )
         {
-            input_item_t *p_current = p_obj->pp_waiting[0];
-            REMOVE_ELEM( p_obj->pp_waiting, p_obj->i_waiting, 0 );
+            int i_current_id = p_obj->pi_waiting[0];
+            playlist_item_t *p_current;
+            REMOVE_ELEM( p_obj->pi_waiting, p_obj->i_waiting, 0 );
             vlc_mutex_unlock( &p_obj->object_lock );
-            input_Preparse( p_playlist, p_current );
-            var_SetInteger( p_playlist, "item-change", p_current->i_id );
+            vlc_mutex_lock( &p_playlist->object_lock );
+
+            p_current = playlist_ItemGetById( p_playlist, i_current_id );
+            if( p_current )
+            {
+                vlc_bool_t b_preparsed = VLC_FALSE;
+                if( strncmp( p_current->input.psz_uri, "http:", 5 ) &&
+                    strncmp( p_current->input.psz_uri, "rtsp:", 5 ) &&
+                    strncmp( p_current->input.psz_uri, "udp:", 4 ) &&
+                    strncmp( p_current->input.psz_uri, "mms:", 4 ) &&
+                    strncmp( p_current->input.psz_uri, "cdda:", 4 ) &&
+                    strncmp( p_current->input.psz_uri, "dvd:", 4 ) &&
+                    strncmp( p_current->input.psz_uri, "v4l:", 4 ) &&
+                    strncmp( p_current->input.psz_uri, "dshow:", 6 ) )
+                {
+                    b_preparsed = VLC_TRUE;
+                    stats_TimerStart( p_playlist, "Preparse run",
+                                      STATS_TIMER_PREPARSE );
+                    input_Preparse( p_playlist, &p_current->input );
+                    stats_TimerStop( p_playlist, STATS_TIMER_PREPARSE );
+                }
+                vlc_mutex_unlock( &p_playlist->object_lock );
+                if( b_preparsed )
+                {
+                    var_SetInteger( p_playlist, "item-change",
+                                    p_current->input.i_id );
+                }
+            }
+            else
+                vlc_mutex_unlock( &p_playlist->object_lock );
             vlc_mutex_lock( &p_obj->object_lock );
         }
         b_sleep = ( p_obj->i_waiting == 0 );
@@ -860,7 +926,6 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
     /* Calculate time needed */
     int64_t start = mdate();
 #endif
-
     /* Handle quickly a few special cases */
 
     /* No items to play */
@@ -876,7 +941,8 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
     }
 
     /* Repeat and play/stop */
-    if( !p_playlist->request.b_request && b_repeat == VLC_TRUE )
+    if( !p_playlist->request.b_request && b_repeat == VLC_TRUE &&
+         p_playlist->status.p_item )
     {
         msg_Dbg( p_playlist,"repeating item" );
         return p_playlist->status.p_item;
@@ -899,7 +965,7 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
     /* TODO: use the "shuffled view" internally ? */
     /* Random case. This is an exception: if request, but request is skip +- 1
      * we don't go to next item but select a new random one. */
-    if( b_random && 
+    if( b_random &&
         ( !p_playlist->request.b_request ||
         ( p_playlist->request.b_request && ( p_playlist->request.p_item == NULL ||
           p_playlist->request.i_skip == 1 || p_playlist->request.i_skip == -1 ) ) ) )
@@ -976,6 +1042,10 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
                     p_new = p_playlist->pp_items[p_playlist->i_index];
                 }
                 p_playlist->request.i_skip = 0;
+            }
+            if( !( p_new->i_flags & PLAYLIST_SKIP_FLAG ) )
+            {
+                return NULL;
             }
         }
         else
@@ -1129,6 +1199,7 @@ static playlist_item_t * NextItem( playlist_t *p_playlist )
     {
         msg_Info( p_playlist, "nothing to play" );
     }
+
     return p_new;
 }
 
@@ -1157,9 +1228,6 @@ static int PlayItem( playlist_t *p_playlist, playlist_item_t *p_item )
 
     p_playlist->p_input = input_CreateThread( p_playlist, &p_item->input );
 
-    var_AddCallback( p_playlist->p_input, "item-change",
-                         ItemChange, p_playlist );
-
     val.i_int = p_item->input.i_id;
     /* unlock the playlist to set the var...mmm */
     vlc_mutex_unlock( &p_playlist->object_lock);
@@ -1168,20 +1236,4 @@ static int PlayItem( playlist_t *p_playlist, playlist_item_t *p_item )
 
     return VLC_SUCCESS;
 
-}
-
-/* Forward item change from input */
-static int ItemChange( vlc_object_t *p_obj, const char *psz_var,
-                       vlc_value_t oldval, vlc_value_t newval, void *param )
-{
-    playlist_t *p_playlist = (playlist_t *)param;
-
-    //p_playlist->b_need_update = VLC_TRUE;
-    var_SetInteger( p_playlist, "item-change", newval.i_int );
-
-    /* Update view */
-    /* FIXME: Make that automatic */
-//    playlist_ViewUpdate( p_playlist, VIEW_S_AUTHOR );
-
-    return VLC_SUCCESS;
 }

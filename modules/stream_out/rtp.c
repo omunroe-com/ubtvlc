@@ -2,7 +2,7 @@
  * rtp.c: rtp stream output module
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: rtp.c 12951 2005-10-24 07:33:08Z md $
+ * $Id: rtp.c 15203 2006-04-13 14:47:20Z hartman $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -33,50 +33,64 @@
 #include <vlc/sout.h>
 
 #include "vlc_httpd.h"
+#include "vlc_url.h"
 #include "network.h"
+#include "charset.h"
 
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
+
+#define MTU_REDUCE 50
+
 #define DST_TEXT N_("Destination")
 #define DST_LONGTEXT N_( \
-    "Allows you to specify the output URL used for the streaming output." )
+    "This is the output URL that will be used." )
 #define SDP_TEXT N_("SDP")
 #define SDP_LONGTEXT N_( \
-    "Allows you to specify the SDP used for the streaming output. " \
-    "You must use an url: http://location to access the SDP via HTTP, " \
-    "rtsp://location for RTSP access, and sap:// for the SDP to be " \
-    "announced via SAP." )
+    "This allows you to specify how the SDP (Session Descriptor) for this RTP "\
+    "session will be made available. You must use an url: http://location to " \
+    "access the SDP via HTTP, rtsp://location for RTSP access, and sap:// " \
+    "for the SDP to be announced via SAP." )
 #define MUX_TEXT N_("Muxer")
 #define MUX_LONGTEXT N_( \
-    "Allows you to specify the muxer used for the streaming output." )
+    "This allows you to specify the muxer used for the streaming output. " \
+    "Default is to use no muxer (standard RTP stream)." )
 
 #define NAME_TEXT N_("Session name")
 #define NAME_LONGTEXT N_( \
-    "Allows you to specify the session name used for the streaming output." )
+    "This is the name of the session that will be announced in the SDP " \
+    "(Session Descriptor)." )
 #define DESC_TEXT N_("Session description")
 #define DESC_LONGTEXT N_( \
-    "Allows you to give a broader description of the stream." )
+    "This allows you to give a broader description of the stream, that will " \
+    "be announced in the SDP (Session Descriptor)." )
 #define URL_TEXT N_("Session URL")
 #define URL_LONGTEXT N_( \
-    "Allows you to specify a URL with additional information on the stream." )
+    "This allows you to give an URL with more details about the stream " \
+    "(often the website of the streaming organization), that will " \
+    "be announced in the SDP (Session Descriptor)." )
 #define EMAIL_TEXT N_("Session email")
 #define EMAIL_LONGTEXT N_( \
-    "Allows you to specify contact e-mail address for this session." )
-
+   "This allows you to give a contact mail address for the stream, that will " \
+   "be announced in the SDP (Session Descriptor)." )
 #define PORT_TEXT N_("Port")
 #define PORT_LONGTEXT N_( \
-    "Allows you to specify the base port used for the RTP streaming." )
+    "This allows you to specify the base port for the RTP streaming." )
 #define PORT_AUDIO_TEXT N_("Audio port")
 #define PORT_AUDIO_LONGTEXT N_( \
-    "Allows you to specify the default audio port used for the RTP streaming." )
+    "This allows you to specify the default audio port for the RTP streaming." )
 #define PORT_VIDEO_TEXT N_("Video port")
 #define PORT_VIDEO_LONGTEXT N_( \
-    "Allows you to specify the default video port used for the RTP streaming." )
+    "This allows you to specify the default video port for the RTP streaming." )
 
-#define TTL_TEXT N_("Time To Live")
+#define TTL_TEXT N_("Time-To-Live (TTL)")
 #define TTL_LONGTEXT N_( \
-    "Allows you to specify the time to live for the output stream." )
+    "This allows you to specify the Time-To-Live for the output stream." )
+
+#define RFC3016_TEXT N_("MP4A LATM")
+#define RFC3016_LONGTEXT N_( \
+    "This allows you to stream MPEG4 LATM audio streams (see RFC3016)." )
 
 static int  Open ( vlc_object_t * );
 static void Close( vlc_object_t * );
@@ -114,8 +128,11 @@ vlc_module_begin();
     add_integer( SOUT_CFG_PREFIX "port-video", 1232, NULL, PORT_VIDEO_TEXT,
                  PORT_VIDEO_LONGTEXT, VLC_TRUE );
 
-    add_integer( SOUT_CFG_PREFIX "ttl", 1, NULL, TTL_TEXT,
+    add_integer( SOUT_CFG_PREFIX "ttl", 0, NULL, TTL_TEXT,
                  TTL_LONGTEXT, VLC_TRUE );
+
+    add_bool( SOUT_CFG_PREFIX "mp4a-latm", 0, NULL, RFC3016_TEXT,
+                 RFC3016_LONGTEXT, VLC_FALSE );
 
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -125,7 +142,7 @@ vlc_module_end();
  *****************************************************************************/
 static const char *ppsz_sout_options[] = {
     "dst", "name", "port", "port-audio", "port-video", "*sdp", "ttl", "mux",
-    "description", "url","email", NULL
+    "description", "url","email", "mp4a-latm", NULL
 };
 
 static sout_stream_id_t *Add ( sout_stream_t *, es_format_t * );
@@ -183,6 +200,7 @@ struct sout_stream_sys_t
     int  i_port_audio;
     int  i_port_video;
     int  i_ttl;
+    vlc_bool_t b_latm;
 
     /* when need to use a private one or when using muxer */
     int i_payload_type;
@@ -271,8 +289,10 @@ static int Open( vlc_object_t *p_this )
 {
     sout_stream_t       *p_stream = (sout_stream_t*)p_this;
     sout_instance_t     *p_sout = p_stream->p_sout;
-    sout_stream_sys_t   *p_sys;
+    sout_stream_sys_t   *p_sys = NULL;
+    sout_cfg_t          *p_cfg = NULL;
     vlc_value_t         val;
+    vlc_bool_t          b_rtsp = VLC_FALSE;
 
     sout_CfgParse( p_stream, SOUT_CFG_PREFIX, ppsz_sout_options, p_stream->p_cfg );
 
@@ -311,32 +331,29 @@ static int Open( vlc_object_t *p_this )
            p_sys->psz_session_name = strdup( "NONE" );
     }
 
-    if( !p_sys->psz_destination || *p_sys->psz_destination == '\0' )
+    for( p_cfg = p_stream->p_cfg; p_cfg != NULL; p_cfg = p_cfg->p_next )
     {
-        sout_cfg_t *p_cfg;
-        vlc_bool_t b_ok = VLC_FALSE;
-
-        for( p_cfg = p_stream->p_cfg; p_cfg != NULL; p_cfg = p_cfg->p_next )
+        if( !strcmp( p_cfg->psz_name, "sdp" ) )
         {
-            if( !strcmp( p_cfg->psz_name, "sdp" ) )
+            if( p_cfg->psz_value && !strncasecmp( p_cfg->psz_value, "rtsp", 4 ) )
             {
-                if( p_cfg->psz_value && !strncasecmp( p_cfg->psz_value, "rtsp", 4 ) )
-                {
-                    b_ok = VLC_TRUE;
-                    break;
-                }
+                b_rtsp = VLC_TRUE;
+                break;
             }
         }
-        if( !b_ok )
-        {
-            vlc_value_t val2;
-            var_Get( p_stream, SOUT_CFG_PREFIX "sdp", &val2 );
-            if( !strncasecmp( val2.psz_string, "rtsp", 4 ) )
-                b_ok = VLC_TRUE;
-            free( val2.psz_string );
-        }
+    }
+    if( !b_rtsp )
+    {
+        vlc_value_t val2;
+        var_Get( p_stream, SOUT_CFG_PREFIX "sdp", &val2 );
+        if( !strncasecmp( val2.psz_string, "rtsp", 4 ) )
+            b_rtsp = VLC_TRUE;
+        free( val2.psz_string );
+    }
 
-        if( !b_ok )
+    if( !p_sys->psz_destination || *p_sys->psz_destination == '\0' )
+    {
+        if( !b_rtsp )
         {
             msg_Err( p_stream, "missing destination and not in rtsp mode" );
             free( p_sys );
@@ -352,13 +369,28 @@ static int Open( vlc_object_t *p_this )
     }
 
     var_Get( p_stream, SOUT_CFG_PREFIX "ttl", &val );
-    if( ( val.i_int > 255 ) || ( val.i_int < 0 ) )
+    if( val.i_int == 0 )
+    {
+        /* Normally, we should let the default hop limit up to the core,
+         * but we have to know it to build our SDP properly, which is why
+         * we ask the core. FIXME: broken when neither sout-rtp-ttl nor
+         * ttl are set. */
+        val.i_int = config_GetInt( p_stream, "ttl" );
+    }
+    if( val.i_int > 255 ) val.i_int = 255;
+    /* must not exceed 999 once formatted */
+
+    if( val.i_int < 0 )
     {
         msg_Err( p_stream, "illegal TTL %d", val.i_int );
         free( p_sys );
         return VLC_EGENERIC;
     }
     p_sys->i_ttl = val.i_int;
+
+
+    var_Get( p_stream, SOUT_CFG_PREFIX "mp4a-latm", &val );
+    p_sys->b_latm = val.b_bool;
 
     p_sys->i_payload_type = 96;
     p_sys->i_es = 0;
@@ -397,7 +429,13 @@ static int Open( vlc_object_t *p_this )
         sout_access_out_t *p_grab;
         char *psz_rtpmap, url[NI_MAXHOST + 8], access[17], psz_ttl[5], ipv;
 
-        if( !p_sys->psz_destination || *p_sys->psz_destination == '\0' )
+        if( b_rtsp )
+        {
+            msg_Err( p_stream, "muxing is not supported in RTSP mode" );
+            free( p_sys );
+            return VLC_EGENERIC;
+        }
+        else if( !p_sys->psz_destination || *p_sys->psz_destination == '\0' )
         {
             msg_Err( p_stream, "rtp needs a destination when muxing" );
             free( p_sys );
@@ -440,6 +478,7 @@ static int Open( vlc_object_t *p_this )
         url[sizeof( url ) - 1] = '\0';
         /* FIXME: we should check that url is a numerical address, otherwise
          * the SDP will be quite broken (regardless of the IP protocol version)
+         * Also it might be IPv6 with no ':' if it is a DNS name.
          */
         ipv = ( strchr( p_sys->psz_destination, ':' ) != NULL ) ? '6' : '4';
 
@@ -451,11 +490,12 @@ static int Open( vlc_object_t *p_this )
             return VLC_EGENERIC;
         }
         p_sys->i_mtu = config_GetInt( p_stream, "mtu" );  /* XXX beurk */
-        if( p_sys->i_mtu <= 16 )
+        if( p_sys->i_mtu <= 16 + MTU_REDUCE )
         {
             /* better than nothing */
             p_sys->i_mtu = 1500;
         }
+        p_sys->i_mtu -= MTU_REDUCE;
 
         /* the access out grabber TODO export it as sout_AccessOutGrabberNew */
         p_grab = p_sys->p_grab =
@@ -525,7 +565,7 @@ static int Open( vlc_object_t *p_this )
                   ipv, p_sys->psz_destination, psz_ttl,
                   p_sys->i_port, p_sys->i_payload_type,
                   p_sys->i_payload_type, psz_rtpmap );
-        fprintf( stderr, "sdp=%s", p_sys->psz_sdp );
+        msg_Dbg( p_stream, "sdp=%s", p_sys->psz_sdp );
 
         /* create the rtp context */
         p_sys->ssrc[0] = rand()&0xff;
@@ -624,8 +664,6 @@ static void Close( vlc_object_t * p_this )
     {
         httpd_HostDelete( p_sys->p_rtsp_host );
     }
-#if 0
-    /* why? is this disabled? */
     if( p_sys->psz_session_name )
     {
         free( p_sys->psz_session_name );
@@ -646,10 +684,10 @@ static void Close( vlc_object_t * p_this )
         free( p_sys->psz_session_email );
         p_sys->psz_session_email = NULL;
     }
-#endif
     if( p_sys->psz_sdp )
     {
         free( p_sys->psz_sdp );
+        p_sys->psz_sdp = NULL;
     }
     free( p_sys );
 }
@@ -667,7 +705,7 @@ static void SDPHandleUrl( sout_stream_t *p_stream, char *psz_url )
     {
         if( p_sys->p_httpd_file )
         {
-            msg_Err( p_stream, "You can used sdp=http:// only once" );
+            msg_Err( p_stream, "you can use sdp=http:// only once" );
             return;
         }
 
@@ -680,7 +718,7 @@ static void SDPHandleUrl( sout_stream_t *p_stream, char *psz_url )
     {
         if( p_sys->p_rtsp_url )
         {
-            msg_Err( p_stream, "You can used sdp=rtsp:// only once" );
+            msg_Err( p_stream, "you can use sdp=rtsp:// only once" );
             return;
         }
 
@@ -700,7 +738,7 @@ static void SDPHandleUrl( sout_stream_t *p_stream, char *psz_url )
     {
         if( p_sys->b_export_sdp_file )
         {
-            msg_Err( p_stream, "You can used sdp=file:// only once" );
+            msg_Err( p_stream, "you can use sdp=file:// only once" );
             return;
         }
         p_sys->b_export_sdp_file = VLC_TRUE;
@@ -770,8 +808,12 @@ static char *SDPGenerate( const sout_stream_t *p_stream,
         }
         if( b_rtsp )
         {
-            i_size += strlen( "a=control:*/trackid=*\r\n" ) + strlen( p_sys->psz_rtsp_control ) + 10;
+            i_size += strlen( "a=control:*/trackID=*\r\n" ) + strlen( p_sys->psz_rtsp_control ) + 10;
         }
+    }
+    if( p_sys->p_mux )
+    {
+        i_size += strlen( "m=video %d RTP/AVP %d\r\n" ) +10 +10;
     }
 
     ipv = ( strchr( psz_destination, ':' ) != NULL ) ? '6' : '4';
@@ -798,7 +840,8 @@ static char *SDPGenerate( const sout_stream_t *p_stream,
     if( net_AddressIsMulticast( (vlc_object_t *)p_stream, psz_destination ) )
     {
         /* Add the ttl if it is a multicast address */
-        p += sprintf( p, "/%d\r\n", p_sys->i_ttl );
+        /* FIXME: 1 is not a correct default value in the case of IPv6 */
+        p += sprintf( p, "/%d\r\n", p_sys->i_ttl ?: 1 );
     }
     else
     {
@@ -835,8 +878,13 @@ static char *SDPGenerate( const sout_stream_t *p_stream,
         }
         if( b_rtsp )
         {
-            p += sprintf( p, "a=control:%s/trackid=%d\r\n", p_sys->psz_rtsp_control, i );
+            p += sprintf( p, "a=control:trackID=%d\r\n", i );
         }
+    }
+    if( p_sys->p_mux )
+    {
+       p += sprintf( p, "m=video %d RTP/AVP %d\r\n",
+                 p_sys->i_port, p_sys->i_payload_type );
     }
 
     return psz_sdp;
@@ -852,6 +900,7 @@ static int rtp_packetize_mpv  ( sout_stream_t *, sout_stream_id_t *, block_t * )
 static int rtp_packetize_ac3  ( sout_stream_t *, sout_stream_id_t *, block_t * );
 static int rtp_packetize_split( sout_stream_t *, sout_stream_id_t *, block_t * );
 static int rtp_packetize_mp4a ( sout_stream_t *, sout_stream_id_t *, block_t * );
+static int rtp_packetize_mp4a_latm ( sout_stream_t *, sout_stream_id_t *, block_t * );
 static int rtp_packetize_h263 ( sout_stream_t *, sout_stream_id_t *, block_t * );
 static int rtp_packetize_amr  ( sout_stream_t *, sout_stream_id_t *, block_t * );
 
@@ -926,7 +975,7 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         char url[NI_MAXHOST + 8];
 
         /* first try to create the access out */
-        if( p_sys->i_ttl > 0 )
+        if( p_sys->i_ttl )
         {
             snprintf( access, sizeof( access ), "udp{raw,ttl=%d}",
                       p_sys->i_ttl );
@@ -1038,19 +1087,50 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         }
         case VLC_FOURCC( 'm', 'p', '4', 'a' ):
         {
-            char hexa[2*p_fmt->i_extra +1];
-
             id->i_payload_type = p_sys->i_payload_type++;
             id->i_clock_rate = p_fmt->audio.i_rate;
-            id->psz_rtpmap = malloc( strlen( "mpeg4-generic/" ) + 12 );
-            sprintf( id->psz_rtpmap, "mpeg4-generic/%d", p_fmt->audio.i_rate );
-            id->pf_packetize = rtp_packetize_mp4a;
-            id->psz_fmtp = malloc( 200 + 2 * p_fmt->i_extra );
-            sprintf_hexa( hexa, p_fmt->p_extra, p_fmt->i_extra );
-            sprintf( id->psz_fmtp,
-                     "streamtype=5; profile-level-id=15; mode=AAC-hbr; "
-                     "config=%s; SizeLength=13;IndexLength=3; "
-                     "IndexDeltaLength=3; Profile=1;", hexa );
+
+            if(!p_sys->b_latm)
+            {
+                char hexa[2*p_fmt->i_extra +1];
+
+                id->psz_rtpmap = malloc( strlen( "mpeg4-generic/" ) + 12 );
+                sprintf( id->psz_rtpmap, "mpeg4-generic/%d", p_fmt->audio.i_rate );
+                id->pf_packetize = rtp_packetize_mp4a;
+                id->psz_fmtp = malloc( 200 + 2 * p_fmt->i_extra );
+                sprintf_hexa( hexa, p_fmt->p_extra, p_fmt->i_extra );
+                sprintf( id->psz_fmtp,
+                        "streamtype=5; profile-level-id=15; mode=AAC-hbr; "
+                        "config=%s; SizeLength=13;IndexLength=3; "
+                        "IndexDeltaLength=3; Profile=1;", hexa );
+            }
+            else
+            {
+                char hexa[13];
+                int i;
+                unsigned char config[6];
+                unsigned int aacsrates[15] = {
+                    96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050,
+                    16000, 12000, 11025, 8000, 7350, 0, 0 };
+
+                for( i = 0; i < 15; i++ )
+                    if( p_fmt->audio.i_rate == aacsrates[i] )
+                        break;
+
+                config[0]=0x40;
+                config[1]=0;
+                config[2]=0x20|i;
+                config[3]=p_fmt->audio.i_channels<<4;
+                config[4]=0x3f;
+                config[5]=0xc0;
+
+                asprintf( &id->psz_rtpmap, "MP4A-LATM/%d/%d",
+                          p_fmt->audio.i_rate, p_fmt->audio.i_channels );
+                id->pf_packetize = rtp_packetize_mp4a_latm;
+                sprintf_hexa( hexa, config, 6 );
+                asprintf( &id->psz_fmtp, "profile-level-id=15; "
+                          "object=2; cpresent=0; config=%s", hexa );
+            }
             break;
         }
         case VLC_FOURCC( 's', 'a', 'm', 'r' ):
@@ -1090,19 +1170,20 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
     id->i_timestamp_start = rand()&0xffffffff;
 
     id->i_mtu    = config_GetInt( p_stream, "mtu" );  /* XXX beuk */
-    if( id->i_mtu <= 16 )
+    if( id->i_mtu <= 16 + MTU_REDUCE )
     {
         /* better than nothing */
         id->i_mtu = 1500;
     }
-    msg_Dbg( p_stream, "using mtu=%d", id->i_mtu );
+    id->i_mtu -= MTU_REDUCE;
+    msg_Dbg( p_stream, "maximum RTP packet size: %d bytes", id->i_mtu );
 
     if( p_sys->p_rtsp_url )
     {
         char psz_urlc[strlen( p_sys->psz_rtsp_control ) + 1 + 10];
 
-        sprintf( psz_urlc, "%s/trackid=%d", p_sys->psz_rtsp_path, p_sys->i_es );
-        fprintf( stderr, "rtsp: adding %s\n", psz_urlc );
+        sprintf( psz_urlc, "%s/trackID=%d", p_sys->psz_rtsp_path, p_sys->i_es );
+        msg_Dbg( p_stream, "rtsp: adding %s\n", psz_urlc );
         id->p_rtsp_url = httpd_UrlNewUnique( p_sys->p_rtsp_host, psz_urlc, NULL, NULL, NULL );
 
         if( id->p_rtsp_url )
@@ -1128,7 +1209,7 @@ static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 
     p_sys->i_sdp_version++;
 
-    fprintf( stderr, "sdp=%s", p_sys->psz_sdp );
+    msg_Dbg( p_stream, "sdp=%s", p_sys->psz_sdp );
 
     /* Update SDP (sap/file) */
     if( p_sys->b_export_sap ) SapSetup( p_stream );
@@ -1335,7 +1416,7 @@ static int FileSetup( sout_stream_t *p_stream )
     sout_stream_sys_t *p_sys = p_stream->p_sys;
     FILE            *f;
 
-    if( ( f = fopen( p_sys->psz_sdp_file, "wt" ) ) == NULL )
+    if( ( f = utf8_fopen( p_sys->psz_sdp_file, "wt" ) ) == NULL )
     {
         msg_Err( p_stream, "cannot open file '%s' (%s)",
                  p_sys->psz_sdp_file, strerror(errno) );
@@ -1420,6 +1501,9 @@ static rtsp_client_t *RtspClientNew( sout_stream_t *p_stream, char *psz_session 
 static rtsp_client_t *RtspClientGet( sout_stream_t *p_stream, char *psz_session )
 {
     int i;
+
+    if( psz_session ) return NULL;
+
     for( i = 0; i < p_stream->p_sys->i_rtsp; i++ )
     {
         if( !strcmp( p_stream->p_sys->rtsp[i]->psz_session, psz_session ) )
@@ -1450,7 +1534,7 @@ static int RtspSetup( sout_stream_t *p_stream, vlc_url_t *url )
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
 
-    fprintf( stderr, "rtsp setup: %s : %d / %s\n", url->psz_host, url->i_port, url->psz_path );
+    msg_Dbg( p_stream, "rtsp setup: %s : %d / %s\n", url->psz_host, url->i_port, url->psz_path );
 
     p_sys->p_rtsp_host = httpd_HostNew( VLC_OBJECT(p_stream), url->psz_host, url->i_port > 0 ? url->i_port : 554 );
     if( p_sys->p_rtsp_host == NULL )
@@ -1482,14 +1566,16 @@ static int  RtspCallback( httpd_callback_sys_t *p_args,
 {
     sout_stream_t *p_stream = (sout_stream_t*)p_args;
     sout_stream_sys_t *p_sys = p_stream->p_sys;
-    char          *psz_destination = p_sys->psz_destination;
-    char          *psz_session = NULL;
+    char *psz_destination = p_sys->psz_destination;
+    char *psz_session = NULL;
+    char *psz_cseq = NULL;
+    int i_cseq = 0;
 
     if( answer == NULL || query == NULL )
     {
         return VLC_SUCCESS;
     }
-    fprintf( stderr, "RtspCallback query: type=%d\n", query->i_type );
+    //fprintf( stderr, "RtspCallback query: type=%d\n", query->i_type );
 
     answer->i_proto = HTTPD_PROTO_RTSP;
     answer->i_version= query->i_version;
@@ -1594,9 +1680,14 @@ static int  RtspCallback( httpd_callback_sys_t *p_args,
         default:
             return VLC_EGENERIC;
     }
-    httpd_MsgAdd( answer, "Server", "VLC Server" );
+    httpd_MsgAdd( answer, "Server", PACKAGE_STRING );
     httpd_MsgAdd( answer, "Content-Length", "%d", answer->i_body );
-    httpd_MsgAdd( answer, "Cseq", "%d", atoi( httpd_MsgGet( query, "Cseq" ) ) );
+    psz_cseq = httpd_MsgGet( query, "Cseq" );
+    if( psz_cseq )
+        i_cseq = atoi( psz_cseq );
+    else
+        i_cseq = 0;
+    httpd_MsgAdd( answer, "Cseq", "%d", i_cseq );
     httpd_MsgAdd( answer, "Cache-Control", "%s", "no-cache" );
 
     if( psz_session )
@@ -1606,20 +1697,23 @@ static int  RtspCallback( httpd_callback_sys_t *p_args,
     return VLC_SUCCESS;
 }
 
-static int  RtspCallbackId( httpd_callback_sys_t *p_args,
+static int RtspCallbackId( httpd_callback_sys_t *p_args,
                           httpd_client_t *cl,
                           httpd_message_t *answer, httpd_message_t *query )
 {
     sout_stream_id_t *id = (sout_stream_id_t*)p_args;
     sout_stream_t    *p_stream = id->p_stream;
     sout_stream_sys_t *p_sys = p_stream->p_sys;
-    char          *psz_session = NULL;
+    char *psz_session = NULL;
+    char *psz_cseq = NULL;
+    int  i_cseq = 0;
+
 
     if( answer == NULL || query == NULL )
     {
         return VLC_SUCCESS;
     }
-    fprintf( stderr, "RtspCallback query: type=%d\n", query->i_type );
+    //fprintf( stderr, "RtspCallback query: type=%d\n", query->i_type );
 
     answer->i_proto = HTTPD_PROTO_RTSP;
     answer->i_version= query->i_version;
@@ -1631,24 +1725,25 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
         {
             char *psz_transport = httpd_MsgGet( query, "Transport" );
 
-            fprintf( stderr, "HTTPD_MSG_SETUP: transport=%s\n", psz_transport );
+            //fprintf( stderr, "HTTPD_MSG_SETUP: transport=%s\n", psz_transport );
 
             if( strstr( psz_transport, "multicast" ) && id->psz_destination )
             {
-                fprintf( stderr, "HTTPD_MSG_SETUP: multicast\n" );
+                //fprintf( stderr, "HTTPD_MSG_SETUP: multicast\n" );
                 answer->i_status = 200;
                 answer->psz_status = strdup( "OK" );
                 answer->i_body = 0;
                 answer->p_body = NULL;
                 psz_session = httpd_MsgGet( query, "Session" );
-                if( *psz_session == 0 )
+                if( !psz_session )
                 {
                     psz_session = malloc( 100 );
                     sprintf( psz_session, "%d", rand() );
                 }
                 httpd_MsgAdd( answer, "Transport",
                               "RTP/AVP/UDP;destination=%s;port=%d-%d;ttl=%d",
-                              id->psz_destination, id->i_port,id->i_port+1, p_sys->i_ttl );
+                              id->psz_destination, id->i_port,id->i_port+1,
+                              p_sys->i_ttl );
             }
             else if( strstr( psz_transport, "unicast" ) && strstr( psz_transport, "client_port=" ) )
             {
@@ -1668,11 +1763,10 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
                     break;
                 }
 
-                fprintf( stderr, "HTTPD_MSG_SETUP: unicast ip=%s port=%d\n",
-                         ip, i_port );
+                //fprintf( stderr, "HTTPD_MSG_SETUP: unicast ip=%s port=%d\n", ip, i_port );
 
                 psz_session = httpd_MsgGet( query, "Session" );
-                if( *psz_session == 0 )
+                if( !psz_session )
                 {
                     psz_session = malloc( 100 );
                     sprintf( psz_session, "%d", rand() );
@@ -1693,7 +1787,7 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
                 }
 
                 /* first try to create the access out */
-                if( p_sys->i_ttl > 0 )
+                if( p_sys->i_ttl )
                     snprintf( psz_access, sizeof( psz_access ),
                               "udp{raw,ttl=%d}", p_sys->i_ttl );
                 else
@@ -1741,7 +1835,12 @@ static int  RtspCallbackId( httpd_callback_sys_t *p_args,
     }
     httpd_MsgAdd( answer, "Server", "VLC Server" );
     httpd_MsgAdd( answer, "Content-Length", "%d", answer->i_body );
-    httpd_MsgAdd( answer, "Cseq", "%d", atoi( httpd_MsgGet( query, "Cseq" ) ) );
+    psz_cseq = httpd_MsgGet( query, "Cseq" );
+    if( psz_cseq )
+        i_cseq = atoi( psz_cseq );
+    else
+        i_cseq = 0;
+    httpd_MsgAdd( answer, "Cseq", "%d", i_cseq );
     httpd_MsgAdd( answer, "Cache-Control", "%s", "no-cache" );
 
     if( psz_session )
@@ -1938,6 +2037,7 @@ static int rtp_packetize_mpv( sout_stream_t *p_stream, sout_stream_id_t *id,
 
     return VLC_SUCCESS;
 }
+
 static int rtp_packetize_ac3( sout_stream_t *p_stream, sout_stream_id_t *id,
                               block_t *in )
 {
@@ -1996,6 +2096,60 @@ static int rtp_packetize_split( sout_stream_t *p_stream, sout_stream_id_t *id,
         memcpy( &out->p_buffer[12], p_data, i_payload );
 
         out->i_buffer   = 12 + i_payload;
+        out->i_dts    = in->i_dts + i * in->i_length / i_count;
+        out->i_length = in->i_length / i_count;
+
+        rtp_packetize_send( id, out );
+
+        p_data += i_payload;
+        i_data -= i_payload;
+    }
+
+    return VLC_SUCCESS;
+}
+
+/* rfc3016 */
+static int rtp_packetize_mp4a_latm( sout_stream_t *p_stream, sout_stream_id_t *id,
+                                block_t *in )
+{
+    int     i_max   = id->i_mtu - 14;              /* payload max in one packet */
+    int     latmhdrsize = in->i_buffer / 0xff + 1;
+    int     i_count = ( in->i_buffer + i_max - 1 ) / i_max;
+
+    uint8_t *p_data = in->p_buffer, *p_header = NULL;
+    int     i_data  = in->i_buffer;
+    int     i;
+
+    for( i = 0; i < i_count; i++ )
+    {
+        int     i_payload = __MIN( i_max, i_data );
+        block_t *out;
+
+        if( i != 0 )
+            latmhdrsize = 0;
+        out = block_New( p_stream, 12 + latmhdrsize + i_payload );
+
+        /* rtp common header */
+        rtp_packetize_common( id, out, ((i == i_count - 1) ? 1 : 0),
+                              (in->i_pts > 0 ? in->i_pts : in->i_dts) );
+
+        if( i == 0 )
+        {
+            int tmp = in->i_buffer;
+
+            p_header=out->p_buffer+12;
+            while( tmp > 0xfe )
+            {
+                *p_header = 0xff;
+                p_header++;
+                tmp -= 0xff;
+            }
+            *p_header = tmp;
+        }
+
+        memcpy( &out->p_buffer[12+latmhdrsize], p_data, i_payload );
+
+        out->i_buffer   = 12 + latmhdrsize + i_payload;
         out->i_dts    = in->i_dts + i * in->i_length / i_count;
         out->i_length = in->i_length / i_count;
 
@@ -2202,12 +2356,12 @@ static int rtp_packetize_amr( sout_stream_t *p_stream, sout_stream_id_t *id,
                               (in->i_pts > 0 ? in->i_pts : in->i_dts) );
         /* Payload header */
         out->p_buffer[12] = 0xF0; /* CMR */
-        out->p_buffer[13] = 0x00; /* ToC */ /* FIXME: frame type */
+        out->p_buffer[13] = p_data[0]&0x7C; /* ToC */ /* FIXME: frame type */
 
         /* FIXME: are we fed multiple frames ? */
-        memcpy( &out->p_buffer[14], p_data, i_payload );
+        memcpy( &out->p_buffer[14], p_data+1, i_payload-1 );
 
-        out->i_buffer   = 14 + i_payload;
+        out->i_buffer   = 14 + i_payload-1;
         out->i_dts    = in->i_dts + i * in->i_length / i_count;
         out->i_length = in->i_length / i_count;
 

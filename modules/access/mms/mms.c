@@ -2,7 +2,7 @@
  * mms.c: MMS over tcp, udp and http access plug-in
  *****************************************************************************
  * Copyright (C) 2002-2004 the VideoLAN team
- * $Id: mms.c 12821 2005-10-11 17:16:13Z zorglub $
+ * $Id: mms.c 15016 2006-03-31 23:07:01Z xtophe $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 
@@ -45,18 +45,20 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for MMS streams. This " \
-    "value should be set in millisecond units." )
+    "Caching value for MMS streams. This " \
+    "value should be set in milliseconds." )
 
 #define ALL_TEXT N_("Force selection of all streams")
+#define ALL_LONGTEXT N_( \
+    "MMS streams can contain several elementary streams, with different " \
+    "bitrates. You can choose to select all of them." )
 
 #define BITRATE_TEXT N_( "Maximum bitrate" )
 #define BITRATE_LONGTEXT N_( \
-    "If this is set, the stream with the maximum bitrate under that limit \
-     will be selected" )
+    "Select the stream with the maximum bitrate under that limit."  )
 
 vlc_module_begin();
-    set_shortname( _("MMS") );
+    set_shortname( "MMS" );
     set_description( _("Microsoft Media Server (MMS) input") );
     set_capability( "access2", -1 );
     set_category( CAT_INPUT );
@@ -65,7 +67,7 @@ vlc_module_begin();
     add_integer( "mms-caching", 19 * DEFAULT_PTS_DELAY / 1000, NULL,
                  CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
 
-    add_bool( "mms-all", 0, NULL, ALL_TEXT, "", VLC_TRUE );
+    add_bool( "mms-all", 0, NULL, ALL_TEXT, ALL_LONGTEXT, VLC_TRUE );
     add_integer( "mms-maxbitrate", 0, NULL, BITRATE_TEXT, BITRATE_LONGTEXT ,
                  VLC_FALSE );
 

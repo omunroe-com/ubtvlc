@@ -2,7 +2,7 @@
  * ps.c: Program Stream demux module for VLC.
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: ps.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: ps.c 14719 2006-03-11 17:35:55Z zorglub $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -44,7 +44,7 @@ static int  OpenAlt( vlc_object_t * );
 static void Close  ( vlc_object_t * );
 
 vlc_module_begin();
-    set_description( _("PS demuxer") );
+    set_description( _("MPEG-PS demuxer") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_DEMUX );
     set_capability( "demux2", 1 );
@@ -52,7 +52,7 @@ vlc_module_begin();
     add_shortcut( "ps" );
 
     add_submodule();
-    set_description( _("PS demuxer") );
+    set_description( _("MPEG-PS demuxer") );
     set_capability( "demux2", 9 );
     set_callbacks( OpenAlt, Close );
 vlc_module_end();
@@ -68,6 +68,9 @@ struct demux_sys_t
 
     int64_t     i_scr;
     int         i_mux_rate;
+
+    vlc_bool_t  b_lost_sync;
+    vlc_bool_t  b_have_pack;
 };
 
 static int Demux  ( demux_t *p_demux );
@@ -107,6 +110,8 @@ static int Open( vlc_object_t *p_this )
     /* Init p_sys */
     p_sys->i_mux_rate = 0;
     p_sys->i_scr      = -1;
+    p_sys->b_lost_sync = VLC_FALSE;
+    p_sys->b_have_pack = VLC_FALSE;
 
     ps_psm_init( &p_sys->psm );
     ps_track_init( p_sys->tk );
@@ -177,9 +182,15 @@ static int Demux( demux_t *p_demux )
     }
     else if( i_ret == 0 )
     {
-        msg_Warn( p_demux, "garbage at input" );
+        if( !p_sys->b_lost_sync )
+            msg_Warn( p_demux, "garbage at input, trying to resync..." );
+
+        p_sys->b_lost_sync = VLC_TRUE;
         return 1;
     }
+
+    if( p_sys->b_lost_sync ) msg_Warn( p_demux, "found sync code" );
+    p_sys->b_lost_sync = VLC_FALSE;
 
     if( ( p_pkt = ps_pkt_read( p_demux->s, i_code ) ) == NULL )
     {
@@ -195,6 +206,7 @@ static int Demux( demux_t *p_demux )
     case 0x1ba:
         if( !ps_pkt_parse_pack( p_pkt, &p_sys->i_scr, &i_mux_rate ) )
         {
+            if( !p_sys->b_have_pack ) p_sys->b_have_pack = VLC_TRUE;
             /* done later on to work around bad vcd/svcd streams */
             /* es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_sys->i_scr ); */
             if( i_mux_rate > 0 ) p_sys->i_mux_rate = i_mux_rate;
@@ -230,6 +242,7 @@ static int Demux( demux_t *p_demux )
     default:
         if( (i_id = ps_pkt_id( p_pkt )) >= 0xc0 )
         {
+            vlc_bool_t b_new = VLC_FALSE;
             ps_track_t *tk = &p_sys->tk[PS_ID_TO_TK(i_id)];
 
             if( !tk->b_seen )
@@ -237,6 +250,7 @@ static int Demux( demux_t *p_demux )
                 if( !ps_track_fill( tk, &p_sys->psm, i_id ) )
                 {
                     tk->es = es_out_Add( p_demux->out, &tk->fmt );
+                    b_new = VLC_TRUE;
                 }
                 else
                 {
@@ -262,6 +276,13 @@ static int Demux( demux_t *p_demux )
             if( tk->b_seen && tk->es &&
                 !ps_pkt_parse_pes( p_pkt, tk->i_skip ) )
             {
+                if( !b_new && !p_sys->b_have_pack && tk->fmt.i_cat == AUDIO_ES && p_pkt->i_pts > 0 )
+                {
+                    /* A hack to sync the A/V on PES files. */
+                    msg_Dbg( p_demux, "force SCR: %lld", p_pkt->i_pts );
+                    es_out_Control( p_demux->out, ES_OUT_SET_PCR, p_pkt->i_pts );
+                }
+
                 es_out_Send( p_demux->out, tk->es, p_pkt );
             }
             else

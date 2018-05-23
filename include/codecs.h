@@ -2,7 +2,7 @@
  * codecs.h: codec related structures needed by the demuxers and decoders
  *****************************************************************************
  * Copyright (C) 1999-2001 the VideoLAN team
- * $Id: codecs.h 12419 2005-08-28 20:57:48Z hartman $
+ * $Id: codecs.h 14947 2006-03-28 13:57:36Z zorglub $
  *
  * Author: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifndef _VLC_CODECS_H
@@ -294,12 +294,12 @@ static struct
 wave_format_tag_to_fourcc[] =
 {
     { WAVE_FORMAT_PCM,        VLC_FOURCC( 'a', 'r', 'a', 'w' ), "Raw audio" },
-    { WAVE_FORMAT_ADPCM,      VLC_FOURCC( 'm', 's', 0x00,0x02), "Adpcm" },
+    { WAVE_FORMAT_ADPCM,      VLC_FOURCC( 'm', 's', 0x00,0x02), "ADPCM" },
     { WAVE_FORMAT_IEEE_FLOAT, VLC_FOURCC( 'a', 'f', 'l', 't' ), "IEEE Float audio" },
     { WAVE_FORMAT_ALAW,       VLC_FOURCC( 'a', 'l', 'a', 'w' ), "A-Law" },
     { WAVE_FORMAT_MULAW,      VLC_FOURCC( 'm', 'l', 'a', 'w' ), "Mu-Law" },
-    { WAVE_FORMAT_IMA_ADPCM,  VLC_FOURCC( 'm', 's', 0x00,0x11), "Ima-Adpcm" },
-    { WAVE_FORMAT_G726,       VLC_FOURCC( 'g', '7', '2', '6' ), "G.726 Adpcm" },
+    { WAVE_FORMAT_IMA_ADPCM,  VLC_FOURCC( 'm', 's', 0x00,0x11), "Ima-ADPCM" },
+    { WAVE_FORMAT_G726,       VLC_FOURCC( 'g', '7', '2', '6' ), "G.726 ADPCM" },
     { WAVE_FORMAT_MPEGLAYER3, VLC_FOURCC( 'm', 'p', 'g', 'a' ), "Mpeg Audio" },
     { WAVE_FORMAT_MPEG,       VLC_FOURCC( 'm', 'p', 'g', 'a' ), "Mpeg Audio" },
     { WAVE_FORMAT_A52,        VLC_FOURCC( 'a', '5', '2', ' ' ), "A/52" },

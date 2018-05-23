@@ -2,7 +2,7 @@
  * bridge.c: bridge stream output module
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
- * $Id: bridge.c 12074 2005-08-08 17:18:08Z dionoea $
+ * $Id: bridge.c 15000 2006-03-31 15:30:32Z zorglub $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -35,12 +35,13 @@
  *****************************************************************************/
 #define ID_TEXT N_("ID")
 #define ID_LONGTEXT N_( \
-    "Specify an identifier integer for this elementary stream" )
+    "Integer identifier for this elementary stream. This will be used to " \
+    "\"find\" this stream later." )
 
 #define DELAY_TEXT N_("Delay")
 #define DELAY_LONGTEXT N_("Pictures coming from the picture video outputs " \
-        "will be delayed accordingly (in milliseconds, >= 100 ms). For high " \
-        "values you will need to raise file-caching and others.")
+        "will be delayed accord to thi value (in milliseconds, should be "\
+        ">= 100 ms). For high values, you will need to raise caching values." )
 
 #define ID_OFFSET_TEXT N_("ID Offset")
 #define ID_OFFSET_LONGTEXT N_("Offset to add to the stream IDs specified in " \

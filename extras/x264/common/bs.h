@@ -33,6 +33,7 @@ typedef struct bs_s
     uint8_t *p_end;
 
     int     i_left;    /* i_count number of available bits */
+    int     i_bits_encoded; /* RD only */
 } bs_t;
 
 static inline void bs_init( bs_t *s, void *p_data, int i_data )
@@ -96,48 +97,6 @@ static inline uint32_t bs_read( bs_t *s, int i_count )
     return( i_result );
 }
 
-#if 0
-/* Only > i386 */
-static uint32_t bswap32( uint32_t x )
-{
-    asm( "bswap   %0": "=r" (x):"0" (x));
-    return x;
-}
-/* work only for i_count <= 32 - 7 */
-static inline uint32_t bs_read( bs_t *s, int i_count )
-{
-    if( s->p < s->p_end && i_count > 0 )
-    {
-#if 0
-        uint32_t i_cache = ((s->p[0] << 24)+(s->p[1] << 16)+(s->p[2] << 8)+s->p[3]) << (8-s->i_left);
-#else
-        uint32_t i_cache = bswap32( *((uint32_t*)s->p) ) << (8-s->i_left);
-#endif
-        uint32_t i_ret = i_cache >> ( 32 - i_count);
-
-        s->i_left -= i_count;
-#if 0
-        if( s->i_left <= 0 )
-        {
-            int i_skip = (8-s->i_left) >> 3;
-
-            s->p += i_skip;
-
-            s->i_left += i_skip << 3;
-        }
-#else
-        while( s->i_left <= 0 )
-        {
-            s->p++;
-            s->i_left += 8;
-        }
-#endif
-        return i_ret;
-    }
-    return 0;
-}
-
-#endif
 static inline uint32_t bs_read1( bs_t *s )
 {
 
@@ -159,17 +118,12 @@ static inline uint32_t bs_read1( bs_t *s )
 }
 static inline uint32_t bs_show( bs_t *s, int i_count )
 {
-#if 0
-    bs_t     s_tmp = *s;
-    return bs_read( &s_tmp, i_count );
-#else
     if( s->p < s->p_end && i_count > 0 )
     {
         uint32_t i_cache = ((s->p[0] << 24)+(s->p[1] << 16)+(s->p[2] << 8)+s->p[3]) << (8-s->i_left);
         return( i_cache >> ( 32 - i_count) );
     }
     return 0;
-#endif
 }
 
 /* TODO optimize */
@@ -215,49 +169,37 @@ static inline int bs_read_te( bs_t *s, int x )
     return 0;
 }
 
-/* TODO optimize (write x bits at once) */
 static inline void bs_write( bs_t *s, int i_count, uint32_t i_bits )
 {
+    if( s->p >= s->p_end - 4 )
+        return;
     while( i_count > 0 )
     {
-        if( s->p >= s->p_end )
+        if( i_count < 32 )
+            i_bits &= (1<<i_count)-1;
+        if( i_count < s->i_left )
         {
+            *s->p = (*s->p << i_count) | i_bits;
+            s->i_left -= i_count;
             break;
-        }
-
-        i_count--;
-
-        if( ( i_bits >> i_count )&0x01 )
-        {
-            *s->p |= 1 << ( s->i_left - 1 );
         }
         else
         {
-            *s->p &= ~( 1 << ( s->i_left - 1 ) );
-        }
-        s->i_left--;
-        if( s->i_left == 0 )
-        {
+            *s->p = (*s->p << s->i_left) | (i_bits >> (i_count - s->i_left));
+            i_count -= s->i_left;
             s->p++;
             s->i_left = 8;
         }
     }
 }
 
-static inline void bs_write1( bs_t *s, uint32_t i_bits )
+static inline void bs_write1( bs_t *s, uint32_t i_bit )
 {
     if( s->p < s->p_end )
     {
+        *s->p <<= 1;
+        *s->p |= i_bit;
         s->i_left--;
-
-        if( i_bits&0x01 )
-        {
-            *s->p |= 1 << s->i_left;
-        }
-        else
-        {
-            *s->p &= ~( 1 << s->i_left );
-        }
         if( s->i_left == 0 )
         {
             s->p++;
@@ -266,27 +208,28 @@ static inline void bs_write1( bs_t *s, uint32_t i_bits )
     }
 }
 
-static inline void bs_align( bs_t *s )
-{
-    if( s->i_left != 8 )
-    {
-        s->i_left = 8;
-        s->p++;
-    }
-}
 static inline void bs_align_0( bs_t *s )
 {
     if( s->i_left != 8 )
     {
-        bs_write( s, s->i_left, 0 );
+        *s->p <<= s->i_left;
+        s->i_left = 8;
+        s->p++;
     }
 }
 static inline void bs_align_1( bs_t *s )
 {
     if( s->i_left != 8 )
     {
-        bs_write( s, s->i_left, ~0 );
+        *s->p <<= s->i_left;
+        *s->p |= (1 << s->i_left) - 1;
+        s->i_left = 8;
+        s->p++;
     }
+}
+static inline void bs_align( bs_t *s )
+{
+    bs_align_0( s );
 }
 
 
@@ -310,7 +253,7 @@ static inline void bs_write_ue( bs_t *s, unsigned int val )
 
     if( val == 0 )
     {
-        bs_write( s, 1, 1 );
+        bs_write1( s, 1 );
     }
     else
     {
@@ -341,7 +284,7 @@ static inline void bs_write_te( bs_t *s, int x, int val )
 {
     if( x == 1 )
     {
-        bs_write( s, 1, ~val );
+        bs_write1( s, 1&~val );
     }
     else if( x > 1 )
     {
@@ -351,7 +294,7 @@ static inline void bs_write_te( bs_t *s, int x, int val )
 
 static inline void bs_rbsp_trailing( bs_t *s )
 {
-    bs_write( s, 1, 1 );
+    bs_write1( s, 1 );
     if( s->i_left != 8 )
     {
         bs_write( s, s->i_left, 0x00 );

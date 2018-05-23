@@ -2,7 +2,7 @@
  * vlc_spu.h : subpicture unit
  *****************************************************************************
  * Copyright (C) 1999, 2000 the VideoLAN team
- * $Id: vlc_spu.h 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: vlc_spu.h 13905 2006-01-12 23:10:04Z dionoea $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /**

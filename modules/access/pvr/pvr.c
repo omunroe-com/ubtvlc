@@ -2,7 +2,7 @@
  * pvr.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: pvr.c 11664 2005-07-09 06:17:09Z courmisch $
+ * $Id: pvr.c 15217 2006-04-14 12:42:50Z massiot $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *
@@ -18,7 +18,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111, USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -45,59 +45,61 @@ static void Close( vlc_object_t * );
 
 #define CACHING_TEXT N_("Caching value in ms")
 #define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for pvr streams. This " \
-    "value should be set in millisecond units." )
+    "Default caching value for PVR streams. This " \
+    "value should be set in milliseconds." )
 
 #define DEVICE_TEXT N_( "Device" )
 #define DEVICE_LONGTEXT N_( "PVR video device" )
 
+#define RADIO_DEVICE_TEXT N_( "Radio device" )
+#define RADIO_DEVICE_LONGTEXT N_( "PVR radio device" )
+
 #define NORM_TEXT N_( "Norm" )
-#define NORM_LONGTEXT N_( "Defines the norm of the stream " \
-    "(Automatic, SECAM, PAL, or NTSC)" )
+#define NORM_LONGTEXT N_( "Norm of the stream " \
+    "(Automatic, SECAM, PAL, or NTSC)." )
 
 #define WIDTH_TEXT N_( "Width" )
 #define WIDTH_LONGTEXT N_( "Width of the stream to capture " \
-    "(-1 for autodetect)" )
+    "(-1 for autodetection)." )
 
 #define HEIGHT_TEXT N_( "Height" )
 #define HEIGHT_LONGTEXT N_( "Height of the stream to capture " \
-    "(-1 for autodetect)" )
+    "(-1 for autodetection)." )
 
 #define FREQUENCY_TEXT N_( "Frequency" )
-#define FREQUENCY_LONGTEXT N_( "Frequency to capture (in kHz), if applicable" )
+#define FREQUENCY_LONGTEXT N_( "Frequency to capture (in kHz), if applicable." )
 
 #define FRAMERATE_TEXT N_( "Framerate" )
 #define FRAMERATE_LONGTEXT N_( "Framerate to capture, if applicable " \
-    "(-1 for autodetect)" )
+    "(-1 for autodetect)." )
 
 #define KEYINT_TEXT N_( "Key interval" )
-#define KEYINT_LONGTEXT N_( "Interval between keyframes (-1 for autodetect)" )
+#define KEYINT_LONGTEXT N_( "Interval between keyframes (-1 for autodetect)." )
 
 #define BFRAMES_TEXT N_( "B Frames" )
 #define BFRAMES_LONGTEXT N_("If this option is set, B-Frames will be used. " \
     "Use this option to set the number of B-Frames.")
 
 #define BITRATE_TEXT N_( "Bitrate" )
-#define BITRATE_LONGTEXT N_( "Bitrate to use (-1 for default)" )
+#define BITRATE_LONGTEXT N_( "Bitrate to use (-1 for default)." )
 
 #define BITRATE_PEAK_TEXT N_( "Bitrate peak" )
-#define BITRATE_PEAK_LONGTEXT N_( "Peak bitrate in VBR mode" )
+#define BITRATE_PEAK_LONGTEXT N_( "Peak bitrate in VBR mode." )
 
-#define BITRATE_MODE_TEXT N_( "Bitrate mode (vbr or cbr)" )
-#define BITRATE_MODE_LONGTEXT N_( "Bitrate mode to use" )
+/// \bug extra parenthesis
+#define BITRATE_MODE_TEXT N_( "Bitrate mode)" )
+#define BITRATE_MODE_LONGTEXT N_( "Bitrate mode to use (VBR or CBR)." )
 
 #define BITMASK_TEXT N_( "Audio bitmask" )
-#define BITMASK_LONGTEXT N_("This option allows setting of bitmask that will "\
+#define BITMASK_LONGTEXT N_("Bitmask that will "\
     "get used by the audio part of the card." )
+
+#define VOLUME_TEXT N_( "Volume" )
+#define VOLUME_LONGTEXT N_("Audio volume (0-65535)." )
 
 #define CHAN_TEXT N_( "Channel" )
 #define CHAN_LONGTEXT N_( "Channel of the card to use (Usually, 0 = tuner, " \
     "1 = composite, 2 = svideo)" )
-
-#define CACHING_TEXT N_("Caching value in ms")
-#define CACHING_LONGTEXT N_( \
-    "Allows you to modify the default caching value for pvr streams. This " \
-    "value should be set in millisecond units." )
 
 static int i_norm_list[] =
     { V4L2_STD_UNKNOWN, V4L2_STD_SECAM, V4L2_STD_PAL, V4L2_STD_NTSC };
@@ -107,9 +109,11 @@ static char *psz_norm_list_text[] =
 static int i_bitrates[] = { 0, 1 };
 static char *psz_bitrates_list_text[] = { N_("vbr"), N_("cbr") };
 
+static int pi_radio_range[2] = { 65000, 108000 };
+
 vlc_module_begin();
     set_shortname( _("PVR") );
-    set_description( _("MPEG Encoding cards input (with ivtv drivers)") );
+    set_description( _("IVTV MPEG Encoding cards input") );
     set_category( CAT_INPUT );
     set_subcategory( SUBCAT_INPUT_ACCESS );
     set_capability( "access2", 0 );
@@ -118,6 +122,8 @@ vlc_module_begin();
     add_integer( "pvr-caching", DEFAULT_PTS_DELAY / 1000, NULL, CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
     add_string( "pvr-device", "/dev/video0", NULL, DEVICE_TEXT,
                  DEVICE_LONGTEXT, VLC_FALSE );
+    add_string( "pvr-radio-device", "/dev/radio0", NULL, RADIO_DEVICE_TEXT,
+                 RADIO_DEVICE_LONGTEXT, VLC_FALSE );
     add_integer( "pvr-norm", V4L2_STD_UNKNOWN , NULL, NORM_TEXT,
                  NORM_LONGTEXT, VLC_FALSE );
        change_integer_list( i_norm_list, psz_norm_list_text, 0 );
@@ -141,9 +147,9 @@ vlc_module_begin();
         change_integer_list( i_bitrates, psz_bitrates_list_text, 0 );
     add_integer( "pvr-audio-bitmask", -1, NULL, BITMASK_TEXT,
                  BITMASK_LONGTEXT, VLC_TRUE );
+    add_integer( "pvr-audio-volume", -1, NULL, VOLUME_TEXT,
+                 VOLUME_LONGTEXT, VLC_TRUE );
     add_integer( "pvr-channel", -1, NULL, CHAN_TEXT, CHAN_LONGTEXT, VLC_TRUE );
-    add_integer( "pvr-caching", DEFAULT_PTS_DELAY / 1000, NULL,
-                 CACHING_TEXT, CACHING_LONGTEXT, VLC_TRUE );
 
     set_callbacks( Open, Close );
 vlc_module_end();
@@ -182,6 +188,7 @@ struct access_sys_t
 {
     /* file descriptor */
     int i_fd;
+    int i_radio_fd;
 
     /* options */
     int i_standard;
@@ -196,6 +203,7 @@ struct access_sys_t
     int i_bitrate_mode;
     int i_audio_bitmask;
     int i_input;
+    int i_volume;
 };
 
 /*****************************************************************************
@@ -205,12 +213,8 @@ static int Open( vlc_object_t * p_this )
 {
     access_t *p_access = (access_t*) p_this;
     access_sys_t * p_sys;
-    char * psz_tofree, * psz_parser, * psz_device;
+    char * psz_tofree, * psz_parser, * psz_device, * psz_radio_device;
     vlc_value_t val;
-
-    struct v4l2_format vfmt;
-    struct v4l2_frequency vf;
-    struct ivtv_ioctl_codec codec;
 
     //psz_device = calloc( strlen( "/dev/videox" ) + 1, 1 );
 
@@ -235,6 +239,11 @@ static int Open( vlc_object_t * p_this )
     var_Create( p_access, "pvr-device", VLC_VAR_STRING | VLC_VAR_DOINHERIT );
     var_Get( p_access, "pvr-device" , &val);
     psz_device = val.psz_string;
+
+    var_Create( p_access, "pvr-radio-device", VLC_VAR_STRING |
+                                              VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-radio-device" , &val);
+    psz_radio_device = val.psz_string;
 
     var_Create( p_access, "pvr-norm", VLC_VAR_INTEGER | VLC_VAR_DOINHERIT );
     var_Get( p_access, "pvr-norm" , &val);
@@ -282,6 +291,12 @@ static int Open( vlc_object_t * p_this )
                                               VLC_VAR_DOINHERIT );
     var_Get( p_access, "pvr-audio-bitmask" , &val);
     p_sys->i_audio_bitmask = val.i_int;
+
+    var_Create( p_access, "pvr-audio-volume", VLC_VAR_INTEGER |
+                                              VLC_VAR_DOINHERIT );
+    var_Get( p_access, "pvr-audio-volume" , &val);
+    p_sys->i_volume = val.i_int;
+
     var_Create( p_access, "pvr-channel", VLC_VAR_INTEGER |
                                               VLC_VAR_DOINHERIT );
     var_Get( p_access, "pvr-channel" , &val);
@@ -331,7 +346,7 @@ static int Open( vlc_object_t * p_this )
                                strlen( "channel=" ) ) )
             {
                 p_sys->i_input =
-                  strtol( psz_parser + strlen( "channel=" ),
+                    strtol( psz_parser + strlen( "channel=" ),
                             &psz_parser, 0 );
             }
             else if( !strncmp( psz_parser, "device=", strlen( "device=" ) ) )
@@ -345,7 +360,7 @@ static int Open( vlc_object_t * p_this )
                                strlen( "frequency=" ) ) )
             {
                 p_sys->i_frequency =
-                  strtol( psz_parser + strlen( "frequency=" ),
+                    strtol( psz_parser + strlen( "frequency=" ),
                             &psz_parser, 0 );
             }
             else if( !strncmp( psz_parser, "framerate=",
@@ -457,9 +472,9 @@ static int Open( vlc_object_t * p_this )
         }
     }
 
-    //give a default value to psz_device if none has bee specified
+    //give a default value to psz_device if none has been specified
 
-    if (!psz_device)
+    if ( psz_device == NULL )
     {
         psz_device = calloc( strlen( "/dev/videox" ) + 1, 1 );
         strcpy( psz_device, "/dev/video0" );
@@ -471,6 +486,7 @@ static int Open( vlc_object_t * p_this )
     if( ( p_sys->i_fd = open( psz_device, O_RDWR ) ) < 0 )
     {
         msg_Err( p_access, "cannot open device (%s)", strerror( errno ) );
+        free( p_sys );
         return VLC_EGENERIC;
     }
     else
@@ -489,7 +505,7 @@ static int Open( vlc_object_t * p_this )
         }
         else
         {
-            msg_Dbg( p_access, "input set to:%d", p_sys->i_input);
+            msg_Dbg( p_access, "input set to: %d", p_sys->i_input);
         }
     }
 
@@ -502,13 +518,15 @@ static int Open( vlc_object_t * p_this )
         }
         else
         {
-            msg_Dbg( p_access, "video standard set to:%x", p_sys->i_standard);
+            msg_Dbg( p_access, "video standard set to: %x", p_sys->i_standard);
         }
     }
 
     /* set the picture size */
     if ( p_sys->i_width != -1 || p_sys->i_height != -1 )
     {
+        struct v4l2_format vfmt;
+
         vfmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         if ( ioctl( p_sys->i_fd, VIDIOC_G_FMT, &vfmt ) < 0 )
         {
@@ -532,7 +550,7 @@ static int Open( vlc_object_t * p_this )
             }
             else
             {
-                msg_Dbg( p_access, "picture size set to:%dx%d",
+                msg_Dbg( p_access, "picture size set to: %dx%d",
                          vfmt.fmt.pix.width, vfmt.fmt.pix.height );
             }
         }
@@ -541,25 +559,81 @@ static int Open( vlc_object_t * p_this )
     /* set the frequency */
     if ( p_sys->i_frequency != -1 )
     {
-        vf.tuner = 0; /* TODO: let the user choose the tuner */
-        if ( ioctl( p_sys->i_fd, VIDIOC_G_FREQUENCY, &vf ) < 0 )
+        int i_fd;
+        struct v4l2_tuner vt;
+        vt.index = 0; /* TODO: let the user choose the tuner */
+        memset( &vt.reserved, 0, sizeof(vt.reserved) );
+
+        if ( p_sys->i_frequency >= pi_radio_range[0]
+              && p_sys->i_frequency <= pi_radio_range[1] )
         {
-            msg_Warn( p_access, "VIDIOC_G_FREQUENCY failed (%s)",
+            if( ( p_sys->i_radio_fd = open( psz_radio_device, O_RDWR ) ) < 0 )
+            {
+                msg_Err( p_access, "cannot open radio device (%s)",
+                         strerror( errno ) );
+                close( p_sys->i_fd );
+                free( p_sys );
+                return VLC_EGENERIC;
+            }
+            else
+            {
+                msg_Dbg( p_access, "using radio device: %s", psz_radio_device );
+            }
+            i_fd = p_sys->i_radio_fd;
+        }
+        else
+        {
+            i_fd = p_sys->i_fd;
+            p_sys->i_radio_fd = -1;
+        }
+
+        if ( ioctl( i_fd, VIDIOC_G_TUNER, &vt ) < 0 )
+        {
+            msg_Warn( p_access, "VIDIOC_G_TUNER failed (%s)",
                       strerror( errno ) );
         }
         else
         {
-            vf.frequency = p_sys->i_frequency * 16 / 1000;
-            if( ioctl( p_sys->i_fd, VIDIOC_S_FREQUENCY, &vf ) < 0 )
+            struct v4l2_frequency vf;
+            vf.tuner = vt.index;
+
+            if ( ioctl( i_fd, VIDIOC_G_FREQUENCY, &vf ) < 0 )
             {
-                msg_Warn( p_access, "VIDIOC_S_FREQUENCY failed (%s)",
+                msg_Warn( p_access, "VIDIOC_G_FREQUENCY failed (%s)",
                           strerror( errno ) );
             }
             else
             {
-                msg_Dbg( p_access, "Tuner frequency set to:%d",
-                         p_sys->i_frequency);
+                if( vt.capability & V4L2_TUNER_CAP_LOW )
+                    vf.frequency = p_sys->i_frequency * 16;
+                else
+                    vf.frequency = (p_sys->i_frequency * 16 + 500) / 1000;
+
+                if( ioctl( i_fd, VIDIOC_S_FREQUENCY, &vf ) < 0 )
+                {
+                    msg_Warn( p_access, "VIDIOC_S_FREQUENCY failed (%s)",
+                              strerror( errno ) );
+                }
+                else
+                {
+                    msg_Dbg( p_access, "tuner frequency set to: %d",
+                             p_sys->i_frequency );
+                }
             }
+        }
+    }
+
+    /* control parameters */
+    if ( p_sys->i_volume != -1 )
+    {
+        struct v4l2_control ctrl;
+
+        ctrl.id = V4L2_CID_AUDIO_VOLUME;
+        ctrl.value = p_sys->i_volume;
+
+        if ( ioctl( p_sys->i_fd, VIDIOC_S_CTRL, &ctrl ) < 0 )
+        {
+            msg_Warn( p_access, "VIDIOC_S_CTRL failed" );
         }
     }
 
@@ -572,6 +646,8 @@ static int Open( vlc_object_t * p_this )
             || p_sys->i_bitrate != -1
             || p_sys->i_audio_bitmask != -1 )
     {
+        struct ivtv_ioctl_codec codec;
+
         if ( ioctl( p_sys->i_fd, IVTV_IOC_G_CODEC, &codec ) < 0 )
         {
             msg_Warn( p_access, "IVTV_IOC_G_CODEC failed" );
@@ -664,6 +740,8 @@ static void Close( vlc_object_t * p_this )
     access_sys_t * p_sys = p_access->p_sys;
 
     close( p_sys->i_fd );
+    if ( p_sys->i_radio_fd != -1 )
+        close( p_sys->i_radio_fd );
     free( p_sys );
 }
 
