@@ -2,7 +2,7 @@
  * netsync.c: synchronization between several network clients.
  *****************************************************************************
  * Copyright (C) 2004-2009 the VideoLAN team
- * $Id: 7466025b6db5ea7ff13322273d78d86219e667a8 $
+ * $Id: 88bc4292d7a1e426a7cd9e650e99afd804b375ad $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Jean-Paul Saman <jpsaman@videolan.org>
@@ -36,10 +36,8 @@
 #include <vlc_input.h>
 #include <vlc_playlist.h>
 
-#ifdef HAVE_UNISTD_H
-#    include <unistd.h>
-#endif
 #include <sys/types.h>
+#include <unistd.h>
 #ifdef HAVE_POLL
 #   include <poll.h>
 #endif
@@ -298,6 +296,7 @@ static int PlaylistEvent(vlc_object_t *object, char const *cmd,
     if (vlc_clone(&sys->thread, sys->is_master ? Master : Slave, intf,
                   VLC_THREAD_PRIORITY_INPUT)) {
         vlc_object_release(input);
+        sys->input = NULL;
         return VLC_SUCCESS;
     }
     var_AddCallback(input, "intf-event", InputEvent, intf);

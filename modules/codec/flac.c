@@ -2,7 +2,7 @@
  * flac.c: flac decoder/encoder module making use of libflac
  *****************************************************************************
  * Copyright (C) 1999-2001 VLC authors and VideoLAN
- * $Id: 72a12bcc9febf87013c3a49114d8228a3c41989b $
+ * $Id: 32ae7fb066e30758f269985a331056c7ea23ca95 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Sigmund Augdal Helberg <dnumgis@videolan.org>
@@ -134,7 +134,12 @@ static void Interleave( int32_t *p_out, const int32_t * const *pp_in,
 
     for( unsigned j = 0; j < i_samples; j++ )
         for( unsigned i = 0; i < i_nb_channels; i++ )
-            p_out[j * i_nb_channels + i] = pp_in[pi_index[i]][j] << shift;
+        {
+            union { int32_t i; uint32_t u; } spl;
+
+            spl.u = ((uint32_t)pp_in[pi_index[i]][j]) << shift;
+            p_out[j * i_nb_channels + i] = spl.i;
+        }
 }
 
 /*****************************************************************************
@@ -395,6 +400,7 @@ static void ProcessHeader( decoder_t *p_dec )
     switch (i_extra) {
     case 34:
         p_sys->p_block = block_Alloc( 8 + i_extra );
+        if( p_sys->p_block == NULL ) return;
         memcpy( p_sys->p_block->p_buffer + 8, p_dec->fmt_in.p_extra, i_extra );
         memcpy( p_sys->p_block->p_buffer, header, 4);
         uint8_t *p = p_sys->p_block->p_buffer;
@@ -405,6 +411,7 @@ static void ProcessHeader( decoder_t *p_dec )
         break;
     case 42:
         p_sys->p_block = block_Alloc( i_extra );
+        if( p_sys->p_block == NULL ) return;
         memcpy( p_sys->p_block->p_buffer, p_dec->fmt_in.p_extra, i_extra );
         break;
     default:
@@ -413,6 +420,9 @@ static void ProcessHeader( decoder_t *p_dec )
     }
     FLAC__stream_decoder_process_until_end_of_metadata( p_sys->p_flac );
     msg_Dbg( p_dec, "STREAMINFO decoded" );
+
+    block_Release( p_sys->p_block );
+    p_sys->p_block = NULL;
 }
 
 /*****************************************************************************
@@ -516,10 +526,16 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 
     /* If the decoder is in the "aborted" state,
      * FLAC__stream_decoder_process_single() won't return an error. */
-    if( FLAC__stream_decoder_get_state(p_dec->p_sys->p_flac)
-        == FLAC__STREAM_DECODER_ABORTED )
+    switch ( FLAC__stream_decoder_get_state(p_dec->p_sys->p_flac) )
     {
-        FLAC__stream_decoder_flush( p_dec->p_sys->p_flac );
+        case FLAC__STREAM_DECODER_ABORTED:
+            FLAC__stream_decoder_flush( p_dec->p_sys->p_flac );
+            break;
+        case FLAC__STREAM_DECODER_END_OF_STREAM:
+            FLAC__stream_decoder_reset( p_dec->p_sys->p_flac );
+            break;
+        default:
+            break;
     }
 
     block_Release( p_sys->p_block );
@@ -587,12 +603,12 @@ EncoderWriteCallback( const FLAC__StreamEncoder *encoder,
             p_enc->fmt_out.i_extra = STREAMINFO_SIZE + 8;
             p_enc->fmt_out.p_extra = xmalloc( STREAMINFO_SIZE + 8);
             memcpy(p_enc->fmt_out.p_extra, "fLaC", 4);
-            memcpy(p_enc->fmt_out.p_extra + 4, buffer, STREAMINFO_SIZE );
+            memcpy((uint8_t*)p_enc->fmt_out.p_extra + 4, buffer, STREAMINFO_SIZE );
             /* Fake this as the last metadata block */
             ((uint8_t*)p_enc->fmt_out.p_extra)[4] |= 0x80;
         }
         p_sys->i_headers++;
-        return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+        return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
     }
 
     p_block = block_Alloc( bytes );
@@ -610,7 +626,7 @@ EncoderWriteCallback( const FLAC__StreamEncoder *encoder,
 
     block_ChainAppend( &p_sys->p_chain, p_block );
 
-    return FLAC__STREAM_DECODER_WRITE_STATUS_CONTINUE;
+    return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 }
 /*****************************************************************************
  * EncoderMetadataCallback: called by libflac to output metadata

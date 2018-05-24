@@ -2,7 +2,7 @@
  * info_panels.cpp : Panels for the information dialogs
  ****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id: 41f018e6e03cc6d5dc7207d69ac664ff6d9e0ef3 $
+ * $Id: a2d8db1bce20f697e0afda6d7b649d35350a4f75 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -50,6 +50,14 @@
 #include <QLabel>
 #include <QSpinBox>
 #include <QTextEdit>
+
+static inline void setSpinBounds( QSpinBox *spinbox ) {
+    spinbox->setRange( 0, INT_MAX );
+    spinbox->setAccelerated( true );
+    spinbox->setAlignment( Qt::AlignRight );
+    spinbox->setSpecialValueText("");
+}
+
 
 /************************************************************************
  * Single panels
@@ -150,6 +158,7 @@ MetaPanel::MetaPanel( QWidget *parent,
     lblURL = new QLabel;
     lblURL->setOpenExternalLinks( true );
     lblURL->setTextFormat( Qt::RichText );
+    lblURL->setMaximumWidth( 128 );
     metaLayout->addWidget( lblURL, line -1, 7, 1, -1 );
 
     ADD_META( VLC_META_COPYRIGHT, copyright_text, 0,  7 ); line++;
@@ -166,7 +175,7 @@ MetaPanel::MetaPanel( QWidget *parent,
     description_text = new QTextEdit;
     description_text->setAcceptRichText( false );
     metaLayout->addWidget( description_text, line, 0, 1, 7 );
-    // CONNECT( description_text, textChanged(), this, enterEditMode() ); //FIXME
+    CONNECT( description_text, textChanged(), this, enterEditMode() );
     line++;
 
     /* VLC_META_SETTING: Useless */
@@ -238,7 +247,10 @@ void MetaPanel::update( input_item_t *p_item )
     UPDATE_META( Genre, genre_text );
     UPDATE_META( Copyright, copyright_text );
     UPDATE_META( Album, collection_text );
+    disconnect( description_text, SIGNAL(textChanged()), this,
+                SLOT(enterEditMode()) );
     UPDATE_META( Description, description_text );
+    CONNECT( description_text, textChanged(), this, enterEditMode() );
     UPDATE_META( Language, language_text );
     UPDATE_META( NowPlaying, nowplaying_text );
     UPDATE_META( Publisher, publisher_text );
@@ -304,8 +316,7 @@ void MetaPanel::saveMeta()
     input_item_SetPublisher( p_input, qtu( publisher_text->text() ) );
     input_item_SetDescription( p_input, qtu( description_text->toPlainText() ) );
 
-    playlist_t *p_playlist = pl_Get( p_intf );
-    input_item_WriteMeta( VLC_OBJECT(p_playlist), p_input );
+    input_item_WriteMeta( VLC_OBJECT(THEPL), p_input );
 
     /* Reset the status of the mode. No need to emit any signal because parent
        is the only caller */
@@ -341,7 +352,10 @@ void MetaPanel::clear()
     collection_text->clear();
     seqnum_text->clear();
     seqtot_text->clear();
+    disconnect( description_text, SIGNAL(textChanged()), this,
+                SLOT(enterEditMode()) );
     description_text->clear();
+    CONNECT( description_text, textChanged(), this, enterEditMode() );
     date_text->clear();
     language_text->clear();
     nowplaying_text->clear();
@@ -456,7 +470,7 @@ InfoPanel::InfoPanel( QWidget *parent ) : QWidget( parent )
      InfoTree = new QTreeWidget(this);
      InfoTree->setColumnCount( 1 );
      InfoTree->header()->hide();
-#if QT_VERSION >= 0x050000
+#if HAS_QT5
      InfoTree->header()->setSectionResizeMode(QHeaderView::ResizeToContents);
 #else
      InfoTree->header()->setResizeMode(QHeaderView::ResizeToContents);

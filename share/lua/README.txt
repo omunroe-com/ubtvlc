@@ -103,7 +103,7 @@ h:redirect( url_dst, url_src ): Redirect all connections from url_src to url_dst
 Input
 -----
 input.is_playing(): Return true if input exists.
-input.add_subtitle(url): Add a subtitle to the current input
+input.add_subtitle(url): Add a subtitle file (by path) to the current input
 input.item(): Get the current input item. Input item methods are:
   :uri(): Get item's URI.
   :name(): Get item's name.
@@ -160,7 +160,7 @@ misc.quit(): Quit VLC.
 Net
 ---
 ----------------------------------------------------------------
-/!\ NB: this namespace is ONLY usable for interfaces.
+/!\ NB: this namespace is ONLY usable for interfaces and extensions.
 ---
 ----------------------------------------------------------------
 net.url_parse( url, [option delimiter] ): Parse URL. Returns a table with
@@ -241,8 +241,8 @@ playlist.loop( [status] ): Toggle playlist loop or set to specified value.
 playlist.random( [status] ): Toggle playlist random or set to specified value.
 playlist.goto( id ): Go to specified track.
 playlist.add( ... ): Add a bunch of items to the playlist.
-  The playlist is a table of playlist objects.
-  A playlist object has the following members:
+  The playlist is a table of playlist items.
+  A playlist item has the following members:
       .path: the item's full path / URL
       .name: the item's name in playlist (OPTIONAL)
       .title: the item's Title (OPTIONAL, meta data)
@@ -263,7 +263,7 @@ playlist.add( ... ): Add a bunch of items to the playlist.
       .arturl: the item's ArtURL (OPTIONAL, meta data)
       .trackid: the item's TrackID (OPTIONAL, meta data)
       .options: a list of VLC options (OPTIONAL)
-                example: .options = { "fullscreen" }
+                example: .options = { "run-time=60" }
       .duration: stream duration in seconds (OPTIONAL)
       .meta: custom meta data (OPTIONAL, meta data)
              A .meta field is a table of custom meta key value pairs.
@@ -310,13 +310,19 @@ playlist.move( id_item, id_where ): take id_item and if id_where has children, i
 
 FIXME: add methods to get an item's meta, options, es ...
 
-SD
---
+Services discovery
+------------------
+
+Interfaces and extensions can use the following SD functions:
+
 sd.get_services_names(): Get a table of all available service discovery
   modules. The module name is used as key, the long name is used as value.
 sd.add( name ): Add service discovery.
 sd.remove( name ): Remove service discovery.
 sd.is_loaded( name ): Check if service discovery is loaded.
+
+Services discovery scripts can use the following SD functions:
+
 sd.add_node( ... ): Add a node to the service discovery.
   The node object has the following members:
       .title: the node's name

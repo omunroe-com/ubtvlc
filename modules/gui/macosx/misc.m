@@ -1,8 +1,8 @@
 /*****************************************************************************
  * misc.m: code not specific to vlc
  *****************************************************************************
- * Copyright (C) 2003-2013 VLC authors and VideoLAN
- * $Id: e02d2a9134935ffe94f4662c152429c2ab716e3e $
+ * Copyright (C) 2003-2014 VLC authors and VideoLAN
+ * $Id: 7e9794f49d97587864a35f3dae5e91158f014b81 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Felix Paul Kühne <fkuehne at videolan dot org>
@@ -22,6 +22,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
+#import "CompatibilityFixes.h"
 #import "misc.h"
 #import "intf.h"                                          /* VLCApplication */
 #import "MainWindow.h"
@@ -172,7 +173,7 @@ static bool b_old_spaces_style = YES;
     /* init our fake object attribute */
     blackoutWindows = [[NSMutableArray alloc] initWithCapacity:1];
 
-    if (OSX_MAVERICKS) {
+    if (OSX_MAVERICKS || OSX_YOSEMITE) {
         NSUserDefaults *userDefaults = [[NSUserDefaults alloc] init];
         [userDefaults addSuiteNamed:@"com.apple.spaces"];
         /* this is system settings -> mission control -> monitors using different spaces */
@@ -300,10 +301,42 @@ static bool b_old_spaces_style = YES;
 @end
 
 /*****************************************************************************
- * VLBrushedMetalImageView
+ * VLCDragDropView
  *****************************************************************************/
 
-@implementation VLBrushedMetalImageView
+@implementation VLCDropDisabledImageView
+
+- (void)awakeFromNib
+{
+    [self unregisterDraggedTypes];
+}
+
+@end
+
+/*****************************************************************************
+ * VLCDragDropView
+ *****************************************************************************/
+
+@implementation VLCDragDropView
+
+@synthesize dropHandler=_dropHandler;
+@synthesize drawBorder;
+
+- (id)initWithFrame:(NSRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // default value
+        [self setDrawBorder:YES];
+    }
+
+    return self;
+}
+
+- (void)enablePlaylistItems
+{
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:NSFilenamesPboardType, @"VLCPlaylistItemPboardType", nil]];
+}
 
 - (BOOL)mouseDownCanMoveWindow
 {
@@ -319,17 +352,30 @@ static bool b_old_spaces_style = YES;
 - (void)awakeFromNib
 {
     [self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
-    [self setImageScaling: NSScaleToFit];
-    [self setImageFrameStyle: NSImageFrameNone];
-    [self setImageAlignment: NSImageAlignCenter];
 }
 
 - (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
 {
-    if ((NSDragOperationGeneric & [sender draggingSourceOperationMask]) == NSDragOperationGeneric)
-        return NSDragOperationGeneric;
+    if ((NSDragOperationGeneric & [sender draggingSourceOperationMask]) == NSDragOperationGeneric) {
+        b_activeDragAndDrop = YES;
+        [self setNeedsDisplay:YES];
+
+        return NSDragOperationCopy;
+    }
 
     return NSDragOperationNone;
+}
+
+- (void)draggingEnded:(id < NSDraggingInfo >)sender
+{
+    b_activeDragAndDrop = NO;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)draggingExited:(id < NSDraggingInfo >)sender
+{
+    b_activeDragAndDrop = NO;
+    [self setNeedsDisplay:YES];
 }
 
 - (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
@@ -340,7 +386,11 @@ static bool b_old_spaces_style = YES;
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
     BOOL b_returned;
-    b_returned = [[VLCCoreInteraction sharedInstance] performDragOperation: sender];
+
+    if (_dropHandler && [_dropHandler respondsToSelector:@selector(performDragOperation:)])
+        b_returned = [_dropHandler performDragOperation: sender];
+    else // default
+        b_returned = [[VLCCoreInteraction sharedInstance] performDragOperation: sender];
 
     [self setNeedsDisplay:YES];
     return b_returned;
@@ -349,6 +399,18 @@ static bool b_old_spaces_style = YES;
 - (void)concludeDragOperation:(id <NSDraggingInfo>)sender
 {
     [self setNeedsDisplay:YES];
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+    if ([self drawBorder] && b_activeDragAndDrop) {
+        NSRect frameRect = [self bounds];
+
+        [[NSColor selectedControlColor] set];
+        NSFrameRectWithWidthUsingOperation(frameRect, 2., NSCompositeHighlight);
+    }
+
+    [super drawRect:dirtyRect];
 }
 
 @end
@@ -426,7 +488,6 @@ void _drawFrameInRect(NSRect frameRect)
 
 - (void)scrollWheel:(NSEvent *)o_event
 {
-    intf_thread_t * p_intf = VLCIntf;
     BOOL b_forward = NO;
     CGFloat f_deltaY = [o_event deltaY];
     CGFloat f_deltaX = [o_event deltaX];
@@ -472,10 +533,10 @@ void _drawFrameInRect(NSRect frameRect)
 - (void)awakeFromNib
 {
     if (config_GetInt( VLCIntf, "macosx-interfacestyle" )) {
-        o_knob_img = [NSImage imageNamed:@"progression-knob_dark"];
+        o_knob_img = imageFromRes(@"progression-knob_dark");
         b_dark = YES;
     } else {
-        o_knob_img = [NSImage imageNamed:@"progression-knob"];
+        o_knob_img = imageFromRes(@"progression-knob");
         b_dark = NO;
     }
     img_rect.size = [o_knob_img size];
@@ -531,7 +592,6 @@ void _drawFrameInRect(NSRect frameRect)
 
 - (void)scrollWheel:(NSEvent *)o_event
 {
-    intf_thread_t * p_intf = VLCIntf;
     BOOL b_up = NO;
     CGFloat f_deltaY = [o_event deltaY];
     CGFloat f_deltaX = [o_event deltaX];
@@ -544,7 +604,6 @@ void _drawFrameInRect(NSRect frameRect)
     // positive for left / down, negative otherwise
     CGFloat f_delta = f_deltaX + f_deltaY;
     CGFloat f_abs;
-    int i_vlckey;
 
     if (f_delta > 0.0f)
         f_abs = f_delta;
@@ -627,9 +686,9 @@ void _drawFrameInRect(NSRect frameRect)
 {
     BOOL b_dark = config_GetInt( VLCIntf, "macosx-interfacestyle" );
     if (b_dark)
-        img = [NSImage imageNamed:@"volume-slider-knob_dark"];
+        img = imageFromRes(@"volume-slider-knob_dark");
     else
-        img = [NSImage imageNamed:@"volume-slider-knob"];
+        img = imageFromRes(@"volume-slider-knob");
 
     image_rect.size = [img size];
     image_rect.origin.x = 0;
@@ -815,52 +874,6 @@ void _drawFrameInRect(NSRect frameRect)
 
 @end
 
-@implementation VLCThreePartDropView
-
-- (BOOL)mouseDownCanMoveWindow
-{
-    return YES;
-}
-
-- (void)dealloc
-{
-    [self unregisterDraggedTypes];
-    [super dealloc];
-}
-
-- (void)awakeFromNib
-{
-    [self registerForDraggedTypes:[NSArray arrayWithObject:NSFilenamesPboardType]];
-}
-
-- (NSDragOperation)draggingEntered:(id <NSDraggingInfo>)sender
-{
-    if ((NSDragOperationGeneric & [sender draggingSourceOperationMask]) == NSDragOperationGeneric)
-        return NSDragOperationGeneric;
-
-    return NSDragOperationNone;
-}
-
-- (BOOL)prepareForDragOperation:(id <NSDraggingInfo>)sender
-{
-    return YES;
-}
-
-- (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
-{
-    BOOL b_returned;
-    b_returned = [[VLCCoreInteraction sharedInstance] performDragOperation: sender];
-
-    [self setNeedsDisplay:YES];
-    return YES;
-}
-
-- (void)concludeDragOperation:(id <NSDraggingInfo>)sender
-{
-    [self setNeedsDisplay:YES];
-}
-
-@end
 
 @implementation PositionFormatter
 
@@ -897,7 +910,7 @@ void _drawFrameInRect(NSRect frameRect)
     return YES;
 }
 
-- (bool)isPartialStringValid:(NSString*)partialString newEditingString:(NSString**)newString errorDescription:(NSString**)error
+- (BOOL)isPartialStringValid:(NSString*)partialString newEditingString:(NSString**)newString errorDescription:(NSString**)error
 {
     if ([partialString rangeOfCharacterFromSet:o_forbidden_characters options:NSLiteralSearch].location != NSNotFound) {
         return NO;
@@ -905,7 +918,6 @@ void _drawFrameInRect(NSRect frameRect)
         return YES;
     }
 }
-
 
 @end
 
@@ -930,6 +942,75 @@ void _drawFrameInRect(NSRect frameRect)
         }
 
     }
+}
+
+@end
+
+/*****************************************************************************
+ * VLCByteCountFormatter addition
+ *****************************************************************************/
+
+@implementation VLCByteCountFormatter
+
++ (NSString *)stringFromByteCount:(long long)byteCount countStyle:(NSByteCountFormatterCountStyle)countStyle
+{
+    // Use native implementation on >= mountain lion
+    Class byteFormatterClass = NSClassFromString(@"NSByteCountFormatter");
+    if (byteFormatterClass && [byteFormatterClass respondsToSelector:@selector(stringFromByteCount:countStyle:)]) {
+        return [byteFormatterClass stringFromByteCount:byteCount countStyle:NSByteCountFormatterCountStyleFile];
+    }
+
+    float devider = 0.;
+    float returnValue = 0.;
+    NSString *suffix;
+
+    NSNumberFormatter *theFormatter = [[NSNumberFormatter alloc] init];
+    [theFormatter setLocale:[NSLocale currentLocale]];
+    [theFormatter setAllowsFloats:YES];
+
+    NSString *returnString = @"";
+
+    if (countStyle != NSByteCountFormatterCountStyleDecimal)
+        devider = 1024.;
+    else
+        devider = 1000.;
+
+    if (byteCount < 1000) {
+        returnValue = byteCount;
+        suffix = _NS("B");
+        [theFormatter setMaximumFractionDigits:0];
+        goto end;
+    }
+
+    if (byteCount < 1000000) {
+        returnValue = byteCount / devider;
+        suffix = _NS("KB");
+        [theFormatter setMaximumFractionDigits:0];
+        goto end;
+    }
+
+    if (byteCount < 1000000000) {
+        returnValue = byteCount / devider / devider;
+        suffix = _NS("MB");
+        [theFormatter setMaximumFractionDigits:1];
+        goto end;
+    }
+
+    [theFormatter setMaximumFractionDigits:2];
+    if (byteCount < 1000000000000) {
+        returnValue = byteCount / devider / devider / devider;
+        suffix = _NS("GB");
+        goto end;
+    }
+
+    returnValue = byteCount / devider / devider / devider / devider;
+    suffix = _NS("TB");
+
+end:
+    returnString = [NSString stringWithFormat:@"%@ %@", [theFormatter stringFromNumber:[NSNumber numberWithFloat:returnValue]], suffix];
+    [theFormatter release];
+
+    return returnString;
 }
 
 @end

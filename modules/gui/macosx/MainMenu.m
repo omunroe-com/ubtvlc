@@ -2,7 +2,7 @@
  * MainMenu.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2011-2013 Felix Paul Kühne
- * $Id: 4c7a97783b45a9665bd8376632b27d28f2bd1d74 $
+ * $Id: 2cd8901e8838858ebfd56c18e92ba0ee71129864 $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *
@@ -22,10 +22,12 @@
  *****************************************************************************/
 
 #import "MainMenu.h"
+#import "intf.h"
+
 #import <vlc_common.h>
 #import <vlc_playlist.h>
+#import <vlc_input.h>
 
-#import "intf.h"
 #import "open.h"
 #import "wizard.h"
 #import "about.h"
@@ -44,6 +46,8 @@
 #import "ControlsBar.h"
 #import "ExtensionsManager.h"
 #import "ConvertAndSave.h"
+#import "DebugMessageVisualizer.h"
+#import "AddonManager.h"
 
 @implementation VLCMainMenu
 static VLCMainMenu *_o_sharedInstance = nil;
@@ -75,11 +79,13 @@ static VLCMainMenu *_o_sharedInstance = nil;
                       _NS("Date"),          DATE_COLUMN,
                       _NS("Language"),      LANGUAGE_COLUMN,
                       _NS("URI"),           URI_COLUMN,
+                      _NS("File Size"),     FILESIZE_COLUMN,
                       nil];
         // this array also assigns tags (index) to type of menu item
         o_ptc_menuorder = [[NSArray alloc] initWithObjects: TRACKNUM_COLUMN, TITLE_COLUMN,
                            ARTIST_COLUMN, DURATION_COLUMN, GENRE_COLUMN, ALBUM_COLUMN,
-                           DESCRIPTION_COLUMN, DATE_COLUMN, LANGUAGE_COLUMN, URI_COLUMN, nil];
+                           DESCRIPTION_COLUMN, DATE_COLUMN, LANGUAGE_COLUMN, URI_COLUMN,
+                           FILESIZE_COLUMN,nil];
     }
 
     return _o_sharedInstance;
@@ -132,6 +138,8 @@ static VLCMainMenu *_o_sharedInstance = nil;
         msg_Dbg(VLCIntf, "adapting interface since '%s' is a RTL language", [preferredLanguage UTF8String]);
         [o_mi_rate_fld setAlignment: NSLeftTextAlignment];
     }
+
+    [self setRateControlsEnabled:NO];
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)o_notification
@@ -262,6 +270,37 @@ static VLCMainMenu *_o_sharedInstance = nil;
 
     [self setupExtensionsMenu];
 
+    NSUInteger count = (NSUInteger) [o_mu_ffmpeg_pp numberOfItems];
+    if (count > 0)
+        [o_mu_ffmpeg_pp removeAllItems];
+
+    NSMenuItem * o_mitem;
+    [o_mu_ffmpeg_pp setAutoenablesItems: YES];
+    [o_mu_ffmpeg_pp addItemWithTitle: _NS("Disable") action:@selector(togglePostProcessing:) keyEquivalent:@""];
+    o_mitem = [o_mu_ffmpeg_pp itemAtIndex: 0];
+    [o_mitem setTag: -1];
+    [o_mitem setEnabled: YES];
+    [o_mitem setTarget: self];
+    for (NSUInteger x = 1; x < 7; x++) {
+        [o_mu_ffmpeg_pp addItemWithTitle:[NSString stringWithFormat:_NS("Level %i"), x]
+                                               action:@selector(togglePostProcessing:)
+                                        keyEquivalent:@""];
+        o_mitem = [o_mu_ffmpeg_pp itemAtIndex:x];
+        [o_mitem setEnabled: YES];
+        [o_mitem setTag:x];
+        [o_mitem setTarget: self];
+    }
+    char *psz_config = config_GetPsz(p_intf, "video-filter");
+    if (psz_config) {
+        if (!strstr(psz_config, "postproc"))
+            [[o_mu_ffmpeg_pp itemAtIndex:0] setState:NSOnState];
+        else
+            [[o_mu_ffmpeg_pp itemWithTag:config_GetInt(p_intf, "postproc-q")] setState:NSOnState];
+        free(psz_config);
+    } else
+        [[o_mu_ffmpeg_pp itemAtIndex:0] setState:NSOnState];
+    [o_mi_ffmpeg_pp setEnabled: NO];
+
     [self refreshAudioDeviceList];
 
     /* setup subtitles menu */
@@ -288,8 +327,11 @@ static VLCMainMenu *_o_sharedInstance = nil;
             mi = [[NSMenuItem alloc] initWithTitle: _NS(p_item->list_text[i]) action:NULL keyEquivalent: @""];
         else if (p_item->list.i[i])
             mi = [[NSMenuItem alloc] initWithTitle: [NSString stringWithFormat: @"%d", p_item->list.i[i]] action:NULL keyEquivalent: @""];
-        else
+        else {
             msg_Err(p_intf, "item %d of pref %s failed to be created", i, psz_name);
+            continue;
+        }
+
         [mi setTarget:self];
         [mi setAction:selector];
         [mi setTag:p_item->list.i[i]];
@@ -309,6 +351,7 @@ static VLCMainMenu *_o_sharedInstance = nil;
     [o_mi_prefs setTitle: _NS("Preferences...")];
     [o_mi_extensions setTitle: _NS("Extensions")];
     [o_mu_extensions setTitle: _NS("Extensions")];
+    [o_mi_addonManager setTitle: _NS("Addons Manager")];
     [o_mi_add_intf setTitle: _NS("Add Interface")];
     [o_mu_add_intf setTitle: _NS("Add Interface")];
     [o_mi_services setTitle: _NS("Services")];
@@ -324,8 +367,12 @@ static VLCMainMenu *_o_sharedInstance = nil;
     [o_mi_open_net setTitle: _NS("Open Network...")];
     [o_mi_open_capture setTitle: _NS("Open Capture Device...")];
     [o_mi_open_recent setTitle: _NS("Open Recent")];
+    [o_mi_close_window setTitle: _NS("Close Window")];
     [o_mi_open_wizard setTitle: _NS("Streaming/Exporting Wizard...")];
     [o_mi_convertandsave setTitle: _NS("Convert / Stream...")];
+    [o_mi_save_playlist setTitle: _NS("Save Playlist...")];
+    [o_mi_revealInFinder setTitle: _NS("Reveal in Finder")];
+    [[o_mi_revealInFinder menu] setAutoenablesItems: NO];
 
     [o_mu_edit setTitle: _NS("Edit")];
     [o_mi_cut setTitle: _NS("Cut")];
@@ -352,7 +399,6 @@ static VLCMainMenu *_o_sharedInstance = nil;
     [o_mi_record setTitle: _NS("Record")];
     [o_mi_rate setView: o_mi_rate_view];
     [o_mi_rate_lbl setStringValue: _NS("Playback Speed")];
-    [o_mi_rate_lbl_gray setStringValue: _NS("Playback Speed")];
     [o_mi_rate_slower_lbl setStringValue: _NS("Slower")];
     [o_mi_rate_normal_lbl setStringValue: _NS("Normal")];
     [o_mi_rate_faster_lbl setStringValue: _NS("Faster")];
@@ -430,8 +476,8 @@ static VLCMainMenu *_o_sharedInstance = nil;
     [o_mi_teletext_blue setTitle: _NS("Blue")];
 
     [o_mu_window setTitle: _NS("Window")];
-    [o_mi_minimize setTitle: _NS("Minimize Window")];
-    [o_mi_close_window setTitle: _NS("Close Window")];
+    [o_mi_minimize setTitle: _NS("Minimize")];
+    [o_mi_zoom_window setTitle: _NS("Zoom")];
     [o_mi_player setTitle: _NS("Player...")];
     [o_mi_controller setTitle: _NS("Main Window...")];
     [o_mi_audioeffects setTitle: _NS("Audio Effects...")];
@@ -527,8 +573,6 @@ static VLCMainMenu *_o_sharedInstance = nil;
     playlist_t * p_playlist = pl_Get(p_intf);
     input_thread_t * p_input = playlist_CurrentInput(p_playlist);
     if (p_input != NULL) {
-        [o_mi_record setEnabled: var_GetBool(p_input, "can-record")];
-
         [self setupVarMenuItem: o_mi_program target: (vlc_object_t *)p_input
                                  var: "program" selector: @selector(toggleVar:)];
 
@@ -572,24 +616,20 @@ static VLCMainMenu *_o_sharedInstance = nil;
             [self setupVarMenuItem: o_mi_deinterlace_mode target: (vlc_object_t *)p_vout
                                      var: "deinterlace-mode" selector: @selector(toggleVar:)];
 
-#if 1
-            [self setupVarMenuItem: o_mi_ffmpeg_pp target:
-             (vlc_object_t *)p_vout var:"postprocess" selector:
-             @selector(toggleVar:)];
-#endif
             vlc_object_release(p_vout);
 
             [self refreshVoutDeviceMenu:nil];
         }
+        [o_mi_ffmpeg_pp setEnabled:YES];
         vlc_object_release(p_input);
+    } else {
+        [o_mi_ffmpeg_pp setEnabled:NO];
     }
-    else
-        [o_mi_record setEnabled: NO];
 }
 
 - (void)refreshVoutDeviceMenu:(NSNotification *)o_notification
 {
-    NSUInteger count = [o_mu_screen numberOfItems];
+    NSUInteger count = (NSUInteger) [o_mu_screen numberOfItems];
     NSMenu * o_submenu = o_mu_screen;
     if (count > 0)
         [o_submenu removeAllItems];
@@ -628,7 +668,6 @@ static VLCMainMenu *_o_sharedInstance = nil;
     [o_mi_channels setEnabled: b_enabled];
     [o_mi_deinterlace setEnabled: b_enabled];
     [o_mi_deinterlace_mode setEnabled: b_enabled];
-    [o_mi_ffmpeg_pp setEnabled: b_enabled];
     [o_mi_screen setEnabled: b_enabled];
     [o_mi_aspect_ratio setEnabled: b_enabled];
     [o_mi_crop setEnabled: b_enabled];
@@ -656,13 +695,15 @@ static VLCMainMenu *_o_sharedInstance = nil;
     int i = [[VLCCoreInteraction sharedInstance] playbackRate];
     double speed =  pow(2, (double)i / 17);
     [o_mi_rate_fld setStringValue: [NSString stringWithFormat:@"%.2fx", speed]];
-    if (b_enabled) {
-        [o_mi_rate_lbl setHidden: NO];
-        [o_mi_rate_lbl_gray setHidden: YES];
-    } else {
-        [o_mi_rate_lbl setHidden: YES];
-        [o_mi_rate_lbl_gray setHidden: NO];
-    }
+
+    NSColor *o_color = b_enabled ? [NSColor controlTextColor] : [NSColor disabledControlTextColor];
+
+    [o_mi_rate_lbl setTextColor:o_color];
+    [o_mi_rate_slower_lbl setTextColor:o_color];
+    [o_mi_rate_normal_lbl setTextColor:o_color];
+    [o_mi_rate_faster_lbl setTextColor:o_color];
+    [o_mi_rate_fld setTextColor:o_color];
+
     [self setSubtitleMenuEnabled: b_enabled];
     [o_pool release];
 }
@@ -759,6 +800,15 @@ static VLCMainMenu *_o_sharedInstance = nil;
 
 #pragma mark -
 #pragma mark Playback
+
+- (IBAction)quitAfterPlayback:(id)sender
+{
+    playlist_t *p_playlist = pl_Get(VLCIntf);
+    bool b_value = !var_CreateGetBool(p_playlist, "play-and-exit");
+    var_SetBool(p_playlist, "play-and-exit", b_value);
+    config_PutInt(p_intf, "play-and-exit", b_value);
+}
+
 - (IBAction)toggleRecord:(id)sender
 {
     [[VLCCoreInteraction sharedInstance] toggleRecord];
@@ -912,6 +962,34 @@ static VLCMainMenu *_o_sharedInstance = nil;
     }
 }
 
+- (void)_disablePostProcessing
+{
+    [[VLCCoreInteraction sharedInstance] setVideoFilter:"postproc" on:false];
+}
+
+- (void)_enablePostProcessing
+{
+    [[VLCCoreInteraction sharedInstance] setVideoFilter:"postproc" on:true];
+}
+
+- (IBAction)togglePostProcessing:(id)sender
+{
+    char *psz_name = "postproc";
+    NSInteger count = [o_mu_ffmpeg_pp numberOfItems];
+    for (NSUInteger x = 0; x < count; x++)
+        [[o_mu_ffmpeg_pp itemAtIndex:x] setState:NSOffState];
+
+    if ([sender tag] == -1) {
+        [self _disablePostProcessing];
+        [sender setState:NSOnState];
+    } else {
+        [self _enablePostProcessing];
+        [sender setState:NSOnState];
+
+        [[VLCCoreInteraction sharedInstance] setVideoFilterProperty:"postproc-q" forFilter:"postproc" integer:[sender tag]];
+    }
+}
+
 - (IBAction)toggleFullscreenDevice:(id)sender
 {
     config_PutInt(VLCIntf, "macosx-vdev", [sender tag]);
@@ -953,24 +1031,12 @@ static VLCMainMenu *_o_sharedInstance = nil;
     o_url = [o_url URLByDeletingLastPathComponent];
     [openPanel setDirectoryURL: o_url];
     free(path);
+    vlc_object_release(p_input);
 
     i_returnValue = [openPanel runModal];
 
-    if (i_returnValue == NSOKButton) {
-        NSUInteger c = 0;
-        if (!p_input)
-            return;
-
-        c = [[openPanel URLs] count];
-
-        for (int i = 0; i < c ; i++) {
-            msg_Dbg(VLCIntf, "loading subs from %s", [[[[openPanel URLs] objectAtIndex:i] path] UTF8String]);
-            if (input_AddSubtitle(p_input, [[[[openPanel URLs] objectAtIndex:i] path] UTF8String], TRUE))
-                msg_Warn(VLCIntf, "unable to load subtitles from '%s'",
-                         [[[[openPanel URLs] objectAtIndex:i] path] UTF8String]);
-        }
-    }
-    vlc_object_release(p_input);
+    if (i_returnValue == NSOKButton)
+        [[VLCCoreInteraction sharedInstance] addSubtitlesToCurrentInput:[openPanel URLs]];
 }
 
 - (IBAction)switchSubtitleOption:(id)sender
@@ -981,7 +1047,7 @@ static VLCMainMenu *_o_sharedInstance = nil;
     config_PutInt(p_intf, [representedObject UTF8String], intValue);
 
     NSMenu *menu = [sender menu];
-    NSUInteger count = [menu numberOfItems];
+    NSUInteger count = (NSUInteger) [menu numberOfItems];
     for (NSUInteger x = 0; x < count; x++)
         [[menu itemAtIndex:x] setState:NSOffState];
     [[menu itemWithTag:intValue] setState:NSOnState];
@@ -1005,7 +1071,6 @@ static VLCMainMenu *_o_sharedInstance = nil;
 
 - (IBAction)telxNavLink:(id)sender
 {
-    intf_thread_t * p_intf = VLCIntf;
     vlc_object_t *p_vbi;
     int i_page = 0;
 
@@ -1062,6 +1127,21 @@ static VLCMainMenu *_o_sharedInstance = nil;
     [[[VLCMain sharedInstance] wizard] showWizard];
 }
 
+- (IBAction)savePlaylist:(id)sender
+{
+    [[[VLCMain sharedInstance] playlist] savePlaylist:sender];
+}
+
+- (IBAction)revealItemInFinder:(id)sender
+{
+    [[[VLCMain sharedInstance] playlist] revealItemInFinder:sender];
+}
+
+- (void)setCanRevealInFinder:(BOOL)b_value
+{
+    [o_mi_revealInFinder setEnabled:b_value];
+}
+
 - (IBAction)showConvertAndSave:(id)sender
 {
     if (o_convertandsave == nil)
@@ -1113,8 +1193,34 @@ static VLCMainMenu *_o_sharedInstance = nil;
 
 - (IBAction)viewPreferences:(id)sender
 {
-    NSInteger i_level = [[[VLCMain sharedInstance] voutController] currentWindowLevel];
+    NSInteger i_level = [[[VLCMain sharedInstance] voutController] currentStatusWindowLevel];
     [[[VLCMain sharedInstance] simplePreferences] showSimplePrefsWithLevel:i_level];
+}
+
+- (IBAction)openAddonManager:(id)sender
+{
+    if (!o_addonManager)
+        o_addonManager = [[VLCAddonManager alloc] init];
+
+    if (!b_nib_addonmanager_loaded)
+        b_nib_addonmanager_loaded = [NSBundle loadNibNamed:@"AddonManager" owner:NSApp];
+
+    [o_addonManager showWindow];
+}
+
+- (IBAction)showMessagesPanel:(id)showMessagesPanel
+{
+    [[VLCDebugMessageVisualizer sharedInstance] showPanel];
+}
+
+- (IBAction)showMainWindow:(id)sender
+{
+    [[VLCMainWindow sharedInstance] makeKeyAndOrderFront:sender];
+}
+
+- (IBAction)showPlaylist:(id)sender
+{
+    [[VLCMainWindow sharedInstance] changePlaylistState: psUserMenuEvent];
 }
 
 #pragma mark -
@@ -1258,6 +1364,7 @@ static VLCMainMenu *_o_sharedInstance = nil;
             break;
         default:
             /* Variable doesn't exist or isn't handled */
+            msg_Warn(p_object, "variable %s doesn't exist or isn't handled", psz_variable);
             return;
     }
 
@@ -1275,9 +1382,8 @@ static VLCMainMenu *_o_sharedInstance = nil;
         return;
     }
 
-    if (var_Get(p_object, psz_variable, &val) < 0) {
+    if (var_Get(p_object, psz_variable, &val) < 0)
         return;
-    }
 
     VLCAutoGeneratedMenuContent *o_data;
     switch(i_type & VLC_VAR_TYPE) {
@@ -1461,6 +1567,10 @@ static VLCMainMenu *_o_sharedInstance = nil;
         if (!p_input)
             bEnabled = FALSE;
         [self setupMenus]; /* Make sure input menu is up to date */
+    } else if ([o_title isEqualToString: _NS("Record")]) {
+        bEnabled = FALSE;
+        if (p_input)
+            bEnabled = var_GetBool(p_input, "can-record");
     } else if ([o_title isEqualToString: _NS("Previous")] ||
             [o_title isEqualToString: _NS("Next")]) {
         PL_LOCK;
@@ -1483,12 +1593,12 @@ static VLCMainMenu *_o_sharedInstance = nil;
         [o_mi setState: i_state];
     } else if ([o_title isEqualToString: _NS("Quit after Playback")]) {
         int i_state;
-        var_Get(p_playlist, "play-and-exit", &val);
-        i_state = val.b_bool ? NSOnState : NSOffState;
+        bool b_value = var_InheritBool(p_playlist, "play-and-exit");
+        i_state = b_value ? NSOnState : NSOffState;
         [o_mi setState: i_state];
     } else if ([o_title isEqualToString: _NS("Step Forward")] ||
                [o_title isEqualToString: _NS("Step Backward")] ||
-               [o_title isEqualToString: _NS("Jump To Time")]) {
+               [o_title isEqualToString: _NS("Jump to Time")]) {
         if (p_input != NULL) {
             var_Get(p_input, "can-seek", &val);
             bEnabled = val.b_bool;

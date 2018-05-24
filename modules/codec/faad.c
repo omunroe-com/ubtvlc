@@ -2,7 +2,7 @@
  * faad.c: AAC decoder using libfaad2
  *****************************************************************************
  * Copyright (C) 2001, 2003 VLC authors and VideoLAN
- * $Id: 9b7b791ad21f12f5aa8413256f1ae2b3864d1a94 $
+ * $Id: a51861ecd5a0f0dabf3de0881ac02eed63f8c7b1 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -122,7 +122,7 @@ static const uint32_t pi_channels_guessed[MAX_CHANNEL_POSITIONS] =
 static int Open( vlc_object_t *p_this )
 {
     decoder_t *p_dec = (decoder_t*)p_this;
-    decoder_sys_t *p_sys = p_dec->p_sys;
+    decoder_sys_t *p_sys;
     faacDecConfiguration *cfg;
 
     if( p_dec->fmt_in.i_codec != VLC_CODEC_MP4A )
@@ -147,7 +147,6 @@ static int Open( vlc_object_t *p_this )
     p_dec->fmt_out.i_cat = AUDIO_ES;
 
     p_dec->fmt_out.i_codec = HAVE_FPU ? VLC_CODEC_FL32 : VLC_CODEC_S16N;
-    p_dec->pf_decode_audio = DecodeBlock;
 
     p_dec->fmt_out.audio.i_physical_channels =
         p_dec->fmt_out.audio.i_original_channels = 0;
@@ -179,9 +178,7 @@ static int Open( vlc_object_t *p_this )
     {
         /* Will be initalised from first frame */
         p_dec->fmt_out.audio.i_rate = 0;
-        /*FIXME: Try to guess channel count, so transcode module doesn't burb and do funny stuff
-            Revert back to 0 when transcode module/audio encoders can reinit stuff after Open()*/
-        p_dec->fmt_out.audio.i_channels = p_dec->fmt_in.audio.i_channels;
+        p_dec->fmt_out.audio.i_channels = 0;
     }
 
     /* Set the faad config */
@@ -197,6 +194,8 @@ static int Open( vlc_object_t *p_this )
     p_dec->b_need_packetized = true;
 
     p_sys->b_sbr = p_sys->b_ps = false;
+
+    p_dec->pf_decode_audio = DecodeBlock;
     return VLC_SUCCESS;
 }
 
@@ -314,7 +313,7 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     }
 
     /* Decode all data */
-    if( p_sys->i_buffer )
+    if( p_sys->i_buffer > 1)
     {
         void *samples;
         faacDecFrameInfo frame;
@@ -396,10 +395,15 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 
             /* Flush the buffer */
             p_sys->i_buffer -= frame.bytesconsumed;
-            if( p_sys->i_buffer > 0 )
+            if( p_sys->i_buffer > 1 )
             {
                 memmove( p_sys->p_buffer,&p_sys->p_buffer[frame.bytesconsumed],
                          p_sys->i_buffer );
+            }
+            else
+            {
+                /* Drop byte of padding */
+                p_sys->i_buffer = 0;
             }
             block_Release( p_block );
             return NULL;
@@ -497,6 +501,11 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
         }
 
         return p_out;
+    }
+    else
+    {
+        /* Drop byte of padding */
+        p_sys->i_buffer = 0;
     }
 
     block_Release( p_block );

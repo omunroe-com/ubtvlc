@@ -2,7 +2,7 @@
  * meta.c : Metadata handling
  *****************************************************************************
  * Copyright (C) 1998-2004 VLC authors and VideoLAN
- * $Id: aeda5d40e5a8f877399fc28ef9c62b62dfebfccb $
+ * $Id: 2fb14d81921ae84945325fecd5c28cfa1220c43a $
  *
  * Authors: Antoine Cellerier <dionoea@videolan.org>
  *          Clément Stenac <zorglub@videolan.org
@@ -50,7 +50,7 @@ struct vlc_meta_t
 /* FIXME bad name convention */
 const char * vlc_meta_TypeToLocalizedString( vlc_meta_type_t meta_type )
 {
-    static const char posix_names[][16] =
+    static const char posix_names[][17] =
     {
         [vlc_meta_Title]       = N_("Title"),
         [vlc_meta_Artist]      = N_("Artist"),
@@ -65,10 +65,17 @@ const char * vlc_meta_TypeToLocalizedString( vlc_meta_type_t meta_type )
         [vlc_meta_URL]         = N_("URL"),
         [vlc_meta_Language]    = N_("Language"),
         [vlc_meta_NowPlaying]  = N_("Now Playing"),
+        [vlc_meta_ESNowPlaying]= N_("Now Playing"),
         [vlc_meta_Publisher]   = N_("Publisher"),
         [vlc_meta_EncodedBy]   = N_("Encoded by"),
         [vlc_meta_ArtworkURL]  = N_("Artwork URL"),
         [vlc_meta_TrackID]     = N_("Track ID"),
+        [vlc_meta_TrackTotal]  = N_("Number of Tracks"),
+        [vlc_meta_Director]    = N_("Director"),
+        [vlc_meta_Season]      = N_("Season"),
+        [vlc_meta_Episode]     = N_("Episode"),
+        [vlc_meta_ShowName]    = N_("Show Name"),
+        [vlc_meta_Actors]      = N_("Actors"),
     };
 
     assert (meta_type < (sizeof(posix_names) / sizeof(posix_names[0])));
@@ -116,6 +123,7 @@ void vlc_meta_Delete( vlc_meta_t *m )
 void vlc_meta_Set( vlc_meta_t *p_meta, vlc_meta_type_t meta_type, const char *psz_val )
 {
     free( p_meta->ppsz_meta[meta_type] );
+    assert( psz_val == NULL || IsUTF8( psz_val ) );
     p_meta->ppsz_meta[meta_type] = psz_val ? strdup( psz_val ) : NULL;
 }
 

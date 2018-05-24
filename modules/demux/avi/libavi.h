@@ -2,7 +2,7 @@
  * libavi.h : LibAVI library
  ******************************************************************************
  * Copyright (C) 2001-2003 VLC authors and VideoLAN
- * $Id: 4ae9aa6579f0864ed5361fa4eb83d20609d08bbe $
+ * $Id: 988066bd7f0868d7a57e738e579964b2256597b1 $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -259,6 +259,7 @@ void   *_AVI_ChunkFind ( avi_chunk_t *, vlc_fourcc_t, int );
 
 int     AVI_ChunkReadRoot( stream_t *, avi_chunk_t *p_root );
 void    AVI_ChunkFreeRoot( stream_t *, avi_chunk_t *p_chk  );
+int     AVI_ChunkFetchIndexes( stream_t *, avi_chunk_t *p_riff );
 
 #define AVI_ChunkCount( p_chk, i_fourcc ) \
     _AVI_ChunkCount( AVI_CHUNK(p_chk), i_fourcc )
@@ -343,6 +344,15 @@ void    AVI_ChunkFreeRoot( stream_t *, avi_chunk_t *p_chk  );
 #define AVIFOURCC_ISTR         VLC_FOURCC('I','S','T','R')
 #define AVIFOURCC_IFRM         VLC_FOURCC('I','F','R','M')
 
+#define AVIFOURCC_IAS1         VLC_FOURCC('I','A','S','1')
+#define AVIFOURCC_IAS2         VLC_FOURCC('I','A','S','2')
+#define AVIFOURCC_IAS3         VLC_FOURCC('I','A','S','3')
+#define AVIFOURCC_IAS4         VLC_FOURCC('I','A','S','4')
+#define AVIFOURCC_IAS5         VLC_FOURCC('I','A','S','5')
+#define AVIFOURCC_IAS6         VLC_FOURCC('I','A','S','6')
+#define AVIFOURCC_IAS7         VLC_FOURCC('I','A','S','7')
+#define AVIFOURCC_IAS8         VLC_FOURCC('I','A','S','8')
+#define AVIFOURCC_IAS9         VLC_FOURCC('I','A','S','9')
 
 #define AVITWOCC_wb            VLC_TWOCC('w','b')
 #define AVITWOCC_db            VLC_TWOCC('d','b')

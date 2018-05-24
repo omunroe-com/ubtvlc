@@ -2,7 +2,7 @@
  * bookmarks.h: MacOS X Bookmarks window
  *****************************************************************************
  * Copyright (C) 2005, 2007 VLC authors and VideoLAN
- * $Id: 809c112bf913356571398e576efad8faaa8f4d54 $
+ * $Id: 17087451ede09ad5111d1010e3c433417afae40f $
  *
  * Authors: Felix Kühne <fkuehne at videolan dot org>
  *
@@ -42,10 +42,8 @@
     IBOutlet id o_edit_btn_cancel;
     IBOutlet id o_edit_lbl_name;
     IBOutlet id o_edit_lbl_time;
-    IBOutlet id o_edit_lbl_bytes;
     IBOutlet id o_edit_fld_name;
     IBOutlet id o_edit_fld_time;
-    IBOutlet id o_edit_fld_bytes;
 
     input_thread_t *p_old_input;
 }
@@ -64,5 +62,5 @@
 - (IBAction)edit_ok:(id)sender;
 
 - (void)showBookmarks;
-- (id)dataTable;
+
 @end

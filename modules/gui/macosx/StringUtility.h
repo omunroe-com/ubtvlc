@@ -1,8 +1,8 @@
 /*****************************************************************************
  * StringUtility.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: a412ff519bedc630214f65d2f1b8037fbb61b4f8 $
+ * Copyright (C) 2002-2014 VLC authors and VideoLAN
+ * $Id: ebc3a4f30943d982afd112c0bade6894143dfcc2 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -35,11 +35,14 @@
 #define B64DecNSStr(s) [[VLCStringUtility sharedInstance] b64Decode: s]
 #define B64EncAndFree(s) [[VLCStringUtility sharedInstance] b64EncodeAndFree: s]
 
-inline NSString *toNSStr(const char *str) {
-    return str != NULL ? [NSString stringWithUTF8String:str] : @"";
-}
-
+NSString *toNSStr(const char *str);
 unsigned int CocoaKeyToVLC(unichar i_key);
+
+/**
+ * Gets the proper variant for an image ressource,
+ * depending on the os version.
+ */
+NSImage *imageFromRes(NSString *o_id);
 
 @interface VLCStringUtility : NSObject
 
@@ -47,14 +50,14 @@ unsigned int CocoaKeyToVLC(unichar i_key);
 
 - (NSString *)localizedString:(const char *)psz;
 - (NSString *)wrapString: (NSString *)o_in_string toWidth: (int)i_width;
-- (NSString *)OSXStringKeyToString:(NSString *)theString;
 - (NSString *)getCurrentTimeAsString:(input_thread_t *)p_input negative:(BOOL)b_negative;
+- (NSString *)stringForTime:(long long int)time;
 
+- (NSString *)OSXStringKeyToString:(NSString *)theString;
 - (NSString *)VLCKeyToString:(NSString *)theString;
 - (unsigned int)VLCModifiersToCocoa:(NSString *)theString;
 
 - (NSString *)b64Decode:(NSString *)string;
-
 - (NSString *)b64EncodeAndFree:(char *)psz_string;
 
 @end

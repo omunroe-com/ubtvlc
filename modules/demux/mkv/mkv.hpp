@@ -2,7 +2,7 @@
  * mkv.hpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2005, 2008 VLC authors and VideoLAN
- * $Id: efc88b3c2fef23ac529fc190ef26fc0b404441e2 $
+ * $Id: 36938e84f5d1900c5a2706719ceaac70b8af0cb1 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -45,14 +45,13 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 
-#ifdef HAVE_TIME_H
-#   include <time.h>                                               /* time() */
-#endif
+#include <time.h>
 
 #include <vlc_meta.h>
 #include <vlc_charset.h>
 #include <vlc_input.h>
 #include <vlc_demux.h>
+#include <vlc_aout.h> /* For reordering */
 
 #include <iostream>
 #include <cassert>
@@ -188,8 +187,6 @@ public:
 
 struct mkv_track_t
 {
-//    ~mkv_track_t();
-
     bool         b_default;
     bool         b_enabled;
     bool         b_forced;
@@ -202,6 +199,7 @@ struct mkv_track_t
     bool         b_dts_only;
     bool         b_pts_only;
 
+    bool         b_no_duration;
     uint64_t     i_default_duration;
     float        f_timecodescale;
     mtime_t      i_last_dts;
@@ -213,6 +211,9 @@ struct mkv_track_t
 
     /* audio */
     unsigned int i_original_rate;
+    uint8_t i_chans_to_reorder;            /* do we need channel reordering */
+    uint8_t pi_chan_table[AOUT_CHAN_MAX];
+
 
     /* Private track paramters */
     PrivateTrackData *p_sys;
@@ -236,6 +237,10 @@ struct mkv_track_t
     int                    i_compression_type;
     uint32_t               i_encoding_scope;
     KaxContentCompSettings *p_compression_data;
+
+    /* Matroska 4 new elements used by Opus */
+    mtime_t i_seek_preroll;
+    mtime_t i_codec_delay;
 
 };
 

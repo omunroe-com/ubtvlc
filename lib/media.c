@@ -2,7 +2,7 @@
  * media.c: Libvlc API media descripor management
  *****************************************************************************
  * Copyright (C) 2007 VLC authors and VideoLAN
- * $Id: 7acfb69249fc575e3843475fa458d5047fdb72ef $
+ * $Id: c2a4ef5ec684bcbde288e595a46b12d7a5ee07db $
  *
  * Authors: Pierre d'Herbemont <pdherbemont@videolan.org>
  *
@@ -26,6 +26,7 @@
 #endif
 
 #include <assert.h>
+#include <errno.h>
 
 #include <vlc/libvlc.h>
 #include <vlc/libvlc_media.h>
@@ -61,7 +62,13 @@ static const vlc_meta_type_t libvlc_to_vlc_meta[] =
     [libvlc_meta_Publisher]    = vlc_meta_Publisher,
     [libvlc_meta_EncodedBy]    = vlc_meta_EncodedBy,
     [libvlc_meta_ArtworkURL]   = vlc_meta_ArtworkURL,
-    [libvlc_meta_TrackID]      = vlc_meta_TrackID
+    [libvlc_meta_TrackID]      = vlc_meta_TrackID,
+    [libvlc_meta_TrackTotal]   = vlc_meta_TrackTotal,
+    [libvlc_meta_Director]     = vlc_meta_Director,
+    [libvlc_meta_Season]       = vlc_meta_Season,
+    [libvlc_meta_Episode]      = vlc_meta_Episode,
+    [libvlc_meta_ShowName]     = vlc_meta_ShowName,
+    [libvlc_meta_Actors]       = vlc_meta_Actors
 };
 
 static const libvlc_meta_t vlc_to_libvlc_meta[] =
@@ -79,10 +86,17 @@ static const libvlc_meta_t vlc_to_libvlc_meta[] =
     [vlc_meta_URL]          = libvlc_meta_URL,
     [vlc_meta_Language]     = libvlc_meta_Language,
     [vlc_meta_NowPlaying]   = libvlc_meta_NowPlaying,
+    [vlc_meta_ESNowPlaying] = libvlc_meta_NowPlaying,
     [vlc_meta_Publisher]    = libvlc_meta_Publisher,
     [vlc_meta_EncodedBy]    = libvlc_meta_EncodedBy,
     [vlc_meta_ArtworkURL]   = libvlc_meta_ArtworkURL,
-    [vlc_meta_TrackID]      = libvlc_meta_TrackID
+    [vlc_meta_TrackID]      = libvlc_meta_TrackID,
+    [vlc_meta_TrackTotal]   = libvlc_meta_TrackTotal,
+    [vlc_meta_Director]     = libvlc_meta_Director,
+    [vlc_meta_Season]       = libvlc_meta_Season,
+    [vlc_meta_Episode]      = libvlc_meta_Episode,
+    [vlc_meta_ShowName]     = libvlc_meta_ShowName,
+    [vlc_meta_Actors]       = libvlc_meta_Actors
 };
 
 /**************************************************************************
@@ -100,15 +114,14 @@ static void input_item_subitem_added( const vlc_event_t *p_event,
                 p_event->u.input_item_subitem_added.p_new_child );
 
     /* Add this to our media list */
-    if( !p_md->p_subitems )
+    if( p_md->p_subitems == NULL )
     {
         p_md->p_subitems = libvlc_media_list_new( p_md->p_libvlc_instance );
+        if( unlikely(p_md->p_subitems == NULL) )
+            abort();
         libvlc_media_list_set_media( p_md->p_subitems, p_md );
     }
-    if( p_md->p_subitems )
-    {
-        libvlc_media_list_add_media( p_md->p_subitems, p_md_child );
-    }
+    libvlc_media_list_add_media( p_md->p_subitems, p_md_child );
 
     /* Construct the event */
     event.type = libvlc_MediaSubItemAdded;
@@ -125,6 +138,7 @@ static void input_item_subitem_added( const vlc_event_t *p_event,
 static void input_item_subitemtree_added( const vlc_event_t * p_event,
                                           void * user_data )
 {
+    VLC_UNUSED( p_event );
     libvlc_media_t * p_md = user_data;
     libvlc_event_t event;
 
@@ -342,7 +356,7 @@ libvlc_media_t *libvlc_media_new_path( libvlc_instance_t *p_instance,
     char *mrl = vlc_path2uri( path, NULL );
     if( unlikely(mrl == NULL) )
     {
-        libvlc_printerr( "Not enough memory" );
+        libvlc_printerr( "%s", vlc_strerror_c(errno) );
         return NULL;
     }
 
@@ -478,12 +492,22 @@ libvlc_media_get_mrl( libvlc_media_t * p_md )
 
 char *libvlc_media_get_meta( libvlc_media_t *p_md, libvlc_meta_t e_meta )
 {
-    char *psz_meta = input_item_GetMeta( p_md->p_input_item,
-                                         libvlc_to_vlc_meta[e_meta] );
-    /* Should be integrated in core */
-    if( psz_meta == NULL && e_meta == libvlc_meta_Title
-     && p_md->p_input_item->psz_name != NULL )
-        psz_meta = strdup( p_md->p_input_item->psz_name );
+    char *psz_meta = NULL;
+
+    if( e_meta == libvlc_meta_NowPlaying )
+    {
+        psz_meta = input_item_GetNowPlayingFb( p_md->p_input_item );
+    }
+    else
+    {
+        psz_meta = input_item_GetMeta( p_md->p_input_item,
+                                             libvlc_to_vlc_meta[e_meta] );
+
+        /* Should be integrated in core */
+        if( psz_meta == NULL && e_meta == libvlc_meta_Title
+            && p_md->p_input_item->psz_name != NULL )
+            psz_meta = strdup( p_md->p_input_item->psz_name );
+    }
 
     return psz_meta;
 }
@@ -616,13 +640,12 @@ libvlc_media_get_duration( libvlc_media_t * p_md )
 
 static int media_parse(libvlc_media_t *media)
 {
-    /* TODO: fetcher and parser independent of playlist */
-#warning FIXME: remove pl_Get
-    playlist_t *playlist = pl_Get(media->p_libvlc_instance->p_libvlc_int);
+    libvlc_int_t *libvlc = media->p_libvlc_instance->p_libvlc_int;
+    input_item_t *item = media->p_input_item;
 
     /* TODO: Fetch art on need basis. But how not to break compatibility? */
-    playlist_AskForArtEnqueue(playlist, media->p_input_item );
-    return playlist_PreparseEnqueue(playlist, media->p_input_item);
+    libvlc_ArtRequest(libvlc, item, META_REQUEST_OPTION_NONE);
+    return libvlc_MetaRequest(libvlc, item, META_REQUEST_OPTION_NONE);
 }
 
 /**************************************************************************

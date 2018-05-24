@@ -2,7 +2,7 @@
  * interface_widgets.cpp : Custom widgets for the main interface
  ****************************************************************************
  * Copyright (C) 2006-2010 the VideoLAN team
- * $Id: b22fb4396880ab3e45a3236919abbdafa5c1d622 $
+ * $Id: 8c30ac02124b13f486c7a7d1375dbd79de44c907 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -51,6 +51,10 @@
 #include <QSlider>
 #include <QBitmap>
 #include <QUrl>
+
+#ifdef QT5_HAS_X11
+# define Q_WS_X11
+#endif
 
 #ifdef Q_WS_X11
 #   include <X11/Xlib.h>
@@ -476,18 +480,15 @@ SpeedLabel::SpeedLabel( intf_thread_t *_p_intf, QWidget *parent )
     /* Change the SpeedRate in the Label */
     CONNECT( THEMIM->getIM(), rateChanged( float ), this, setRate( float ) );
 
-    DCONNECT( THEMIM, inputChanged( input_thread_t * ),
+    DCONNECT( THEMIM, inputChanged( ),
               speedControl, activateOnState() );
 
-    setFrameStyle( QFrame::StyledPanel | QFrame::Raised );
-    setLineWidth( 1 );
-
+    setContentsMargins(4, 0, 4, 0);
     setRate( var_InheritFloat( THEPL, "rate" ) );
 }
 
 SpeedLabel::~SpeedLabel()
 {
-    delete speedControl;
     delete speedControlMenu;
 }
 
@@ -706,7 +707,7 @@ void CoverArtLabel::showArtUpdate( input_item_t *_p_item )
 
 void CoverArtLabel::askForUpdate()
 {
-    THEMIM->getIM()->requestArtUpdate( p_item );
+    THEMIM->getIM()->requestArtUpdate( p_item, true );
 }
 
 void CoverArtLabel::setArtFromFile()
@@ -731,8 +732,7 @@ void CoverArtLabel::clear()
 }
 
 TimeLabel::TimeLabel( intf_thread_t *_p_intf, TimeLabel::Display _displayType  )
-    : ClickableQLabel(), p_intf( _p_intf ), bufTimer( new QTimer(this) ),
-      buffering( false ), showBuffering(false), bufVal( -1 ), displayType( _displayType )
+    : ClickableQLabel(), p_intf( _p_intf ), displayType( _displayType )
 {
     b_remainingTime = false;
     if( _displayType != TimeLabel::Elapsed )
@@ -759,22 +759,14 @@ TimeLabel::TimeLabel( intf_thread_t *_p_intf, TimeLabel::Display _displayType  )
     }
     setAlignment( Qt::AlignRight | Qt::AlignVCenter );
 
-    bufTimer->setSingleShot( true );
-
     CONNECT( THEMIM->getIM(), positionUpdated( float, int64_t, int ),
               this, setDisplayPosition( float, int64_t, int ) );
-    CONNECT( THEMIM->getIM(), cachingChanged( float ),
-              this, updateBuffering( float ) );
-    CONNECT( bufTimer, timeout(), this, updateBuffering() );
 
-    setStyleSheet( "padding-left: 4px; padding-right: 4px;" );
+    setStyleSheet( "QLabel { padding-left: 4px; padding-right: 4px; }" );
 }
 
 void TimeLabel::setDisplayPosition( float pos, int64_t t, int length )
 {
-    showBuffering = false;
-    bufTimer->stop();
-
     if( pos == -1.f )
     {
         setMinimumSize( QSize( 0, 0 ) );
@@ -865,39 +857,3 @@ void TimeLabel::toggleTimeDisplay()
     getSettings()->setValue( "MainWindow/ShowRemainingTime", b_remainingTime );
 }
 
-
-void TimeLabel::updateBuffering( float _buffered )
-{
-    bufVal = _buffered;
-    if( !buffering || bufVal == 0 )
-    {
-        showBuffering = false;
-        buffering = true;
-        bufTimer->start(200);
-    }
-    else if( bufVal == 1 )
-    {
-        showBuffering = buffering = false;
-        bufTimer->stop();
-    }
-    update();
-}
-
-void TimeLabel::updateBuffering()
-{
-    showBuffering = true;
-    update();
-}
-
-void TimeLabel::paintEvent( QPaintEvent* event )
-{
-    if( showBuffering )
-    {
-        QRect r( rect() );
-        r.setLeft( r.width() * bufVal );
-        QPainter p( this );
-        p.setOpacity( 0.4 );
-        p.fillRect( r, palette().color( QPalette::Highlight ) );
-    }
-    QLabel::paintEvent( event );
-}

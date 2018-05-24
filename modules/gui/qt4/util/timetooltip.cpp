@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Copyright © 2011-2012 VideoLAN
- * $Id: d085719058a906f775faece0f69c4c3411184a9f $
+ * $Id: 574eca9d259c5c69645ff4cba5936df36ea66460 $
  *
  * Authors: Ludovic Fauvet <etix@l0cal.com>
  *
@@ -31,12 +31,18 @@
 #define TIP_HEIGHT 5
 
 TimeTooltip::TimeTooltip( QWidget *parent ) :
-    QWidget( parent ), mInitialized( false )
+    QWidget( parent )
 {
-    setWindowFlags( Qt::Window                  |
+    setWindowFlags(
+#if defined( Q_OS_WIN )
+                    Qt::ToolTip
+#else
+                    Qt::Window                  |
                     Qt::WindowStaysOnTopHint    |
                     Qt::FramelessWindowHint     |
-                    Qt::X11BypassWindowManagerHint );
+                    Qt::X11BypassWindowManagerHint
+#endif
+                    );
 
     // Tell Qt that it doesn't need to erase the background before
     // a paintEvent occurs. This should save some CPU cycles.
@@ -132,7 +138,6 @@ void TimeTooltip::buildPath()
 
 void TimeTooltip::setTip( const QPoint& target, const QString& time, const QString& text )
 {
-    mInitialized = true;
     mDisplayedText = time;
     if ( !text.isEmpty() )
         mDisplayedText.append( " - " ).append( text );
@@ -146,18 +151,13 @@ void TimeTooltip::setTip( const QPoint& target, const QString& time, const QStri
     }
 
     update();
+    raise();
 }
 
 void TimeTooltip::show()
 {
     setVisible( true );
-#ifdef Q_OS_OS2
-    // Bring a tooltip on the top
-    // Without this, tooltip does not appear on fullscreen
-    // from the second fullscreen state change
-    if( mInitialized )
-        QWidget::raise();
-#endif
+    raise();
 }
 
 void TimeTooltip::paintEvent( QPaintEvent * )

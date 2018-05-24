@@ -2,7 +2,7 @@
  * dvdread.c : DvdRead input module for vlc
  *****************************************************************************
  * Copyright (C) 2001-2006 VLC authors and VideoLAN
- * $Id: a239053f0c3183029d46d394127dc5ad4f07c721 $
+ * $Id: f1c64294784ce8a55a8ec6dd2ba3d0bbfe283f1c $
  *
  * Authors: Stéphane Borel <stef@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -50,11 +50,8 @@
 
 #include "../demux/ps.h"
 
-#ifdef HAVE_UNISTD_H
-#   include <unistd.h>
-#endif
-
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <dvdread/dvd_reader.h>
 #include <dvdread/ifo_types.h>
@@ -394,7 +391,7 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 
             /* Duplicate title infos */
             *pi_int = p_sys->i_titles;
-            *ppp_title = malloc( sizeof(input_title_t **) * p_sys->i_titles );
+            *ppp_title = malloc( p_sys->i_titles * sizeof(input_title_t *) );
             for( i = 0; i < p_sys->i_titles; i++ )
             {
                 (*ppp_title)[i] = vlc_input_title_Duplicate(p_sys->titles[i]);
@@ -478,12 +475,15 @@ static int Demux( demux_t *p_demux )
         /* End of title */
         if( p_sys->i_cur_cell >= p_sys->p_cur_pgc->nr_of_cells )
         {
-            if( p_sys->i_title + 1 >= p_sys->i_titles )
-            {
-                return 0; /* EOF */
-            }
+            int k = p_sys->i_title;
 
-            DvdReadSetArea( p_demux, p_sys->i_title + 1, 0, -1 );
+            /* Looking for a not broken title */
+            while( k < p_sys->i_titles && DvdReadSetArea( p_demux, ++k, 0, -1 ) != VLC_SUCCESS )
+            {
+                msg_Err(p_demux, "Failed next title, trying another: %i", k );
+                if( k >= p_sys->i_titles )
+                    return 0; // EOF
+            }
         }
 
         if( p_sys->i_pack_len >= 1024 )
@@ -503,12 +503,15 @@ static int Demux( demux_t *p_demux )
 
     if( p_sys->i_cur_cell >= p_sys->p_cur_pgc->nr_of_cells )
     {
-        if( p_sys->i_title + 1 >= p_sys->i_titles )
-        {
-            return 0; /* EOF */
-        }
+        int k = p_sys->i_title;
 
-        DvdReadSetArea( p_demux, p_sys->i_title + 1, 0, -1 );
+        /* Looking for a not broken title */
+        while( k < p_sys->i_titles && DvdReadSetArea( p_demux, ++k, 0, -1 ) != VLC_SUCCESS )
+        {
+            msg_Err(p_demux, "Failed next title, trying another: %i", k );
+            if( k >= p_sys->i_titles )
+                return 0; // EOF
+        }
     }
 
     /*
@@ -729,7 +732,11 @@ static int DvdReadSetArea( demux_t *p_demux, int i_title, int i_chapter,
     {
         int i_start_cell, i_end_cell;
 
-        if( p_sys->p_title != NULL ) DVDCloseFile( p_sys->p_title );
+        if( p_sys->p_title != NULL )
+        {
+            DVDCloseFile( p_sys->p_title );
+            p_sys->p_title = NULL;
+        }
         if( p_vts != NULL ) ifoClose( p_vts );
         p_sys->i_title = i_title;
 
@@ -1155,7 +1162,7 @@ static void DvdReadHandleDSI( demux_t *p_demux, uint8_t *p_data )
     /*
      * Store the timecodes so we can get the current time
      */
-    p_sys->i_title_cur_time = (mtime_t) (p_sys->dsi_pack.dsi_gi.nv_pck_scr / 90 * 1000);
+    p_sys->i_title_cur_time = (mtime_t) p_sys->dsi_pack.dsi_gi.nv_pck_scr / 90 * 1000;
     p_sys->i_cell_cur_time = (mtime_t) dvdtime_to_time( &p_sys->dsi_pack.dsi_gi.c_eltm, 0 );
 
     /*

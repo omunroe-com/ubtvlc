@@ -2,7 +2,7 @@
  * avcodec.c: video and audio decoder and encoder using libavcodec
  *****************************************************************************
  * Copyright (C) 1999-2008 VLC authors and VideoLAN
- * $Id: 753a24e1c2911ee9964c13170049ba7914170049 $
+ * $Id: 07902af9d38a603fc47ce15ebf9a4c67e9b2cd29 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Gildas Bazin <gbazin@videolan.org>
@@ -76,6 +76,7 @@ static const char *const enc_hq_list_text[] = {
 #ifdef MERGE_FFMPEG
 # include "../../demux/avformat/avformat.h"
 # include "../../access/avio.h"
+# include "../../packetizer/avparser.h"
 #endif
 
 /*****************************************************************************
@@ -128,10 +129,6 @@ vlc_module_begin ()
                   SKIPLOOPF_LONGTEXT, false)
         change_safe ()
         change_integer_list( nloopf_list, nloopf_list_text )
-#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT( 54, 41, 0 )
-    add_bool( "avcodec-ignorecrop", false, IGNORECROP_TEXT, IGNORECROP_LONGTEXT,
-        true )
-#endif
 
     add_obsolete_integer( "ffmpeg-debug" ) /* removed since 2.1.0 */
     add_integer( "avcodec-debug", 0, DEBUG_TEXT, DEBUG_LONGTEXT,
@@ -139,7 +136,7 @@ vlc_module_begin ()
     add_obsolete_string( "ffmpeg-codec" ) /* removed since 2.1.0 */
     add_string( "avcodec-codec", NULL, CODEC_TEXT, CODEC_LONGTEXT, true )
     add_obsolete_bool( "ffmpeg-hw" ) /* removed since 2.1.0 */
-    add_module( "avcodec-hw", "hw decoder", "none", HW_TEXT, HW_LONGTEXT, false )
+    add_module( "avcodec-hw", "hw decoder", "any", HW_TEXT, HW_LONGTEXT, false )
 #if defined(FF_THREAD_FRAME)
     add_obsolete_integer( "ffmpeg-threads" ) /* removed since 2.1.0 */
     add_integer( "avcodec-threads", 0, THREADS_TEXT, THREADS_LONGTEXT, true );
@@ -219,7 +216,7 @@ vlc_module_begin ()
                  ENC_QMAX_TEXT, ENC_QMAX_LONGTEXT, true )
     add_bool( ENC_CFG_PREFIX "trellis", false,
               ENC_TRELLIS_TEXT, ENC_TRELLIS_LONGTEXT, true )
-    add_float( ENC_CFG_PREFIX "qscale", 0,
+    add_float( ENC_CFG_PREFIX "qscale", 3,
                ENC_QSCALE_TEXT, ENC_QSCALE_LONGTEXT, true )
     add_integer( ENC_CFG_PREFIX "strict", 0,
                  ENC_STRICT_TEXT, ENC_STRICT_LONGTEXT, true )
@@ -249,6 +246,8 @@ vlc_module_begin ()
 #   include "../../demux/avformat/avformat.c"
     add_submodule ()
         AVIO_MODULE
+    add_submodule ()
+        AVPARSER_MODULE
 #endif
 vlc_module_end ()
 
@@ -258,7 +257,8 @@ vlc_module_end ()
 static int OpenDecoder( vlc_object_t *p_this )
 {
     decoder_t *p_dec = (decoder_t*) p_this;
-    int i_cat, i_codec_id, i_result;
+    unsigned i_codec_id;
+    int i_cat, i_result;
     const char *psz_namecodec;
 
     AVCodecContext *p_context = NULL;
@@ -266,13 +266,14 @@ static int OpenDecoder( vlc_object_t *p_this )
 
     /* *** determine codec type *** */
     if( !GetFfmpegCodec( p_dec->fmt_in.i_codec, &i_cat, &i_codec_id,
-                             &psz_namecodec ) )
+                             &psz_namecodec )
+     || i_cat == UNKNOWN_ES )
     {
         return VLC_EGENERIC;
     }
 
     /* Initialization must be done before avcodec_find_decoder() */
-    vlc_init_avcodec();
+    vlc_init_avcodec(p_this);
 
     /* *** ask ffmpeg for a decoder *** */
     char *psz_decoder = var_CreateGetString( p_this, "avcodec-codec" );
@@ -303,13 +304,6 @@ static int OpenDecoder( vlc_object_t *p_this )
         return VLC_ENOMEM;
     p_context->debug = var_InheritInteger( p_dec, "avcodec-debug" );
     p_context->opaque = (void *)p_this;
-
-    /* set CPU capabilities */
-#if LIBAVUTIL_VERSION_CHECK(51, 25, 0, 42, 100)
-    av_set_cpu_flags_mask( INT_MAX & ~GetVlcDspMask() );
-#else
-    p_context->dsp_mask = GetVlcDspMask();
-#endif
 
     p_dec->b_need_packetized = true;
     switch( i_cat )
@@ -400,8 +394,16 @@ int ffmpeg_OpenCodec( decoder_t *p_dec )
     }
     if( p_dec->fmt_in.i_cat == VIDEO_ES )
     {
-        p_sys->p_context->width  = p_dec->fmt_in.video.i_width;
-        p_sys->p_context->height = p_dec->fmt_in.video.i_height;
+        p_sys->p_context->width  = p_dec->fmt_in.video.i_visible_width;
+        p_sys->p_context->height = p_dec->fmt_in.video.i_visible_height;
+        if (p_sys->p_context->width  == 0)
+            p_sys->p_context->width  = p_dec->fmt_in.video.i_width;
+        else if (p_sys->p_context->width != p_dec->fmt_in.video.i_width)
+            p_sys->p_context->coded_width = p_dec->fmt_in.video.i_width;
+        if (p_sys->p_context->height == 0)
+            p_sys->p_context->height = p_dec->fmt_in.video.i_height;
+        else if (p_sys->p_context->height != p_dec->fmt_in.video.i_height)
+            p_sys->p_context->coded_height = p_dec->fmt_in.video.i_height;
         p_sys->p_context->bits_per_coded_sample = p_dec->fmt_in.video.i_bits_per_pixel;
     }
     else if( p_dec->fmt_in.i_cat == AUDIO_ES )

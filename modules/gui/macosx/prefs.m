@@ -2,7 +2,7 @@
  * prefs.m: MacOS X module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: 0b87421d65f4ce6ff76a468d9d24942dfd08816d $
+ * $Id: 7645b8f12bb58f9bf89636934c496a0823cb65f2 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -179,6 +179,7 @@ static VLCPrefs *_o_sharedMainInstance = nil;
 
     if (!OSX_SNOW_LEOPARD)
         [o_prefs_window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenAuxiliary];
+    [o_prefs_window setHidesOnDeactivate:YES];
 
     [self initStrings];
     [o_prefs_view setBorderType: NSGrooveBorder];
@@ -484,9 +485,8 @@ static VLCPrefs *_o_sharedMainInstance = nil;
 
 - (id)initWithConfigItem: (module_config_t *) configItem
 {
-    NSString * name = _NS(configItem->psz_name);
+    NSString *name = toNSStr(configItem->psz_name);
     self = [super initWithName:name];
-    [name release];
     if (self != nil)
         _configItem = configItem;
 

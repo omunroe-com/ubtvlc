@@ -2,7 +2,7 @@
  * main_interface.hpp : Main Interface
  ****************************************************************************
  * Copyright (C) 2006-2010 VideoLAN and AUTHORS
- * $Id: bb413fcb08c559f8f81caf68a1e38bc6e88e379c $
+ * $Id: 8d59f653e99cc3fc89819b1d79a6a6ebaef49e58 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -54,6 +54,7 @@ class SpeedControlWidget;
 class QVBoxLayout;
 class QMenu;
 class QSize;
+class QTimer;
 class StandardPLPanel;
 
 class MainInterface : public QVLCMW
@@ -111,6 +112,7 @@ private:
     void createMainWidget( QSettings* );
     void createStatusBar();
     void createPlaylist();
+    void createResumePanel( QWidget *w );
 
     /* Systray */
     void createSystray();
@@ -146,6 +148,11 @@ private:
     PlaylistWidget      *playlistWidget;
     //VisualSelector      *visualSelector;
 
+    /* resume panel */
+    QWidget             *resumePanel;
+    QTimer              *resumeTimer;
+    int64_t             i_resumeTime;
+
     /* Status Bar */
     QLabel              *nameLabel;
     QLabel              *cryptedLabel;
@@ -175,6 +182,7 @@ private:
     bool                 b_statusbarVisible;
 
 #ifdef _WIN32
+    HWND WinId( QWidget *);
     HIMAGELIST himl;
     ITaskbarList3 *p_taskbl;
     UINT taskbar_wmsg;
@@ -252,6 +260,10 @@ private slots:
     void setVideoOnTop( bool );
     void setBoss();
     void setRaise();
+
+    void showResumePanel( int64_t);
+    void hideResumePanel();
+    void resumePlayback();
 
 signals:
     void askGetVideo( WId *p_id, int *pi_x, int *pi_y,

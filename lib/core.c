@@ -2,7 +2,7 @@
  * core.c: Core libvlc new API functions : initialization
  *****************************************************************************
  * Copyright (C) 2005 VLC authors and VideoLAN
- * $Id: 486829ddb472b774222a9235bfbe197a40670b96 $
+ * $Id: fa5c4de6d0c0a623c9b271f8fd748da0e199c93c $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -36,7 +36,7 @@
 #include <limits.h>
 #include <assert.h>
 
-static const char nomemstr[] = "Insufficient memory";
+#include "../src/revision.c"
 
 libvlc_instance_t * libvlc_new( int argc, const char *const *argv )
 {
@@ -154,7 +154,7 @@ void libvlc_set_app_id(libvlc_instance_t *p_i, const char *id,
 
     var_SetString(p_libvlc, "app-id", id ? id : "");
     var_SetString(p_libvlc, "app-version", version ? version : "");
-    var_SetString(p_libvlc, "app-version", icon ? icon : "");
+    var_SetString(p_libvlc, "app-icon-name", icon ? icon : "");
 }
 
 const char * libvlc_get_version(void)

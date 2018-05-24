@@ -34,6 +34,7 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/uio.h>
 #include <poll.h>
 #include <netinet/in.h>
 
@@ -243,63 +244,29 @@ static void Dump( bool b_outgoing, uint8_t *p_data, int i_size )
  * TPDUSend
  *****************************************************************************/
 static int TPDUSend( cam_t * p_cam, uint8_t i_slot, uint8_t i_tag,
-                     const uint8_t *p_content, int i_length )
+                     const uint8_t *p_content, size_t i_length )
 {
-    uint8_t i_tcid = i_slot + 1;
-    uint8_t p_data[MAX_TPDU_SIZE];
-    int i_size;
+    uint8_t p_data[9], *p = p_data;
 
-    i_size = 0;
-    p_data[0] = i_slot;
-    p_data[1] = i_tcid;
-    p_data[2] = i_tag;
+    *(p++) = i_slot;
+    *(p++) = i_slot + 1; /* TCID */
+    *(p++) = i_tag;
+    p = SetLength( p, i_length + 1 );
 
-    switch ( i_tag )
+    *(p++) = i_slot + 1;
+    Dump( true, p_data, p - p_data );
+
+    const struct iovec iov[2] = {
+        { p_data, p - p_data },
+        { (void *)p_content, i_length },
+    };
+
+    if ( writev( p_cam->fd, iov, 2 ) <= 0 )
     {
-    case T_RCV:
-    case T_CREATE_TC:
-    case T_CTC_REPLY:
-    case T_DELETE_TC:
-    case T_DTC_REPLY:
-    case T_REQUEST_TC:
-        p_data[3] = 1; /* length */
-        p_data[4] = i_tcid;
-        i_size = 5;
-        break;
-
-    case T_NEW_TC:
-    case T_TC_ERROR:
-        p_data[3] = 2; /* length */
-        p_data[4] = i_tcid;
-        p_data[5] = p_content[0];
-        i_size = 6;
-        break;
-
-    case T_DATA_LAST:
-    case T_DATA_MORE:
-    {
-        /* i_length <= MAX_TPDU_DATA */
-        uint8_t *p = p_data + 3;
-        p = SetLength( p, i_length + 1 );
-        *p++ = i_tcid;
-
-        if ( i_length )
-            memcpy( p, p_content, i_length );
-            i_size = i_length + (p - p_data);
-        }
-        break;
-
-    default:
-        break;
-    }
-    Dump( true, p_data, i_size );
-
-    if ( write( p_cam->fd, p_data, i_size ) != i_size )
-    {
-        msg_Err( p_cam->obj, "cannot write to CAM device (%m)" );
+        msg_Err( p_cam->obj, "cannot write to CAM device: %s",
+                 vlc_strerror_c(errno) );
         return VLC_EGENERIC;
     }
-
     return VLC_SUCCESS;
 }
 
@@ -322,7 +289,7 @@ static int TPDURecv( cam_t *p_cam, uint8_t i_slot, uint8_t *pi_tag,
     while( poll(pfd, 1, CAM_READ_TIMEOUT ) == -1 )
         if( errno != EINTR )
         {
-            msg_Err( p_cam->obj, "poll error: %m" );
+            msg_Err( p_cam->obj, "poll error: %s", vlc_strerror_c(errno) );
             return VLC_EGENERIC;
         }
 
@@ -347,7 +314,8 @@ static int TPDURecv( cam_t *p_cam, uint8_t i_slot, uint8_t *pi_tag,
 
     if ( i_size < 5 )
     {
-        msg_Err( p_cam->obj, "cannot read from CAM device (%d:%m)", i_size );
+        msg_Err( p_cam->obj, "cannot read from CAM device (%d): %s", i_size,
+                 vlc_strerror_c(errno) );
         if( pi_size == NULL )
             free( p_data );
         return VLC_EGENERIC;
@@ -881,7 +849,8 @@ static int APDUSend( cam_t * p_cam, int i_session_id, int i_tag,
             i_ret = ioctl( p_cam->fd, CA_SEND_MSG, &ca_msg );
             if ( i_ret < 0 )
             {
-                msg_Err( p_cam->obj, "Error sending to CAM: %m" );
+                msg_Err( p_cam->obj, "Error sending to CAM: %s",
+                         vlc_strerror_c(errno) );
                 i_ret = VLC_EGENERIC;
             }
         }
@@ -1998,7 +1967,7 @@ cam_t *en50221_Init( vlc_object_t *obj, int fd )
          * ASIC. */
         if ( ioctl( fd, CA_GET_SLOT_INFO, &info ) < 0 )
         {
-            msg_Err( obj, "cannot get slot info: %m" );
+            msg_Err( obj, "cannot get slot info: %s", vlc_strerror_c(errno) );
             goto error;
         }
         if( info.flags == 0 )
@@ -2516,7 +2485,7 @@ char *en50221_Status( cam_t *p_cam, char *psz_request )
 
     if( ioctl( p_cam->fd, CA_GET_CAP, &caps ) < 0 )
     {
-        fprintf( p, "ioctl CA_GET_CAP failed (%m)\n" );
+        fprintf( p, "ioctl(CA_GET_CAP) failed: %s\n", vlc_strerror_c(errno) );
         goto out;
     }
 
@@ -2557,7 +2526,8 @@ char *en50221_Status( cam_t *p_cam, char *psz_request )
         sinfo.num = i_slot;
         if ( ioctl( p_cam->fd, CA_GET_SLOT_INFO, &sinfo ) < 0 )
         {
-            fprintf( p, "ioctl CA_GET_SLOT_INFO failed (%m)<br>\n" );
+            fprintf( p, "ioctl(CA_GET_SLOT_INFO) failed: %s<br>\n",
+                     vlc_strerror_c(errno) );
             continue;
         }
 

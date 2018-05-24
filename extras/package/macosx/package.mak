@@ -21,7 +21,8 @@ VLC.app: VLC-tmp
 	PRODUCT="$@" ACTION="release-makefile" src_dir=$(srcdir) build_dir=$(top_builddir) sh $(srcdir)/extras/package/macosx/build-package.sh
 	find $@ -type d -exec chmod ugo+rx '{}' \;
 	find $@ -type f -exec chmod ugo+r '{}' \;
-	rm -Rf $@/Contents/Frameworks/BGHUDAppKit.framework/Resources/
+	rm -Rf $@/Contents/Frameworks/BGHUDAppKit.framework/Versions/A/Resources/BGHUDAppKitPlugin.ibplugin
+	rm -Rf $@/Contents/Frameworks/BGHUDAppKit.framework/Versions/A/Resources/README.textile
 
 
 VLC-tmp: vlc
@@ -37,6 +38,7 @@ VLC-tmp: vlc
 	REVISION=`(git --git-dir=$(srcdir)/.git describe --always || echo exported)` && \
 	    sed "s/#REVISION#/$$REVISION/g" $(top_builddir)/extras/package/macosx/Info.plist \
         > $(top_builddir)/tmp/extras/package/macosx/Info.plist
+	xcrun plutil -convert binary1 $(top_builddir)/tmp/extras/package/macosx/Info.plist
 	cp -R $(top_builddir)/extras/package/macosx/Resources $(top_builddir)/tmp/extras/package/macosx/
 	cd "$(srcdir)"; cp AUTHORS COPYING THANKS $(abs_top_builddir)/tmp/
 	mkdir -p $(top_builddir)/tmp/modules/audio_output
@@ -44,8 +46,8 @@ VLC-tmp: vlc
 	cd "$(srcdir)/modules/gui/macosx/" && cp *.h *.m $(abs_top_builddir)/tmp/modules/gui/macosx/
 	cd $(top_builddir)/tmp/extras/package/macosx && \
 		xcodebuild -target vlc SYMROOT=../../../build DSTROOT=../../../build $(silentstd)
-	cp -R -L $(top_builddir)/tmp/build/Default/VLC.bundle $@
-	mkdir -p $@/Contents/Frameworks && cp -R -L $(CONTRIB_DIR)/Growl.framework $@/Contents/Frameworks/
+	cp -R $(top_builddir)/tmp/build/Default/VLC.bundle $@
+	mkdir -p $@/Contents/Frameworks && cp -R $(CONTRIB_DIR)/Growl.framework $@/Contents/Frameworks/
 	mkdir -p $@/Contents/MacOS/share/locale/
 	cp -r "$(prefix)/lib/vlc/lua" "$(prefix)/share/vlc/lua" $@/Contents/MacOS/share/
 	mkdir -p $@/Contents/MacOS/include/
