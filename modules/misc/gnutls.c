@@ -87,64 +87,52 @@ vlc_module_begin ()
             change_string_list (priorities_values, priorities_text)
 vlc_module_end ()
 
-#if (GNUTLS_VERSION_NUMBER >= 0x030300)
-static int gnutls_Init (vlc_object_t *obj)
-{
-    const char *version = gnutls_check_version ("3.3.0");
-    if (version == NULL)
-    {
-        msg_Err (obj, "unsupported GnuTLS version");
-        return -1;
-    }
-    msg_Dbg (obj, "using GnuTLS version %s", version);
-    return 0;
-}
-
-# define gnutls_Deinit() (void)0
-#else
 static vlc_mutex_t gnutls_mutex = VLC_STATIC_MUTEX;
 
 /**
  * Initializes GnuTLS with proper locking.
  * @return VLC_SUCCESS on success, a VLC error code otherwise.
  */
-static int gnutls_Init (vlc_object_t *obj)
+static int gnutls_Init (vlc_object_t *p_this)
 {
-    const char *version = gnutls_check_version ("3.0.20");
-    if (version == NULL)
+    int ret = VLC_EGENERIC;
+
+    vlc_mutex_lock (&gnutls_mutex);
+    if (gnutls_global_init ())
     {
-        msg_Err (obj, "unsupported GnuTLS version");
-        return -1;
+        msg_Err (p_this, "cannot initialize GnuTLS");
+        goto error;
     }
-    msg_Dbg (obj, "using GnuTLS version %s", version);
 
-    if (gnutls_check_version ("3.3.0") == NULL)
+    const char *psz_version = gnutls_check_version ("3.0.20");
+    if (psz_version == NULL)
     {
-         int val;
-
-         vlc_mutex_lock (&gnutls_mutex);
-         val = gnutls_global_init ();
-         vlc_mutex_unlock (&gnutls_mutex);
-
-         if (val)
-         {
-             msg_Err (obj, "cannot initialize GnuTLS");
-             return -1;
-         }
+        msg_Err (p_this, "unsupported GnuTLS version");
+        gnutls_global_deinit ();
+        goto error;
     }
-    return 0;
+
+    msg_Dbg (p_this, "GnuTLS v%s initialized", psz_version);
+    ret = VLC_SUCCESS;
+
+error:
+    vlc_mutex_unlock (&gnutls_mutex);
+    return ret;
 }
+
 
 /**
  * Deinitializes GnuTLS.
  */
-static void gnutls_Deinit (void)
+static void gnutls_Deinit (vlc_object_t *p_this)
 {
     vlc_mutex_lock (&gnutls_mutex);
+
     gnutls_global_deinit ();
+    msg_Dbg (p_this, "GnuTLS deinitialized");
     vlc_mutex_unlock (&gnutls_mutex);
 }
-#endif
+
 
 static int gnutls_Error (vlc_object_t *obj, int val)
 {
@@ -390,9 +378,6 @@ static int gnutls_HandshakeAndValidate (vlc_tls_t *session, const char *host,
             return -1;
     }
 
-    if (host == NULL)
-        return status ? -1 : 0;
-
     /* certificate (host)name verification */
     const gnutls_datum_t *data;
     unsigned count;
@@ -404,6 +389,8 @@ static int gnutls_HandshakeAndValidate (vlc_tls_t *session, const char *host,
     }
     msg_Dbg (session, "%u certificate(s) in the list", count);
 
+    if (val || host == NULL)
+        return val;
     if (status && gnutls_CertSearch (session, host, service, data))
         return -1;
 
@@ -579,8 +566,7 @@ static int gnutls_AddCA (vlc_tls_creds_t *crd, const char *path)
     block_t *block = block_FilePath (path);
     if (block == NULL)
     {
-        msg_Err (crd, "cannot read trusted CA from %s: %s", path,
-                 vlc_strerror_c(errno));
+        msg_Err (crd, "cannot read trusted CA from %s: %m", path);
         return VLC_EGENERIC;
     }
 
@@ -619,8 +605,7 @@ static int gnutls_AddCRL (vlc_tls_creds_t *crd, const char *path)
     block_t *block = block_FilePath (path);
     if (block == NULL)
     {
-        msg_Err (crd, "cannot read CRL from %s: %s", path,
-                 vlc_strerror_c(errno));
+        msg_Err (crd, "cannot read CRL from %s: %m", path);
         return VLC_EGENERIC;
     }
 
@@ -654,10 +639,7 @@ static int OpenServer (vlc_tls_creds_t *crd, const char *cert, const char *key)
 
     vlc_tls_creds_sys_t *sys = malloc (sizeof (*sys));
     if (unlikely(sys == NULL))
-    {
-        gnutls_Deinit ();
-        return VLC_ENOMEM;
-    }
+        goto error;
 
     crd->sys     = sys;
     crd->add_CA  = gnutls_AddCA;
@@ -673,26 +655,22 @@ static int OpenServer (vlc_tls_creds_t *crd, const char *cert, const char *key)
     {
         msg_Err (crd, "cannot allocate credentials: %s",
                  gnutls_strerror (val));
-        free (sys);
-        gnutls_Deinit ();
-        return VLC_ENOMEM;
+        goto error;
     }
 
     block_t *certblock = block_FilePath (cert);
     if (certblock == NULL)
     {
-        msg_Err (crd, "cannot read certificate chain from %s: %s", cert,
-                 vlc_strerror_c(errno));
-        goto error;
+        msg_Err (crd, "cannot read certificate chain from %s: %m", cert);
+        return VLC_EGENERIC;
     }
 
     block_t *keyblock = block_FilePath (key);
     if (keyblock == NULL)
     {
-        msg_Err (crd, "cannot read private key from %s: %s", key,
-                 vlc_strerror_c(errno));
+        msg_Err (crd, "cannot read private key from %s: %m", key);
         block_Release (certblock);
-        goto error;
+        return VLC_EGENERIC;
     }
 
     gnutls_datum_t pub = {
@@ -740,9 +718,8 @@ static int OpenServer (vlc_tls_creds_t *crd, const char *cert, const char *key)
     return VLC_SUCCESS;
 
 error:
-    gnutls_certificate_free_credentials (sys->x509_cred);
     free (sys);
-    gnutls_Deinit ();
+    gnutls_Deinit (VLC_OBJECT(crd));
     return VLC_EGENERIC;
 }
 
@@ -757,7 +734,8 @@ static void CloseServer (vlc_tls_creds_t *crd)
     gnutls_certificate_free_credentials (sys->x509_cred);
     gnutls_dh_params_deinit (sys->dh_params);
     free (sys);
-    gnutls_Deinit ();
+
+    gnutls_Deinit (VLC_OBJECT(crd));
 }
 
 /**
@@ -800,7 +778,7 @@ static int OpenClient (vlc_tls_creds_t *crd)
     return VLC_SUCCESS;
 error:
     free (sys);
-    gnutls_Deinit ();
+    gnutls_Deinit (VLC_OBJECT(crd));
     return VLC_EGENERIC;
 }
 
@@ -810,5 +788,6 @@ static void CloseClient (vlc_tls_creds_t *crd)
 
     gnutls_certificate_free_credentials (sys->x509_cred);
     free (sys);
-    gnutls_Deinit ();
+
+    gnutls_Deinit (VLC_OBJECT(crd));
 }

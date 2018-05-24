@@ -2,7 +2,7 @@
  * main_interface.hpp : Main Interface
  ****************************************************************************
  * Copyright (C) 2006-2010 VideoLAN and AUTHORS
- * $Id: e3f36a74158113bdfb364c43380ea966fd80b194 $
+ * $Id: bb413fcb08c559f8f81caf68a1e38bc6e88e379c $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -111,7 +111,6 @@ private:
     void createMainWidget( QSettings* );
     void createStatusBar();
     void createPlaylist();
-    void createContinueDialog( QWidget *w );
 
     /* Systray */
     void createSystray();
@@ -147,10 +146,6 @@ private:
     PlaylistWidget      *playlistWidget;
     //VisualSelector      *visualSelector;
 
-    /* continue */
-    QWidget             *continueDialog;
-    int64_t             i_continueTime;
-
     /* Status Bar */
     QLabel              *nameLabel;
     QLabel              *cryptedLabel;
@@ -180,7 +175,6 @@ private:
     bool                 b_statusbarVisible;
 
 #ifdef _WIN32
-    HWND WinId( QWidget *);
     HIMAGELIST himl;
     ITaskbarList3 *p_taskbl;
     UINT taskbar_wmsg;
@@ -258,9 +252,6 @@ private slots:
     void setVideoOnTop( bool );
     void setBoss();
     void setRaise();
-
-    void showContinueDialog( int64_t);
-    void continuePlayback();
 
 signals:
     void askGetVideo( WId *p_id, int *pi_x, int *pi_y,

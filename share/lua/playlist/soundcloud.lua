@@ -22,7 +22,7 @@
 
 -- Probe function.
 function probe()
-    return ( vlc.access == "http" or vlc.access == "https" )
+    return vlc.access == "http"
         and string.match( vlc.path, "soundcloud%.com/.+/.+" )
 end
 

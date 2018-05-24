@@ -678,7 +678,7 @@ static int InitCapture( demux_t *p_demux )
 
         if ( poll( pfd, 1, READ_TIMEOUT ) < 0 )
         {
-            msg_Warn( p_demux, "couldn't poll(): %s", vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't poll(): %m" );
             close( p_sys->i_vfd );
             return VLC_EGENERIC;
         }
@@ -688,8 +688,7 @@ static int InitCapture( demux_t *p_demux )
             unsigned int i_val;
 
             if ( ioctl( p_sys->i_vfd, SDIVIDEO_IOC_RXGETEVENTS, &i_val ) < 0 )
-                msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_RXGETEVENTS: %s",
-                          vlc_strerror_c(errno) );
+                msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_RXGETEVENTS %m" );
             else
             {
                 if ( i_val & SDIVIDEO_EVENT_RX_BUFFER )
@@ -717,8 +716,7 @@ static int InitCapture( demux_t *p_demux )
     if ( ioctl( p_sys->i_vfd, SDIVIDEO_IOC_RXGETVIDSTATUS, &p_sys->i_standard )
           < 0 )
     {
-        msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_RXGETVIDSTATUS: %s",
-                  vlc_strerror_c(errno) );
+        msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_RXGETVIDSTATUS %m" );
         close( p_sys->i_vfd );
         return VLC_EGENERIC;
     }
@@ -744,8 +742,7 @@ static int InitCapture( demux_t *p_demux )
 
         if ( ioctl( p_sys->i_afd, SDIAUDIO_IOC_RXGETAUDRATE, &i_rate ) < 0 )
         {
-            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_RXGETAUDRATE: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_RXGETAUDRATE %m" );
             return VLC_EGENERIC;
         }
         switch ( i_rate )
@@ -833,8 +830,7 @@ static int InitCapture( demux_t *p_demux )
                                                 PROT_READ, MAP_SHARED, p_sys->i_afd,
                                                 i * i_bufmemsize )) == MAP_FAILED )
             {
-                msg_Err( p_demux, "couldn't mmap(%d): %s", i,
-                         vlc_strerror_c(errno) );
+                msg_Err( p_demux, "couldn't mmap(%d): %m", i );
                 return VLC_EGENERIC;
             }
         }
@@ -888,8 +884,7 @@ static int InitCapture( demux_t *p_demux )
                                             PROT_READ, MAP_SHARED, p_sys->i_vfd,
                                             i * i_bufmemsize )) == MAP_FAILED )
         {
-            msg_Err( p_demux, "couldn't mmap(%d): %s", i,
-                     vlc_strerror_c(errno) );
+            msg_Err( p_demux, "couldn't mmap(%d): %m", i );
             return VLC_EGENERIC;
         }
     }
@@ -935,7 +930,7 @@ static int Capture( demux_t *p_demux )
 
     if ( poll( pfd, 1 + (p_sys->i_max_channel != -1), READ_TIMEOUT ) < 0 )
     {
-        msg_Warn( p_demux, "couldn't poll(): %s", vlc_strerror_c(errno) );
+        msg_Warn( p_demux, "couldn't poll(): %m" );
         return VLC_EGENERIC;
     }
 
@@ -944,8 +939,7 @@ static int Capture( demux_t *p_demux )
         unsigned int i_val;
 
         if ( ioctl( p_sys->i_vfd, SDIVIDEO_IOC_RXGETEVENTS, &i_val ) < 0 )
-            msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_RXGETEVENTS: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_RXGETEVENTS %m" );
         else
         {
             if ( i_val & SDIVIDEO_EVENT_RX_BUFFER )
@@ -969,8 +963,7 @@ static int Capture( demux_t *p_demux )
         unsigned int i_val;
 
         if ( ioctl( p_sys->i_afd, SDIAUDIO_IOC_RXGETEVENTS, &i_val ) < 0 )
-            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_RXGETEVENTS: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_RXGETEVENTS %m" );
         else
         {
             if ( i_val & SDIAUDIO_EVENT_RX_BUFFER )
@@ -993,8 +986,7 @@ static int Capture( demux_t *p_demux )
         if ( ioctl( p_sys->i_vfd, SDIVIDEO_IOC_DQBUF, p_sys->i_current_vbuffer )
               < 0 )
         {
-            msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_DQBUF: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_DQBUF %m" );
             return VLC_EGENERIC;
         }
 
@@ -1004,8 +996,7 @@ static int Capture( demux_t *p_demux )
         if ( ioctl( p_sys->i_vfd, SDIVIDEO_IOC_QBUF, p_sys->i_current_vbuffer )
               < 0 )
         {
-            msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_QBUF: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIVIDEO_IOC_QBUF %m" );
             return VLC_EGENERIC;
         }
 
@@ -1018,7 +1009,7 @@ static int Capture( demux_t *p_demux )
 
         if ( read( p_sys->i_vfd, p_buffer, p_sys->i_vbuffer_size ) < 0 )
         {
-            msg_Warn( p_demux, "couldn't read: %s", vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't read %m" );
             free( p_buffer );
             return VLC_EGENERIC;
         }
@@ -1038,8 +1029,7 @@ static int Capture( demux_t *p_demux )
         if ( ioctl( p_sys->i_afd, SDIAUDIO_IOC_DQBUF, p_sys->i_current_abuffer )
               < 0 )
         {
-            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_DQBUF: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_DQBUF %m" );
             return VLC_EGENERIC;
         }
 
@@ -1049,8 +1039,7 @@ static int Capture( demux_t *p_demux )
         if ( ioctl( p_sys->i_afd, SDIAUDIO_IOC_QBUF, p_sys->i_current_abuffer )
               < 0 )
         {
-            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_QBUF: %s",
-                      vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't SDIAUDIO_IOC_QBUF %m" );
             return VLC_EGENERIC;
         }
 
@@ -1063,7 +1052,7 @@ static int Capture( demux_t *p_demux )
 
         if ( read( p_sys->i_afd, p_buffer, p_sys->i_abuffer_size ) < 0 )
         {
-            msg_Warn( p_demux, "couldn't read: %s", vlc_strerror_c(errno) );
+            msg_Warn( p_demux, "couldn't read %m" );
             free( p_buffer );
             return VLC_EGENERIC;
         }

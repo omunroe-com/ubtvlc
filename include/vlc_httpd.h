@@ -2,7 +2,7 @@
  * vlc_httpd.h: builtin HTTP/RTSP server.
  *****************************************************************************
  * Copyright (C) 2004-2006 VLC authors and VideoLAN
- * $Id: 852a7a8c15f9c419cf00e2565d71986500258da7 $
+ * $Id: 6100dd00b2f1a1c957224c5d0af0791ace64551a $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -71,12 +71,6 @@ VLC_API httpd_host_t *vlc_rtsp_HostNew( vlc_object_t * ) VLC_USED;
 /* delete a host */
 VLC_API void httpd_HostDelete( httpd_host_t * );
 
-typedef struct
-{
-    char * name;
-    char * value;
-} httpd_header;
-
 typedef struct httpd_message_t
 {
     httpd_client_t *cl; /* NULL if not throught a connection e vlc internal */
@@ -95,8 +89,10 @@ typedef struct httpd_message_t
     uint8_t *psz_args;
 
     /* options */
-    size_t       i_headers;
-    httpd_header *p_headers;
+    int     i_name;
+    char    **name;
+    int     i_value;
+    char    **value;
 
     /* body */
     int64_t i_body_offset;
@@ -142,8 +138,8 @@ typedef struct httpd_stream_t httpd_stream_t;
 VLC_API httpd_stream_t * httpd_StreamNew( httpd_host_t *, const char *psz_url, const char *psz_mime, const char *psz_user, const char *psz_password ) VLC_USED;
 VLC_API void httpd_StreamDelete( httpd_stream_t * );
 VLC_API int httpd_StreamHeader( httpd_stream_t *, uint8_t *p_data, int i_data );
-VLC_API int httpd_StreamSend( httpd_stream_t *, const block_t *p_block );
-VLC_API int httpd_StreamSetHTTPHeaders(httpd_stream_t *, httpd_header *, size_t);
+VLC_API int httpd_StreamSend( httpd_stream_t *, uint8_t *p_data, int i_data );
+
 
 /* Msg functions facilities */
 VLC_API void httpd_MsgAdd( httpd_message_t *, const char *psz_name, const char *psz_value, ... ) VLC_FORMAT( 3, 4 );

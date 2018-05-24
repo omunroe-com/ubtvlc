@@ -48,7 +48,7 @@ SetCompressor lzma
 SetCompressor /SOLID lzma
 !endif
 
-SetOverwrite ifdiff
+SetOverwrite ifnewer
 CRCCheck on
 BrandingText "${PRODUCT_GROUP} ${PRODUCT_NAME}"
 
@@ -130,6 +130,7 @@ RequestExecutionLevel admin
   !insertmacro MUI_LANGUAGE "Russian"
   !insertmacro MUI_LANGUAGE "Portuguese"
   !insertmacro MUI_LANGUAGE "PortugueseBR"
+  !insertmacro MUI_LANGUAGE "Albanian"
   !insertmacro MUI_LANGUAGE "Welsh"
   !insertmacro MUI_LANGUAGE "Uzbek"
   !insertmacro MUI_LANGUAGE "Ukrainian"
@@ -156,9 +157,6 @@ RequestExecutionLevel admin
   !insertmacro MUI_LANGUAGE "Estonian"
   !insertmacro MUI_LANGUAGE "Lithuanian"
   !insertmacro MUI_LANGUAGE "Basque"
-  !insertmacro MUI_LANGUAGE "Galician"
-  !insertmacro MUI_LANGUAGE "Hebrew"
-  !insertmacro MUI_LANGUAGE "Slovenian"
 
 ; Reserve files for solid compression
   !insertmacro MUI_RESERVEFILE_LANGDLL
@@ -227,8 +225,7 @@ ${MementoSection} $Name_Section01 SEC01
   WriteRegStr HKCR Applications\vlc.exe "FriendlyAppName" "VLC media player"
   WriteRegStr HKCR Applications\vlc.exe\shell\Open "" $ContextMenuEntry_PlayWith
   WriteRegStr HKCR Applications\vlc.exe\shell\Open\command "" '"$INSTDIR\vlc.exe" --started-from-file "%1"'
-  !insertmacro MacroAllExtensions RegisterExtensionMacro
-  !insertmacro MacroSkinExtensions RegisterSkinExtensionMacro
+  !insertmacro MacroAllExtensions WriteRegStrSupportedTypes
 
   ; Windows default programs Registration
   ; Vista and above detection
@@ -523,7 +520,7 @@ UAC_Success:
   StrCmp $LANGUAGE ${LANG_JAPANESE} Japanese 0
 ;  StrCmp $LANGUAGE ${LANG_BENGALI} Bengali 0
 ;  StrCmp $LANGUAGE ${LANG_PUNJABI} Punjabi 0
-  StrCmp $LANGUAGE ${LANG_SLOVENIAN} Slovenian 0
+;  StrCmp $LANGUAGE ${LANG_SLOVENIAN} Slovenian 0
   StrCmp $LANGUAGE ${LANG_SPANISH} Spanish 0
   StrCmp $LANGUAGE ${LANG_ESTONIAN} Estonian 0
   StrCmp $LANGUAGE ${LANG_LITHUANIAN} Lithuanian 0
@@ -550,6 +547,7 @@ UAC_Success:
   StrCmp $LANGUAGE ${LANG_UKRAINIAN} Ukrainian 0
   StrCmp $LANGUAGE ${LANG_UZBEK} Uzbek 0
   StrCmp $LANGUAGE ${LANG_WELSH} Welsh 0
+  StrCmp $LANGUAGE ${LANG_ALBANIAN} Albanian 0
   StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} Brazilian EndLanguageCmp
   French:
   !include "languages\french.nsh"
@@ -679,6 +677,9 @@ UAC_Success:
   Goto EndLanguageCmp
   Welsh:
   !include "languages\welsh.nsh"
+  Goto EndLanguageCmp
+  Albanian:
+  !include "languages\albanian.nsh"
   Goto EndLanguageCmp
   Brazilian:
   !include "languages\brazilian_portuguese.nsh"
@@ -1048,7 +1049,7 @@ UAC_Success:
   StrCmp $LANGUAGE ${LANG_JAPANESE} Japanese 0
 ;  StrCmp $LANGUAGE ${LANG_BENGALI} Bengali 0
 ;  StrCmp $LANGUAGE ${LANG_PUNJABI} Punjabi 0
-  StrCmp $LANGUAGE ${LANG_SLOVENIAN} Slovenian 0
+;  StrCmp $LANGUAGE ${LANG_SLOVENIAN} Slovenian 0
   StrCmp $LANGUAGE ${LANG_SPANISH} Spanish 0
   StrCmp $LANGUAGE ${LANG_ESTONIAN} Estonian 0
   StrCmp $LANGUAGE ${LANG_LITHUANIAN} Lithuanian 0
@@ -1075,6 +1076,7 @@ UAC_Success:
   StrCmp $LANGUAGE ${LANG_UKRAINIAN} Ukrainian 0
   StrCmp $LANGUAGE ${LANG_UZBEK} Uzbek 0
   StrCmp $LANGUAGE ${LANG_WELSH} Welsh 0
+  StrCmp $LANGUAGE ${LANG_ALBANIAN} Albanian 0
   StrCmp $LANGUAGE ${LANG_PORTUGUESEBR} Brazilian EndLanguageCmp
   French:
   !include "languages\french.nsh"
@@ -1204,6 +1206,9 @@ UAC_Success:
   Goto EndLanguageCmp
   Welsh:
   !include "languages\welsh.nsh"
+  Goto EndLanguageCmp
+  Albanian:
+  !include "languages\albanian.nsh"
   Goto EndLanguageCmp
   Brazilian:
   !include "languages\brazilian_portuguese.nsh"

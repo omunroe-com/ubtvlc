@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
  * Copyright © 2007 Rémi Denis-Courmont
- * $Id: a044d4e6905c4ba56d77392c655c388ab68950e7 $
+ * $Id: 07003240c8717589b91b554f2f36d14889b7936c $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Rémi Denis-Courmont
@@ -40,8 +40,9 @@
 #include <vlc_network.h>
 #include <vlc_charset.h>
 
-#include <errno.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#    include <unistd.h>
+#endif
 #ifdef HAVE_ARPA_INET_H
 # include <arpa/inet.h>
 #endif
@@ -556,8 +557,7 @@ static void *Run( void *data )
                     i_read = net_Read (p_sd, ufd[i].fd, NULL, p_buffer,
                                        MAX_SAP_BUFFER, false);
                     if (i_read < 0)
-                        msg_Warn (p_sd, "receive error: %s",
-                                  vlc_strerror_c(errno));
+                        msg_Warn (p_sd, "receive error: %m");
                     if (i_read > 6)
                     {
                         /* Parse the packet */
@@ -582,9 +582,9 @@ static void *Run( void *data )
             mtime_t i_last_period = now - p_announce->i_last;
 
             /* Remove the announcement, if the last announcement was 1 hour ago
-             * or if the last packet emitted was 10 times the average time
+             * or if the last packet emitted was 3 times the average time
              * between two packets */
-            if( ( p_announce->i_period_trust > 5 && i_last_period > 10 * p_announce->i_period ) ||
+            if( ( p_announce->i_period_trust > 5 && i_last_period > 3 * p_announce->i_period ) ||
                 i_last_period > i_timeout )
             {
                 RemoveAnnounce( p_sd, p_announce );
@@ -593,7 +593,7 @@ static void *Run( void *data )
             {
                 /* Compute next timeout */
                 if( p_announce->i_period_trust > 5 )
-                    timeout = min_int((10 * p_announce->i_period - i_last_period) / 1000, timeout);
+                    timeout = min_int((3 * p_announce->i_period - i_last_period) / 1000, timeout);
                 timeout = min_int((i_timeout - i_last_period)/1000, timeout);
             }
         }
@@ -750,12 +750,12 @@ static int ParseSAP( services_discovery_t *p_sd, const uint8_t *buf,
         if (strcmp (psz_sdp, "application/sdp"))
         {
             msg_Dbg (p_sd, "unsupported content type: %s", psz_sdp);
-            goto error;
+            return VLC_EGENERIC;
         }
 
         // skips content type
         if (len <= clen)
-            goto error;
+            return VLC_EGENERIC;
 
         len -= clen;
         psz_sdp += clen;
@@ -765,7 +765,7 @@ static int ParseSAP( services_discovery_t *p_sd, const uint8_t *buf,
     p_sdp = ParseSDP( VLC_OBJECT(p_sd), psz_sdp );
 
     if( p_sdp == NULL )
-        goto error;
+        return VLC_EGENERIC;
 
     p_sdp->psz_sdp = psz_sdp;
 
@@ -785,7 +785,7 @@ static int ParseSAP( services_discovery_t *p_sd, const uint8_t *buf,
     if( p_sdp->psz_uri == NULL )
     {
         FreeSDP( p_sdp );
-        goto error;
+        return VLC_EGENERIC;
     }
 
     for( i = 0 ; i< p_sd->p_sys->i_announces ; i++ )
@@ -817,19 +817,15 @@ static int ParseSAP( services_discovery_t *p_sd, const uint8_t *buf,
                 p_announce->i_period = ( p_announce->i_period * (p_announce->i_period_trust-1) + (now - p_announce->i_last) ) / p_announce->i_period_trust;
                 p_announce->i_last = now;
             }
-            FreeSDP( p_sdp );
-            free (decomp);
+            FreeSDP( p_sdp ); p_sdp = NULL;
             return VLC_SUCCESS;
         }
     }
 
     CreateAnnounce( p_sd, i_source, i_hash, p_sdp );
 
-    free (decomp);
+    FREENULL (decomp);
     return VLC_SUCCESS;
-error:
-    free (decomp);
-    return VLC_EGENERIC;
 }
 
 sap_announce_t *CreateAnnounce( services_discovery_t *p_sd, uint32_t *i_source, uint16_t i_hash,
@@ -856,18 +852,14 @@ sap_announce_t *CreateAnnounce( services_discovery_t *p_sd, uint32_t *i_source, 
     p_input = input_item_NewWithType( p_sap->p_sdp->psz_uri,
                                       p_sdp->psz_sessionname,
                                       0, NULL, 0, -1, ITEM_TYPE_NET );
-    if( unlikely(p_input == NULL) )
+    vlc_meta_t *p_meta = vlc_meta_New();
+    vlc_meta_Set( p_meta, vlc_meta_Description, p_sdp->psz_sessioninfo );
+    p_input->p_meta = p_meta;
+    p_sap->p_item = p_input;
+    if( !p_input )
     {
         free( p_sap );
         return NULL;
-    }
-    p_sap->p_item = p_input;
-
-    vlc_meta_t *p_meta = vlc_meta_New();
-    if( likely(p_meta != NULL) )
-    {
-        vlc_meta_Set( p_meta, vlc_meta_Description, p_sdp->psz_sessioninfo );
-        p_input->p_meta = p_meta;
     }
 
     if( p_sdp->rtcp_port )
@@ -1259,7 +1251,7 @@ static sdp_t *ParseSDP (vlc_object_t *p_obj, const char *psz_sdp)
                 {
                     msg_Dbg (p_obj, "SDP origin not supported: %s", data);
                     /* Or maybe out-of-range, but this looks suspicious */
-                    goto error;
+                    return NULL;
                 }
                 EnsureUTF8 (p_sdp->orig_host);
                 break;

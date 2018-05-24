@@ -2,7 +2,7 @@
  * vout_subpictures.c : subpicture management functions
  *****************************************************************************
  * Copyright (C) 2000-2007 VLC authors and VideoLAN
- * $Id: a051c16b418faa385316a21b026f3398d03397d4 $
+ * $Id: 90e6708c47a20c2a8f9d16cc650564c5c0ecb22c $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -238,16 +238,12 @@ static filter_t *SpuRenderCreateAndLoadScale(vlc_object_t *object,
     es_format_Init(&scale->fmt_in, VIDEO_ES, 0);
     scale->fmt_in.video.i_chroma = src_chroma;
     scale->fmt_in.video.i_width =
-    scale->fmt_in.video.i_visible_width =
-    scale->fmt_in.video.i_height =
-    scale->fmt_in.video.i_visible_height = 32;
+    scale->fmt_in.video.i_height = 32;
 
     es_format_Init(&scale->fmt_out, VIDEO_ES, 0);
     scale->fmt_out.video.i_chroma = dst_chroma;
     scale->fmt_out.video.i_width =
-    scale->fmt_out.video.i_visible_width =
-    scale->fmt_out.video.i_height =
-    scale->fmt_out.video.i_visible_height = require_resize ? 16 : 32;
+    scale->fmt_out.video.i_height = require_resize ? 16 : 32;
 
     scale->pf_video_buffer_new = spu_new_video_buffer;
     scale->pf_video_buffer_del = spu_del_video_buffer;
@@ -848,8 +844,6 @@ static void SpuRenderRegion(spu_t *spu,
             {
                 scale->fmt_in.video  = picture->format;
                 scale->fmt_out.video = picture->format;
-                if (using_palette)
-                    scale->fmt_in.video.i_chroma = chroma_list[0];
                 if (convert_chroma)
                     scale->fmt_out.i_codec        =
                     scale->fmt_out.video.i_chroma = chroma_list[0];
@@ -1372,13 +1366,9 @@ void spu_PutSubpicture(spu_t *spu, subpicture_t *subpic)
 
     vlc_mutex_lock(&sys->filter_chain_lock);
     if (chain_update) {
-        if (*chain_update) {
-            filter_chain_Reset(sys->filter_chain, NULL, NULL);
+        filter_chain_Reset(sys->filter_chain, NULL, NULL);
 
-            filter_chain_AppendFromString(spu->p->filter_chain, chain_update);
-        }
-        else if (filter_chain_GetLength(spu->p->filter_chain) > 0)
-            filter_chain_Reset(sys->filter_chain, NULL, NULL);
+        filter_chain_AppendFromString(spu->p->filter_chain, chain_update);
 
         /* "sub-source"  was formerly "sub-filter", so now the "sub-filter"
         configuration may contain sub-filters or sub-sources configurations.
@@ -1387,28 +1377,23 @@ void spu_PutSubpicture(spu_t *spu, subpicture_t *subpic)
     }
     vlc_mutex_unlock(&sys->filter_chain_lock);
 
+
     if (is_left_empty) {
-        /* try to use the configuration as a sub-source configuration,
-           but only if there is no 'source_chain_update' value and
-           if only if 'chain_update' has a value */
-        if (chain_update && *chain_update) {
-            vlc_mutex_lock(&sys->lock);
-            if (!sys->source_chain_update || !*sys->source_chain_update) {
-                if (sys->source_chain_update)
-                    free(sys->source_chain_update);
-                sys->source_chain_update = chain_update;
-                chain_update = NULL;
-            }
-            vlc_mutex_unlock(&sys->lock);
+        /* try to use the configuration as a sub-source configuration */
+
+        vlc_mutex_lock(&sys->lock);
+        if (!sys->source_chain_update || !*sys->source_chain_update) {
+            free(sys->source_chain_update);
+            sys->source_chain_update = chain_update;
+            chain_update = NULL;
         }
+        vlc_mutex_unlock(&sys->lock);
     }
 
     free(chain_update);
 
     /* Run filter chain on the new subpicture */
-    vlc_mutex_lock(&sys->filter_chain_lock);
     subpic = filter_chain_SubFilter(spu->p->filter_chain, subpic);
-    vlc_mutex_unlock(&sys->filter_chain_lock);
     if (!subpic)
         return;
 
@@ -1449,13 +1434,9 @@ subpicture_t *spu_Render(spu_t *spu,
 
     vlc_mutex_lock(&sys->source_chain_lock);
     if (chain_update) {
-        if (*chain_update) {
-            filter_chain_Reset(sys->source_chain, NULL, NULL);
+        filter_chain_Reset(sys->source_chain, NULL, NULL);
 
-            filter_chain_AppendFromString(spu->p->source_chain, chain_update);
-        }
-        else if (filter_chain_GetLength(spu->p->source_chain) > 0)
-            filter_chain_Reset(sys->source_chain, NULL, NULL);
+        filter_chain_AppendFromString(spu->p->source_chain, chain_update);
 
         free(chain_update);
     }
@@ -1466,13 +1447,11 @@ subpicture_t *spu_Render(spu_t *spu,
     static const vlc_fourcc_t chroma_list_default_yuv[] = {
         VLC_CODEC_YUVA,
         VLC_CODEC_RGBA,
-        VLC_CODEC_ARGB,
         VLC_CODEC_YUVP,
         0,
     };
     static const vlc_fourcc_t chroma_list_default_rgb[] = {
         VLC_CODEC_RGBA,
-        VLC_CODEC_ARGB,
         VLC_CODEC_YUVA,
         VLC_CODEC_YUVP,
         0,

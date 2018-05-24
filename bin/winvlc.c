@@ -28,10 +28,7 @@
 # include "config.h"
 #endif
 
-#ifndef UNICODE
 #define UNICODE
-#endif
-
 #include <vlc/vlc.h>
 #include <windows.h>
 #include <shellapi.h>
@@ -79,7 +76,6 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
     putenv("VLC_DATA_PATH=Z:"TOP_SRCDIR"/share");
 #endif
 
-    SetErrorMode(SEM_FAILCRITICALERRORS);
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
     /* SetProcessDEPPolicy */
@@ -109,13 +105,12 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
     if (wargv == NULL)
         return 1;
 
-    char *argv[argc + 4];
+    char *argv[argc + 3];
     BOOL crash_handling = TRUE;
     int j = 0;
     char *lang = NULL;
 
     argv[j++] = FromWide( L"--media-library" );
-    argv[j++] = FromWide( L"--stats" );
     argv[j++] = FromWide( L"--no-ignore-config" );
     for (int i = 1; i < argc; i++)
     {
@@ -207,14 +202,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 /* Crashdumps handling */
 static void check_crashdump(void)
 {
-    wchar_t mv_crashdump_path[MAX_PATH];
-    wcscpy (mv_crashdump_path, crashdump_path);
-    wcscat (mv_crashdump_path, L".mv");
-
-    if (_wrename (crashdump_path, mv_crashdump_path))
-        return;
-
-    FILE * fd = _wfopen ( mv_crashdump_path, L"r, ccs=UTF-8" );
+    FILE * fd = _wfopen ( crashdump_path, L"r, ccs=UTF-8" );
     if( !fd )
         return;
     fclose( fd );
@@ -242,7 +230,7 @@ static void check_crashdump(void)
                         now.wYear, now.wMonth, now.wDay, now.wHour,
                         now.wMinute, now.wSecond );
 
-                if( FtpPutFile( ftp, mv_crashdump_path, remote_file,
+                if( FtpPutFile( ftp, crashdump_path, remote_file,
                             FTP_TRANSFER_TYPE_BINARY, 0) )
                     MessageBox( NULL, L"Report sent correctly. Thanks a lot " \
                                 "for the help.", L"Report sent", MB_OK);
@@ -272,7 +260,7 @@ static void check_crashdump(void)
         }
     }
 
-    _wremove(mv_crashdump_path);
+    _wremove(crashdump_path);
 }
 
 /*****************************************************************************
@@ -355,9 +343,6 @@ LONG WINAPI vlc_exception_filter(struct _EXCEPTION_POINTERS *lpExceptionInfo)
             VirtualQuery( caller, &mbi, sizeof( mbi ) ) ;
             GetModuleFileName( mbi.AllocationBase, module, 256 );
             fwprintf( fd, L"%p|%ls\n", caller, module );
-
-            if( IsBadReadPtr( pBase, 2 * sizeof( void* ) ) )
-                break;
 
             /*The last BP points to NULL!*/
             caller = *(pBase + 1);

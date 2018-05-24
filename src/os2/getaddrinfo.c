@@ -261,7 +261,7 @@ getaddrinfo (const char *node, const char *service,
                 protocol = IPPROTO_UDP;
                 break;
 
-#ifdef SOCK_RAW
+#ifndef SOCK_RAW
             case SOCK_RAW:
 #endif
             case 0:

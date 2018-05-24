@@ -2,7 +2,7 @@
  * vlc_picture.h: picture definitions
  *****************************************************************************
  * Copyright (C) 1999 - 2009 VLC authors and VideoLAN
- * $Id: d3e3b99c1f8f5ad6c6b4ca63a1c80ba8357889d0 $
+ * $Id: c99f54d7212b39689a8027c64cc92b40442cf080 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@via.ecp.fr>
@@ -91,8 +91,6 @@ struct picture_t
     bool            b_progressive;          /**< is it a progressive frame ? */
     bool            b_top_field_first;             /**< which field is first */
     unsigned int    i_nb_fields;                  /**< # of displayed fields */
-    void          * context;          /**< video format-specific data pointer,
-             * must point to a (void (*)(void*)) pointer to free the context */
     /**@}*/
 
     /** Private data - the video output plugin might want to put stuff here to
@@ -102,7 +100,7 @@ struct picture_t
     /** This way the picture_Release can be overloaded */
     struct
     {
-        atomic_uintptr_t refcount;
+        vlc_atomic_t refcount;
         void (*pf_destroy)( picture_t * );
         picture_gc_sys_t *p_sys;
     } gc;
@@ -133,7 +131,6 @@ VLC_API picture_t * picture_NewFromFormat( const video_format_t *p_fmt ) VLC_USE
 typedef struct
 {
     picture_sys_t *p_sys;
-    void (*pf_destroy)(picture_t *);
 
     /* Plane resources
      * XXX all fields MUST be set to the right value.
@@ -235,7 +232,7 @@ VLC_API int picture_Export( vlc_object_t *p_obj, block_t **pp_image, video_forma
  *
  * It can be useful to get the properties of planes.
  */
-VLC_API int picture_Setup( picture_t *, const video_format_t * );
+VLC_API int picture_Setup( picture_t *, vlc_fourcc_t i_chroma, int i_width, int i_height, int i_sar_num, int i_sar_den );
 
 
 /**
@@ -246,9 +243,8 @@ VLC_API int picture_Setup( picture_t *, const video_format_t * );
  *  - not be ephemere.
  *  - not have the fade flag.
  *  - contains only picture (no text rendering).
- * \return the number of region(s) succesfully blent
  */
-VLC_API unsigned picture_BlendSubpicture( picture_t *, filter_t *p_blend, subpicture_t * );
+VLC_API void picture_BlendSubpicture( picture_t *, filter_t *p_blend, subpicture_t * );
 
 
 /*****************************************************************************

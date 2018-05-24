@@ -75,8 +75,6 @@ processcommands = function ()
     local val = _GET['val']
     local options = _GET['option']
     local band = tonumber(_GET['band'])
-    local name = _GET['name']
-    local duration = tonumber(_GET['duration'])
     if type(options) ~= "table" then -- Deal with the 0 or 1 option case
         options = { options }
     end
@@ -89,11 +87,11 @@ processcommands = function ()
         end
         vlc.msg.err( "</options>" )
         --]]
-        vlc.playlist.add({{path=vlc.strings.make_uri(input),options=options,name=name,duration=duration}})
+        vlc.playlist.add({{path=vlc.strings.make_uri(input),options=options}})
     elseif command == "addsubtitle" then
-        vlc.input.add_subtitle (val)
+        vlc.input.add_subtitle (vlc.strings.make_uri(val))
     elseif command == "in_enqueue" then
-        vlc.playlist.enqueue({{path=vlc.strings.make_uri(input),options=options,name=name,duration=duration}})
+        vlc.playlist.enqueue({{path=vlc.strings.make_uri(input),options=options}})
     elseif command == "pl_play" then
         if id == -1 then
             vlc.playlist.play()
@@ -149,9 +147,7 @@ processcommands = function ()
             vlc.sd.add(val)
         end
     elseif command == "fullscreen" then
-        if vlc.object.vout() then
-            vlc.video.fullscreen()
-        end
+        vlc.video.fullscreen()
     elseif command == "snapshot" then
         common.snapshot()
     elseif command == "volume" then

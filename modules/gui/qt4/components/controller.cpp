@@ -2,7 +2,7 @@
  * controller.cpp : Controller for the main interface
  ****************************************************************************
  * Copyright (C) 2006-2009 the VideoLAN team
- * $Id: a006ff0a8e7eb51ceb06082ee97aa8ba39a433af $
+ * $Id: 2928bd52438a13f8b1e5b9aec9b27dce081912b2 $
  *
  * Authors: Jean-Baptiste Kempf <jb@videolan.org>
  *          Ilkka Ollakka <ileoo@videolan.org>
@@ -241,7 +241,6 @@ QWidget *AbstractController::createWidget( buttonType_e button, int options )
         CONNECT_MAP_SET( playButton, PLAY_ACTION );
         CONNECT( this, inputPlaying( bool ),
                  playButton, updateButtonIcons( bool ));
-        playButton->updateButtonIcons( THEMIM->getIM()->playingStatus() == PLAYING_S );
         widget = playButton;
         }
         break;
@@ -608,7 +607,7 @@ QFrame *AbstractController::telexFrame()
 
     /* Page setting */
     QSpinBox *telexPage = new QSpinBox( telexFrame );
-    telexPage->setRange( 100, 899 );
+    telexPage->setRange( 0, 999 );
     telexPage->setValue( 100 );
     telexPage->setAccelerated( true );
     telexPage->setWrapping( true );
@@ -616,40 +615,6 @@ QFrame *AbstractController::telexFrame()
     telexPage->setSizePolicy( QSizePolicy::Preferred, QSizePolicy::Minimum );
     telexPage->setEnabled( false );
     telexLayout->addWidget( telexPage );
-
-    /* Contextual & Index Buttons */
-    QSignalMapper *contextButtonMapper = new QSignalMapper( this );
-    QToolButton *contextButton = NULL;
-    int i_iconminsize = __MAX( 16, telexOn->minimumHeight() );
-    QPixmap iconPixmap( i_iconminsize, i_iconminsize );
-    iconPixmap.fill( Qt::transparent );
-    QPainter iconPixmapPainter( &iconPixmap );
-    QLinearGradient iconPixmapPainterGradient( iconPixmap.rect().center() / 2,
-                                               iconPixmap.rect().center() );
-
-#define CREATE_CONTEXT_BUTTON(color, key) \
-    iconPixmapPainterGradient.setColorAt( 0, QColor( color ).lighter(150) );\
-    iconPixmapPainterGradient.setColorAt( 1.0, QColor( color ) );\
-    iconPixmapPainter.setBrush( iconPixmapPainterGradient );\
-    iconPixmapPainter.drawEllipse( iconPixmap.rect().adjusted( 4, 4, -5, -5 ) );\
-    contextButton = new QToolButton();\
-    setupButton( contextButton );\
-    contextButton->setIcon( iconPixmap );\
-    contextButton->setEnabled( false );\
-    contextButtonMapper->setMapping( contextButton, key << 16 );\
-    CONNECT( contextButton, clicked(), contextButtonMapper, map() );\
-    CONNECT( contextButtonMapper, mapped( int ),\
-             THEMIM->getIM(), telexSetPage( int ) );\
-    CONNECT( THEMIM->getIM(), teletextActivated( bool ), contextButton, setEnabled( bool ) );\
-    telexLayout->addWidget( contextButton )
-
-    CREATE_CONTEXT_BUTTON("grey", 'i'); /* index */
-    CREATE_CONTEXT_BUTTON("red", 'r');
-    CREATE_CONTEXT_BUTTON("green", 'g');
-    CREATE_CONTEXT_BUTTON("yellow", 'y');
-    CREATE_CONTEXT_BUTTON("blue", 'b');
-
-#undef CREATE_CONTEXT_BUTTON
 
     /* Page change and set */
     CONNECT( telexPage, valueChanged( int ),
@@ -805,8 +770,6 @@ FullscreenControllerWidget::FullscreenControllerWidget( intf_thread_t *_p_i, QWi
     f_opacity = var_InheritFloat( p_intf, "qt-fs-opacity" );
 #endif
 
-    i_sensitivity = var_InheritInteger( p_intf, "qt-fs-sensitivity" );
-
     vlc_mutex_init_recursive( &lock );
 
     DCONNECT( THEMIM->getIM(), voutListChanged( vout_thread_t **, int ),
@@ -859,6 +822,11 @@ void FullscreenControllerWidget::restoreFSC()
         /* Dock at the bottom of the screen */
         updateFullwidthGeometry( targetScreen() );
     }
+
+#ifdef Q_WS_X11
+    // Tell kwin that we do not want a shadow around the fscontroller
+    setMask( QRegion( 0, 0, width(), height() ) );
+#endif
 }
 
 void FullscreenControllerWidget::centerFSC( int number )
@@ -1222,8 +1190,8 @@ void FullscreenControllerWidget::mouseChanged( vout_thread_t *, int i_mousex, in
 
     b_toShow = false;
     if( ( i_mouse_last_move_x == -1 || i_mouse_last_move_y == -1 ) ||
-        ( abs( i_mouse_last_move_x - i_mousex ) > i_sensitivity ||
-          abs( i_mouse_last_move_y - i_mousey ) > i_sensitivity ) )
+        ( abs( i_mouse_last_move_x - i_mousex ) > 2 ||
+          abs( i_mouse_last_move_y - i_mousey ) > 2 ) )
     {
         i_mouse_last_move_x = i_mousex;
         i_mouse_last_move_y = i_mousey;

@@ -248,12 +248,8 @@ static int Control (demux_t *demux, int query, va_list args)
              || (sys->titlev[sys->track_id]->i_length == 0))
                 *pos = 0.;
             else
-            {
-                int offset = gme_tell (sys->emu);
-
-                *pos = (double)offset
+                *pos = (double)(gme_tell (sys->emu))
                     / (double)(sys->titlev[sys->track_id]->i_length / 1000);
-            }
             return VLC_SUCCESS;
         }
 

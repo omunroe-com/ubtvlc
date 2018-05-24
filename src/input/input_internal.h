@@ -2,7 +2,7 @@
  * input_internal.h: Internal input structures
  *****************************************************************************
  * Copyright (C) 1998-2006 VLC authors and VideoLAN
- * $Id: 2236313b9c1fa6859842715d6f35c03fd5840e8b $
+ * $Id: e13022dd1d74b5ee12f1eb68b5ce07ecff5ce6b5 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
@@ -39,7 +39,10 @@
 /* input_source_t: gathers all information per input source */
 typedef struct
 {
-    demux_t  *p_demux; /**< Demux plugin instance */
+    /* Access/Stream/Demux plugins */
+    access_t *p_access VLC_DEPRECATED;
+    stream_t *p_stream;
+    demux_t  *p_demux;
 
     /* Title infos for that input */
     bool         b_title_demux; /* Titles/Seekpoints provided by demux */
@@ -116,7 +119,6 @@ struct input_thread_private_t
     /* Input attachment */
     int i_attachment;
     input_attachment_t **attachment;
-    demux_t **attachment_demux;
 
     /* Main input properties */
 

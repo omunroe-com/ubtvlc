@@ -2,7 +2,7 @@
  * registry.cpp: Windows Registry Manipulation
  ****************************************************************************
  * Copyright (C) 2008 the VideoLAN team
- * $Id: 2484d8972240264b881ff150508b5b3d80de1668 $
+ * $Id: 38166a42bdb14dff9a10161dbddf2f3217ba2d0d $
  *
  * Authors: Andre Weber <WeberAndre # gmx - de>
  *
@@ -33,6 +33,10 @@
 QVLCRegistry::QVLCRegistry( HKEY rootKey )
 {
     m_RootKey = rootKey;
+}
+
+QVLCRegistry::~QVLCRegistry( void )
+{
 }
 
 bool QVLCRegistry::RegistryKeyExists( const char *path )

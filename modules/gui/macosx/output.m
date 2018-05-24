@@ -2,7 +2,7 @@
  * output.m: MacOS X Output Dialog
  *****************************************************************************
  * Copyright (C) 2002-2013 VLC authors and VideoLAN
- * $Id: f365d9f4355204e13a0ad09a167a905f9d7c8773 $
+ * $Id: 8e9109ed3c3c06ad2f8dd16b9fca15b375d4a5b7 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -201,7 +201,7 @@
     [NSApp endSheet: o_output_sheet];
 }
 
-- (IBAction)outputMethodChanged:(id)sender
+- (void)outputMethodChanged:(NSNotification *)o_notification
 {
     NSString *o_mode;
     o_mode = [[o_method selectedCell] title];
@@ -314,7 +314,7 @@
     [self outputInfoChanged: nil];
 }
 
-- (IBAction)outputInfoChanged:(id)object
+- (void)outputInfoChanged:(NSNotification *)o_notification
 {
     NSString *o_mode, *o_mux, *o_mux_string;
     NSMutableString *o_announce = [NSMutableString stringWithString:@""];
@@ -372,7 +372,8 @@
              * port correctly. Not need, if there isn't any path following the
              * hostname. */
             NSArray * o_urlItems = [[o_stream_address stringValue] componentsSeparatedByString: @"/"];
-            NSMutableString * o_finalStreamAddress = [[[NSMutableString alloc] init] autorelease];
+            NSMutableString * o_finalStreamAddress;
+            o_finalStreamAddress = [[NSMutableString alloc] init];
 
             if ([o_urlItems count] == 1)
                 [o_finalStreamAddress appendFormat: @"\"%@:%@\"", [o_stream_address stringValue],[o_stream_port stringValue]];
@@ -474,7 +475,7 @@
     [self TTLChanged:nil];
 }
 
-- (IBAction)transcodeChanged:(id)sender
+- (void)transcodeChanged:(NSNotification *)o_notification
 {
     if ([o_transcode_video_chkbox state] == NSOnState) {
         [o_transcode_video_selector setEnabled: YES];
@@ -498,7 +499,7 @@
     [self transcodeInfoChanged:nil];
 }
 
-- (IBAction)transcodeInfoChanged:(id)object
+- (void)transcodeInfoChanged:(NSNotification *)o_notification
 {
     NSMutableString *o_transcode_string = [NSMutableString stringWithCapacity:200];
 

@@ -2,7 +2,7 @@
  * open.hpp : advanced open dialog
  ****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id: 27210a8b65936167b31ac99b96c3692426170ab8 $
+ * $Id: ae6b27d9c42945d9b024122b613fc622c854d044 $
  *
  * Authors: Jean-Baptiste Kempf <jb@videolan.org>
  *
@@ -71,8 +71,6 @@ public:
 
     void showTab( int = OPEN_FILE_TAB );
     QString getMRL( bool b = true );
-
-    QStringList getMRLs( bool b = true );
     QString getOptions();
 
 public slots:

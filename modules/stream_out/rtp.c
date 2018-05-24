@@ -48,8 +48,10 @@
 
 #include "rtp.h"
 
-#include <sys/types.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <sys/types.h>
+#   include <unistd.h>
+#endif
 #ifdef HAVE_ARPA_INET_H
 #   include <arpa/inet.h>
 #endif
@@ -273,13 +275,13 @@ static const char *const ppsz_sout_options[] = {
     "mp4a-latm", NULL
 };
 
-static sout_stream_id_sys_t *Add ( sout_stream_t *, es_format_t * );
-static int               Del ( sout_stream_t *, sout_stream_id_sys_t * );
-static int               Send( sout_stream_t *, sout_stream_id_sys_t *,
+static sout_stream_id_t *Add ( sout_stream_t *, es_format_t * );
+static int               Del ( sout_stream_t *, sout_stream_id_t * );
+static int               Send( sout_stream_t *, sout_stream_id_t *,
                                block_t* );
-static sout_stream_id_sys_t *MuxAdd ( sout_stream_t *, es_format_t * );
-static int               MuxDel ( sout_stream_t *, sout_stream_id_sys_t * );
-static int               MuxSend( sout_stream_t *, sout_stream_id_sys_t *,
+static sout_stream_id_t *MuxAdd ( sout_stream_t *, es_format_t * );
+static int               MuxDel ( sout_stream_t *, sout_stream_id_t * );
+static int               MuxSend( sout_stream_t *, sout_stream_id_t *,
                                   block_t* );
 
 static sout_access_out_t *GrabberCreate( sout_stream_t *p_sout );
@@ -342,7 +344,7 @@ struct sout_stream_sys_t
     /* */
     vlc_mutex_t      lock_es;
     int              i_es;
-    sout_stream_id_sys_t **es;
+    sout_stream_id_t **es;
 };
 
 typedef struct rtp_sink_t
@@ -351,7 +353,7 @@ typedef struct rtp_sink_t
     rtcp_sender_t *rtcp;
 } rtp_sink_t;
 
-struct sout_stream_id_sys_t
+struct sout_stream_id_t
 {
     sout_stream_t *p_stream;
     /* rtp field */
@@ -630,7 +632,7 @@ static int Open( vlc_object_t *p_this )
 
     if( p_sys->p_mux != NULL )
     {
-        sout_stream_id_sys_t *id = Add( p_stream, NULL );
+        sout_stream_id_t *id = Add( p_stream, NULL );
         if( id == NULL )
         {
             Close( p_this );
@@ -681,7 +683,9 @@ static void Close( vlc_object_t * p_this )
 
     if( p_sys->psz_sdp_file != NULL )
     {
+#ifdef HAVE_UNISTD_H
         unlink( p_sys->psz_sdp_file );
+#endif
         free( p_sys->psz_sdp_file );
     }
     free( p_sys->psz_vod_session );
@@ -866,7 +870,7 @@ char *SDPGenerate( sout_stream_t *p_stream, const char *rtsp_url )
 
     for( i = 0; i < p_sys->i_es; i++ )
     {
-        sout_stream_id_sys_t *id = p_sys->es[i];
+        sout_stream_id_t *id = p_sys->es[i];
         rtp_format_t *rtp_fmt = &id->rtp_fmt;
         const char *mime_major; /* major MIME type */
 
@@ -926,7 +930,7 @@ out:
  * Shrink the MTU down to a fixed packetization time (for audio).
  */
 static void
-rtp_set_ptime (sout_stream_id_sys_t *id, unsigned ptime_ms, size_t bytes)
+rtp_set_ptime (sout_stream_id_t *id, unsigned ptime_ms, size_t bytes)
 {
     /* Samples per second */
     size_t spl = (id->rtp_fmt.clock_rate - 1) * ptime_ms / 1000 + 1;
@@ -952,14 +956,14 @@ uint32_t rtp_compute_ts( unsigned i_clock_rate, int64_t i_pts )
 }
 
 /** Add an ES as a new RTP stream */
-static sout_stream_id_sys_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
+static sout_stream_id_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
 {
     /* NOTE: As a special case, if we use a non-RTP
      * mux (TS/PS), then p_fmt is NULL. */
     sout_stream_sys_t *p_sys = p_stream->p_sys;
     char              *psz_sdp;
 
-    sout_stream_id_sys_t *id = malloc( sizeof( *id ) );
+    sout_stream_id_t *id = malloc( sizeof( *id ) );
     if( unlikely(id == NULL) )
         return NULL;
     id->p_stream   = p_stream;
@@ -1035,13 +1039,12 @@ static sout_stream_id_sys_t *Add( sout_stream_t *p_stream, es_format_t *p_fmt )
         }
 
         char *salt = var_GetNonEmptyString (p_stream, SOUT_CFG_PREFIX"salt");
-        int val = srtp_setkeystring (id->srtp, key, salt ? salt : "");
+        errno = srtp_setkeystring (id->srtp, key, salt ? salt : "");
         free (salt);
         free (key);
-        if (val)
+        if (errno)
         {
-            msg_Err (p_stream, "bad SRTP key/salt combination (%s)",
-                     vlc_strerror_c(val));
+            msg_Err (p_stream, "bad SRTP key/salt combination (%m)");
             goto error;
         }
         id->i_sequence = 0; /* FIXME: awful hack for libvlc_srtp */
@@ -1216,7 +1219,7 @@ error:
     return NULL;
 }
 
-static int Del( sout_stream_t *p_stream, sout_stream_id_sys_t *id )
+static int Del( sout_stream_t *p_stream, sout_stream_id_t *id )
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
 
@@ -1262,7 +1265,7 @@ static int Del( sout_stream_t *p_stream, sout_stream_id_sys_t *id )
     return VLC_SUCCESS;
 }
 
-static int Send( sout_stream_t *p_stream, sout_stream_id_sys_t *id,
+static int Send( sout_stream_t *p_stream, sout_stream_id_t *id,
                  block_t *p_buffer )
 {
     block_t *p_next;
@@ -1329,8 +1332,8 @@ static int FileSetup( sout_stream_t *p_stream )
 
     if( ( f = vlc_fopen( p_sys->psz_sdp_file, "wt" ) ) == NULL )
     {
-        msg_Err( p_stream, "cannot open file '%s' (%s)",
-                 p_sys->psz_sdp_file, vlc_strerror_c(errno) );
+        msg_Err( p_stream, "cannot open file '%s' (%m)",
+                 p_sys->psz_sdp_file );
         return VLC_EGENERIC;
     }
 
@@ -1401,7 +1404,7 @@ static void* ThreadSend( void *data )
 # define EAGAIN       WSAEWOULDBLOCK
 # define EWOULDBLOCK  WSAEWOULDBLOCK
 #endif
-    sout_stream_id_sys_t *id = data;
+    sout_stream_id_t *id = data;
     unsigned i_caching = id->i_caching;
 
     for (;;)
@@ -1421,8 +1424,8 @@ static void* ThreadSend( void *data )
             vlc_restorecancel (canc);
             if( val )
             {
-                msg_Dbg( id->p_stream, "SRTP sending error: %s",
-                         vlc_strerror_c(val) );
+                errno = val;
+                msg_Dbg( id->p_stream, "SRTP sending error: %m" );
                 block_Release( out );
                 out = NULL;
             }
@@ -1486,7 +1489,7 @@ static void* ThreadSend( void *data )
 /* This thread dequeues incoming connections (DCCP streaming) */
 static void *rtp_listen_thread( void *data )
 {
-    sout_stream_id_sys_t *id = data;
+    sout_stream_id_t *id = data;
 
     assert( id->listen.fd != NULL );
 
@@ -1504,7 +1507,7 @@ static void *rtp_listen_thread( void *data )
 }
 
 
-int rtp_add_sink( sout_stream_id_sys_t *id, int fd, bool rtcp_mux, uint16_t *seq )
+int rtp_add_sink( sout_stream_id_t *id, int fd, bool rtcp_mux, uint16_t *seq )
 {
     rtp_sink_t sink = { fd, NULL };
     sink.rtcp = OpenRTCP( VLC_OBJECT( id->p_stream ), fd, IPPROTO_UDP,
@@ -1520,7 +1523,7 @@ int rtp_add_sink( sout_stream_id_sys_t *id, int fd, bool rtcp_mux, uint16_t *seq
     return VLC_SUCCESS;
 }
 
-void rtp_del_sink( sout_stream_id_sys_t *id, int fd )
+void rtp_del_sink( sout_stream_id_t *id, int fd )
 {
     rtp_sink_t sink = { fd, NULL };
 
@@ -1541,7 +1544,7 @@ void rtp_del_sink( sout_stream_id_sys_t *id, int fd )
     net_Close( sink.rtp_fd );
 }
 
-uint16_t rtp_get_seq( sout_stream_id_sys_t *id )
+uint16_t rtp_get_seq( sout_stream_id_t *id )
 {
     /* This will return values for the next packet. */
     uint16_t seq;
@@ -1580,7 +1583,7 @@ static int64_t rtp_init_ts( const vod_media_t *p_media,
  * Also return the NPT corresponding to this timestamp. If the stream
  * output is not started, the initial timestamp that will be used with
  * the first packets for NPT=0 is returned instead. */
-int64_t rtp_get_ts( const sout_stream_t *p_stream, const sout_stream_id_sys_t *id,
+int64_t rtp_get_ts( const sout_stream_t *p_stream, const sout_stream_id_t *id,
                     const vod_media_t *p_media, const char *psz_vod_session,
                     int64_t *p_npt )
 {
@@ -1613,7 +1616,7 @@ int64_t rtp_get_ts( const sout_stream_t *p_stream, const sout_stream_id_sys_t *i
     return p_sys->i_pts_zero + npt; 
 }
 
-void rtp_packetize_common( sout_stream_id_sys_t *id, block_t *out,
+void rtp_packetize_common( sout_stream_id_t *id, block_t *out,
                            int b_marker, int64_t i_pts )
 {
     if( !id->b_ts_init )
@@ -1655,7 +1658,7 @@ void rtp_packetize_common( sout_stream_id_sys_t *id, block_t *out,
     id->i_sequence++;
 }
 
-void rtp_packetize_send( sout_stream_id_sys_t *id, block_t *out )
+void rtp_packetize_send( sout_stream_id_t *id, block_t *out )
 {
     block_FifoPut( id->p_fifo, out );
 }
@@ -1664,7 +1667,7 @@ void rtp_packetize_send( sout_stream_id_sys_t *id, block_t *out )
  * @return configured max RTP payload size (including payload type-specific
  * headers, excluding RTP and transport headers)
  */
-size_t rtp_mtu (const sout_stream_id_sys_t *id)
+size_t rtp_mtu (const sout_stream_id_t *id)
 {
     return id->i_mtu - 12;
 }
@@ -1674,7 +1677,7 @@ size_t rtp_mtu (const sout_stream_id_sys_t *id)
  *****************************************************************************/
 
 /** Add an ES to a non-RTP muxed stream */
-static sout_stream_id_sys_t *MuxAdd( sout_stream_t *p_stream, es_format_t *p_fmt )
+static sout_stream_id_t *MuxAdd( sout_stream_t *p_stream, es_format_t *p_fmt )
 {
     sout_input_t      *p_input;
     sout_mux_t *p_mux = p_stream->p_sys->p_mux;
@@ -1687,22 +1690,23 @@ static sout_stream_id_sys_t *MuxAdd( sout_stream_t *p_stream, es_format_t *p_fmt
         return NULL;
     }
 
-    return (sout_stream_id_sys_t *)p_input;
+    return (sout_stream_id_t *)p_input;
 }
 
 
-static int MuxSend( sout_stream_t *p_stream, sout_stream_id_sys_t *id,
+static int MuxSend( sout_stream_t *p_stream, sout_stream_id_t *id,
                     block_t *p_buffer )
 {
     sout_mux_t *p_mux = p_stream->p_sys->p_mux;
     assert( p_mux != NULL );
 
-    return sout_MuxSendBuffer( p_mux, (sout_input_t *)id, p_buffer );
+    sout_MuxSendBuffer( p_mux, (sout_input_t *)id, p_buffer );
+    return VLC_SUCCESS;
 }
 
 
 /** Remove an ES from a non-RTP muxed stream */
-static int MuxDel( sout_stream_t *p_stream, sout_stream_id_sys_t *id )
+static int MuxDel( sout_stream_t *p_stream, sout_stream_id_t *id )
 {
     sout_mux_t *p_mux = p_stream->p_sys->p_mux;
     assert( p_mux != NULL );
@@ -1716,7 +1720,7 @@ static ssize_t AccessOutGrabberWriteBuffer( sout_stream_t *p_stream,
                                             const block_t *p_buffer )
 {
     sout_stream_sys_t *p_sys = p_stream->p_sys;
-    sout_stream_id_sys_t *id = p_sys->es[0];
+    sout_stream_id_t *id = p_sys->es[0];
 
     int64_t  i_dts = p_buffer->i_dts;
 

@@ -1,11 +1,5 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-
-#ifndef _REENTRANT
-# define _REENTRANT
-#endif
-
-
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 
 # define _WIN32_WINNT 0x0502 /* Windows XP SP2 */
@@ -81,9 +75,6 @@
 /* Binary specific version */
 #undef DISTRO_VERSION
 
-/* Define if you want the addons manager modules */
-#undef ENABLE_ADDONMANAGERMODULES
-
 /* Define if you want the HTTP daemon support */
 #undef ENABLE_HTTPD
 
@@ -125,8 +116,8 @@
 /* Support for __attribute__((packed)) for structs */
 #undef HAVE_ATTRIBUTE_PACKED
 
-/* Define to 1 if you have the `av_vda_alloc_context' function. */
-#undef HAVE_AV_VDA_ALLOC_CONTEXT
+/* Define to 1 if you have the <AudioUnit/AudioUnit.h> header file. */
+#undef HAVE_AUDIOUNIT_AUDIOUNIT_H
 
 /* Define to 1 if you have the `backtrace' function. */
 #undef HAVE_BACKTRACE
@@ -141,6 +132,9 @@
 /* Define to 1 if you have the Mac OS X function CFPreferencesCopyAppValue in
    the CoreFoundation framework. */
 #undef HAVE_CFPREFERENCESCOPYAPPVALUE
+
+/* Define to 1 if you have the <CoreAudio/CoreAudio.h> header file. */
+#undef HAVE_COREAUDIO_COREAUDIO_H
 
 /* Define to 1 if you have the <d2d1.h> header file. */
 #undef HAVE_D2D1_H
@@ -170,6 +164,12 @@
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
+
+/* Define if you have dvdnav_describe_title_chapters. */
+#undef HAVE_DVDNAV_DESCRIBE_TITLE_CHAPTERS
+
+/* Define if you have dvdnav_get_video_resolution. */
+#undef HAVE_DVDNAV_GET_VIDEO_RESOLUTION
 
 /* Define to 1 if you have the <dxva2api.h> header file. */
 #undef HAVE_DXVA2API_H
@@ -249,9 +249,6 @@
 /* Define to 1 if you have inet_pton function */
 #undef HAVE_INET_PTON
 
-/* Define to 1 if you have the <interface/mmal/mmal.h> header file. */
-#undef HAVE_INTERFACE_MMAL_MMAL_H
-
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
@@ -260,9 +257,6 @@
 
 /* Define to 1 if you have the `isatty' function. */
 #undef HAVE_ISATTY
-
-/* Define to 1 if you have the <jpeglib.h> header file. */
-#undef HAVE_JPEGLIB_H
 
 /* Define to 1 if you have the <kai.h> header file. */
 #undef HAVE_KAI_H
@@ -311,9 +305,6 @@
 
 /* Define to 1 if you have the <libtar.h> header file. */
 #undef HAVE_LIBTAR_H
-
-/* Define to 1 if you have the libvorbis */
-#undef HAVE_LIBVORBIS
 
 /* Define to 1 if you have the <linux/dccp.h> header file. */
 #undef HAVE_LINUX_DCCP_H
@@ -392,9 +383,6 @@
 
 /* Define to 1 if you have the `openat' function. */
 #undef HAVE_OPENAT
-
-/* Define to 1 if you have the `open_memstream' function. */
-#undef HAVE_OPEN_MEMSTREAM
 
 /* Define to 1 if you have the `pipe2' function. */
 #undef HAVE_PIPE2
@@ -605,8 +593,7 @@
 /* Dynamic object extension */
 #undef LIBEXT
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Define to 1 if debug code should NOT be compiled */
@@ -739,6 +726,9 @@
 
 /* Define to 1 if you need to in order for `stat' and other things to work. */
 #undef _POSIX_SOURCE
+
+/* Define to expose reentrant functions. */
+#undef _REENTRANT
 
 /* Same as _REENTANT for some other OSes. */
 #undef _THREAD_SAFE

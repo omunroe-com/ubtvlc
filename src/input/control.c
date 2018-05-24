@@ -2,7 +2,7 @@
  * control.c
  *****************************************************************************
  * Copyright (C) 1999-2004 VLC authors and VideoLAN
- * $Id: 8a03b1c2422c56bb58029347d25246a224816963 $
+ * $Id: a4b2842cf369c6c08c181d9179050c092002e0cd $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -530,34 +530,28 @@ static void UpdateBookmarksOption( input_thread_t *p_input )
     }
 
     char *psz_value = malloc( i_len + p_input->p->i_bookmark + 1 );
+    char *psz_next = psz_value;
 
-    if( psz_value != NULL )
+    psz_next += sprintf( psz_next, "bookmarks=" );
+    for( int i = 0; i < p_input->p->i_bookmark && psz_value != NULL; i++ )
     {
-        strcpy( psz_value, "bookmarks=" );
+        const seekpoint_t *p_bookmark = p_input->p->pp_bookmark[i];
 
-        char *psz_next = psz_value + strlen( "bookmarks" );
+        psz_next += sprintf( psz_next, psz_format,
+                             p_bookmark->psz_name,
+                             p_bookmark->i_byte_offset,
+                             p_bookmark->i_time_offset/1000000 );
 
-        for( int i = 0; i < p_input->p->i_bookmark && psz_value != NULL; i++ )
-        {
-            const seekpoint_t *p_bookmark = p_input->p->pp_bookmark[i];
-
-            psz_next += sprintf( psz_next, psz_format,
-                                 p_bookmark->psz_name,
-                                 p_bookmark->i_byte_offset,
-                                 p_bookmark->i_time_offset/1000000 );
-
-            if( i < p_input->p->i_bookmark - 1)
-                *psz_next++ = ',';
-        }
+        if( i < p_input->p->i_bookmark - 1)
+            *psz_next++ = ',';
     }
     vlc_mutex_unlock( &p_input->p->p_item->lock );
 
-    if( psz_value != NULL )
-    {
-        input_item_AddOption( p_input->p->p_item, psz_value,
-                              VLC_INPUT_OPTION_UNIQUE );
-        free( psz_value );
-    }
+    if( psz_value )
+        input_item_AddOption( p_input->p->p_item, psz_value, VLC_INPUT_OPTION_UNIQUE );
+
+    free( psz_value );
+
     input_SendEventBookmark( p_input );
 }
 

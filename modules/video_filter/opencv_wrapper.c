@@ -283,12 +283,14 @@ static void ReleaseImages( filter_t* p_filter )
 {
     filter_sys_t* p_sys = p_filter->p_sys;
 
-    for( int i = 0; i < VOUT_MAX_PLANES; i++ )
+    if (p_sys->p_cv_image)
     {
-        if (p_sys->p_cv_image[i] != NULL)
+        for( int i = 0; i < VOUT_MAX_PLANES; i++ )
         {
-            cvReleaseImageHeader(&(p_sys->p_cv_image[i]));
-            p_sys->p_cv_image[i] = NULL;
+            if (p_sys->p_cv_image[i]) {
+                cvReleaseImageHeader(&(p_sys->p_cv_image[i]));
+                p_sys->p_cv_image[i] = NULL;
+            }
         }
     }
     p_sys->i_cv_image_size = 0;

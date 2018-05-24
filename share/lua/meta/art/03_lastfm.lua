@@ -19,10 +19,6 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 --]]
 
-function descriptor()
-    return { scope="network" }
-end
-
 -- Return the artwork
 function fetch_art()
     if vlc.item == nil then return nil end

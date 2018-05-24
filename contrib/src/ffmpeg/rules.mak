@@ -2,20 +2,20 @@
 
 #Uncomment the one you want
 #USE_LIBAV ?= 1
-#USE_FFMPEG ?= 1
+USE_FFMPEG ?= 1
 
 ifdef USE_FFMPEG
-HASH=ea0b921
+HASH=2dcaa1b9d142ae113b28bffdbf7f8f8900b5e770
 FFMPEG_SNAPURL := http://git.videolan.org/?p=ffmpeg.git;a=snapshot;h=$(HASH);sf=tgz
 else
-HASH=2f221b6
+HASH=d1f9563d502037239185c11578cc614bdf0c5870
 FFMPEG_SNAPURL := http://git.libav.org/?p=libav.git;a=snapshot;h=$(HASH);sf=tgz
 endif
 
 FFMPEGCONF = \
 	--cc="$(CC)" \
-	--pkg-config="$(PKG_CONFIG)" \
 	--disable-doc \
+	--disable-decoder=bink \
 	--disable-encoder=vorbis \
 	--enable-libgsm \
 	--enable-libopenjpeg \
@@ -38,9 +38,6 @@ endif
 DEPS_ffmpeg = zlib gsm openjpeg
 
 # Optional dependencies
-ifndef BUILD_NETWORK
-FFMPEGCONF += --disable-network
-endif
 ifdef BUILD_ENCODERS
 FFMPEGCONF += --enable-libmp3lame --enable-libvpx --disable-decoder=libvpx --disable-decoder=libvpx_vp8 --disable-decoder=libvpx_vp9
 DEPS_ffmpeg += lame $(DEPS_lame) vpx $(DEPS_vpx)
@@ -101,7 +98,7 @@ FFMPEGCONF += --cpu=core2
 endif
 endif
 ifdef HAVE_IOS
-FFMPEGCONF += --enable-pic --extra-ldflags="$(EXTRA_CFLAGS)"
+FFMPEGCONF += --enable-pic
 ifdef HAVE_NEON
 FFMPEGCONF += --as="$(AS)"
 endif
@@ -135,14 +132,6 @@ else # !Windows
 FFMPEGCONF += --enable-pthreads
 endif
 
-# Solaris
-ifdef HAVE_SOLARIS
-ifeq ($(ARCH),x86_64)
-FFMPEGCONF += --cpu=core2
-endif
-FFMPEGCONF += --target-os=sunos --enable-pic
-endif
-
 # Build
 PKGS += ffmpeg
 ifeq ($(call need_pkg,"libavcodec >= 54.25.0 libavformat >= 53.21.0 libswscale"),)
@@ -160,6 +149,7 @@ ffmpeg: ffmpeg-$(HASH).tar.gz .sum-ffmpeg
 	rm -Rf $@ $@-$(HASH)
 	mkdir -p $@-$(HASH)
 	$(ZCAT) "$<" | (cd $@-$(HASH) && tar xv --strip-components=1)
+
 	$(MOVE)
 
 .ffmpeg: ffmpeg

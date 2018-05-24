@@ -2,7 +2,7 @@
  * cache.c: Plugins cache
  *****************************************************************************
  * Copyright (C) 2001-2007 VLC authors and VideoLAN
- * $Id: f94d091550fb5ba8b3a022034e80de73fbb866c4 $
+ * $Id: 5d9651fcf2ee1fb6c5a2fda272b740dc4c950952 $
  *
  * Authors: Sam Hocevar <sam@zoy.org>
  *          Ethan C. Baldridge <BaldridgeE@cadmus.com>
@@ -33,7 +33,9 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
 #include <assert.h>
 
 #include <vlc_common.h>
@@ -243,8 +245,8 @@ size_t CacheLoad( vlc_object_t *p_this, const char *dir, module_cache_t **r )
     file = vlc_fopen( psz_filename, "rb" );
     if( !file )
     {
-        msg_Warn( p_this, "cannot read %s: %s", psz_filename,
-                  vlc_strerror_c(errno) );
+        msg_Warn( p_this, "cannot read %s (%m)",
+                  psz_filename );
         free( psz_filename );
         return 0;
     }
@@ -497,15 +499,13 @@ void CacheSave (vlc_object_t *p_this, const char *dir,
     if (file == NULL)
     {
         if (errno != EACCES && errno != ENOENT)
-            msg_Warn (p_this, "cannot create %s: %s", tmpname,
-                      vlc_strerror_c(errno));
+            msg_Warn (p_this, "cannot create %s (%m)", tmpname);
         goto out;
     }
 
     if (CacheSaveBank (file, entries, n))
     {
-        msg_Warn (p_this, "cannot write %s: %s", tmpname,
-                  vlc_strerror_c(errno));
+        msg_Warn (p_this, "cannot write %s (%m)", tmpname);
         clearerr (file);
         fclose (file);
         vlc_unlink (tmpname);

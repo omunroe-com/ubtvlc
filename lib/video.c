@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2005-2010 VLC authors and VideoLAN
  *
- * $Id: 19065fbdc2cf240999c964f345b381dc44f95942 $
+ * $Id: 43471b9e21b5e0cda1d57d00a4fe8bae8393c27e $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Filippo Carone <littlejohn@videolan.org>
@@ -38,7 +38,6 @@
 #include <vlc_vout.h>
 
 #include "media_player_internal.h"
-#include <math.h>
 #include <assert.h>
 
 /*
@@ -238,9 +237,9 @@ float libvlc_video_get_scale( libvlc_media_player_t *mp )
 
 void libvlc_video_set_scale( libvlc_media_player_t *p_mp, float f_scale )
 {
-    if (isfinite(f_scale) && f_scale != 0.f)
+    if (f_scale != 0.)
         var_SetFloat (p_mp, "scale", f_scale);
-    var_SetBool (p_mp, "autoscale", f_scale == 0.f);
+    var_SetBool (p_mp, "autoscale", f_scale == 0.);
 
     /* Apply to current video outputs (if any) */
     size_t n;
@@ -249,9 +248,9 @@ void libvlc_video_set_scale( libvlc_media_player_t *p_mp, float f_scale )
     {
         vout_thread_t *p_vout = pp_vouts[i];
 
-        if (isfinite(f_scale) && f_scale != 0.f)
+        if (f_scale != 0.)
             var_SetFloat (p_vout, "scale", f_scale);
-        var_SetBool (p_vout, "autoscale", f_scale == 0.f);
+        var_SetBool (p_vout, "autoscale", f_scale == 0.);
         vlc_object_release (p_vout);
     }
     free (pp_vouts);

@@ -2,7 +2,7 @@
  r playlistinfo.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: bbf00ba752110720bbe4d03381751ed434ae571c $
+ * $Id: 66bc75e477e2d05b549f12109b5ff91300d00c81 $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org>
  *          Felix Paul Kühne <fkuehne at videolan dot org>
@@ -65,6 +65,7 @@ static VLCInfo *_o_sharedInstance = nil;
 - (void)awakeFromNib
 {
     [o_info_window setExcludedFromWindowsMenu: YES];
+    [o_info_window setFloatingPanel: NO];
     if (!OSX_SNOW_LEOPARD)
         [o_info_window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenAuxiliary];
 
@@ -114,6 +115,7 @@ static VLCInfo *_o_sharedInstance = nil;
     [o_lost_abuffers_lbl setStringValue: _NS("Lost buffers")];
 
     [o_info_window setInitialFirstResponder: o_uri_txt];
+    [o_info_window setDelegate: self];
 
     b_awakeFromNib = YES;
 
@@ -141,7 +143,7 @@ static VLCInfo *_o_sharedInstance = nil;
 
 - (void)initPanel
 {
-    b_stats = var_InheritBool(VLCIntf, "stats");
+    b_stats = config_GetInt(VLCIntf, "stats");
     if (!b_stats) {
         if ([o_tab_view numberOfTabViewItems] > 2)
             [o_tab_view removeTabViewItem: [o_tab_view tabViewItemAtIndex: 2]];
@@ -149,9 +151,9 @@ static VLCInfo *_o_sharedInstance = nil;
     else
         [self initMediaPanelStats];
 
-    NSInteger i_level = [[[VLCMain sharedInstance] voutController] currentStatusWindowLevel];
+    NSInteger i_level = [[[VLCMain sharedInstance] voutController] currentWindowLevel];
     [o_info_window setLevel: i_level];
-    [o_info_window makeKeyAndOrderFront:nil];
+    [o_info_window makeKeyAndOrderFront: self];
 }
 
 - (void)initMediaPanelStats
@@ -210,7 +212,7 @@ static VLCInfo *_o_sharedInstance = nil;
         [o_image_well setImage: [NSImage imageNamed: @"noart.png"]];
     } else {
         if (!input_item_IsPreparsed(p_item))
-            libvlc_MetaRequest(VLCIntf->p_libvlc, p_item, META_REQUEST_OPTION_NONE);
+            playlist_PreparseEnqueue(pl_Get(VLCIntf), p_item);
 
         /* fill uri info */
         char * psz_url = decode_URI(input_item_GetURI(p_item));
@@ -261,7 +263,6 @@ static VLCInfo *_o_sharedInstance = nil;
     /* reload the advanced table */
     [rootItem refresh];
     [o_outline_view reloadData];
-    [o_outline_view expandItem:nil expandChildren:YES];
 
     /* update the stats once to display p_item change faster */
     [self updateStatistics];
@@ -356,14 +357,14 @@ static VLCInfo *_o_sharedInstance = nil;
 
 error:
     NSRunAlertPanel(_NS("Error while saving meta"),
-        @"%@",_NS("VLC was unable to save the meta data."),
+        _NS("VLC was unable to save the meta data."),
         _NS("OK"), nil, nil);
 }
 
 - (IBAction)downloadCoverArt:(id)sender
 {
     playlist_t * p_playlist = pl_Get(VLCIntf);
-    if (p_item) libvlc_ArtRequest(VLCIntf->p_libvlc, p_item, META_REQUEST_OPTION_NONE);
+    if (p_item) playlist_AskForArtEnqueue(p_playlist, p_item);
 }
 
 - (input_item_t *)item

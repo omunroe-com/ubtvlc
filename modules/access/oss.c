@@ -2,7 +2,7 @@
  * oss.c : OSS input module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2009 VLC authors and VideoLAN
- * $Id: 40e78c1a09e733ec4ce204d19094de99d5512e12 $
+ * $Id: 04d06d0f5f794377e9fb1b8e11b6b941f9c0bee1 $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org>
  *          Richard Hosking <richard at hovis dot net>
@@ -339,8 +339,7 @@ static int OpenAudioDevOss( demux_t *p_demux )
 
     if( i_fd < 0 )
     {
-        msg_Err( p_demux, "cannot open OSS audio device (%s)",
-                 vlc_strerror_c(errno) );
+        msg_Err( p_demux, "cannot open OSS audio device (%m)" );
         goto adev_fail;
     }
 
@@ -349,24 +348,21 @@ static int OpenAudioDevOss( demux_t *p_demux )
         || i_format != AFMT_S16_LE )
     {
         msg_Err( p_demux,
-                 "cannot set audio format (16b little endian) (%s)",
-                 vlc_strerror_c(errno) );
+                 "cannot set audio format (16b little endian) (%m)" );
         goto adev_fail;
     }
 
     if( ioctl( i_fd, SNDCTL_DSP_STEREO,
                &p_demux->p_sys->b_stereo ) < 0 )
     {
-        msg_Err( p_demux, "cannot set audio channels count (%s)",
-                 vlc_strerror_c(errno) );
+        msg_Err( p_demux, "cannot set audio channels count (%m)" );
         goto adev_fail;
     }
 
     if( ioctl( i_fd, SNDCTL_DSP_SPEED,
                &p_demux->p_sys->i_sample_rate ) < 0 )
     {
-        msg_Err( p_demux, "cannot set audio sample rate (%s)",
-                 vlc_strerror_c(errno) );
+        msg_Err( p_demux, "cannot set audio sample rate (%m)" );
         goto adev_fail;
     }
 
@@ -419,16 +415,14 @@ static bool ProbeAudioDevOss( demux_t *p_demux, const char *psz_device )
 
     if( i_fd < 0 )
     {
-        msg_Err( p_demux, "cannot open device %s for OSS audio (%s)",
-                 psz_device, vlc_strerror_c(errno) );
+        msg_Err( p_demux, "cannot open device %s for OSS audio (%m)", psz_device );
         goto open_failed;
     }
 
     /* this will fail if the device is video */
     if( ioctl( i_fd, SNDCTL_DSP_GETCAPS, &i_caps ) < 0 )
     {
-        msg_Err( p_demux, "cannot get audio caps (%s)",
-                 vlc_strerror_c(errno) );
+        msg_Err( p_demux, "cannot get audio caps (%m)" );
         goto open_failed;
     }
 

@@ -35,7 +35,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -102,12 +104,12 @@ void module_InitBank (void)
 
     if (modules.usage == 0)
     {
-        /* Fills the module bank structure with the core module infos.
-         * This is very useful as it will allow us to consider the core
+        /* Fills the module bank structure with the main module infos.
+         * This is very useful as it will allow us to consider the main
          * library just as another module, and for instance the configuration
-         * options of core will be available in the module bank structure just
+         * options of main will be available in the module bank structure just
          * as for every other module. */
-        module_t *module = module_InitStatic (vlc_entry__core);
+        module_t *module = module_InitStatic (vlc_entry__main);
         if (likely(module != NULL))
             module_StoreBank (module);
         config_SortConfig ();
@@ -117,7 +119,7 @@ void module_InitBank (void)
     /* We do retain the module bank lock until the plugins are loaded as well.
      * This is ugly, this staged loading approach is needed: LibVLC gets
      * some configuration parameters relevant to loading the plugins from
-     * the core (builtin) module. The module bank becomes shared read-only data
+     * the main (builtin) module. The module bank becomes shared read-only data
      * once it is ready, so we need to fully serialize initialization.
      * DO NOT UNCOMMENT the following line unless you managed to squeeze
      * module_LoadPlugins() before you unlock the mutex. */
@@ -444,7 +446,7 @@ static void AllocatePluginDir (module_bank_t *bank, unsigned maxdepth,
 
         /* Skip ".", ".." */
         if (!strcmp (file, ".") || !strcmp (file, ".."))
-            continue;
+            goto skip;
 
         /* Compute path relative to plug-in base directory */
         if (reldir != NULL)
@@ -455,7 +457,7 @@ static void AllocatePluginDir (module_bank_t *bank, unsigned maxdepth,
         else
             relpath = strdup (file);
         if (unlikely(relpath == NULL))
-            continue;
+            goto skip;
 
         /* Compute absolute path */
         if (asprintf (&abspath, "%s"DIR_SEP"%s", bank->base, relpath) == -1)
@@ -493,6 +495,7 @@ static void AllocatePluginDir (module_bank_t *bank, unsigned maxdepth,
     skip:
         free (relpath);
         free (abspath);
+        free (file);
     }
     closedir (dh);
 }

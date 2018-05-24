@@ -123,8 +123,7 @@ int InitVideo (access_t *access, int fd, uint32_t caps)
         struct v4l2_format fmt = { .type = V4L2_BUF_TYPE_VIDEO_CAPTURE };
         if (v4l2_ioctl (fd, VIDIOC_G_FMT, &fmt) < 0)
         {
-            msg_Err (access, "cannot get default format: %s",
-                     vlc_strerror_c(errno));
+            msg_Err (access, "cannot get default format: %m");
             return -1;
         }
         pixfmt = fmt.fmt.pix.pixelformat;
@@ -211,7 +210,7 @@ static int AccessPoll (access_t *access)
         case 0:
             /* FIXME: kill this case (arbitrary timeout) */
                 return -1;
-            msg_Err (access, "poll error: %s", vlc_strerror_c(errno));
+            msg_Err (access, "poll error: %m");
             access->info.b_eof = true;
             return -1;
     }
@@ -250,7 +249,7 @@ static block_t *ReadBlock (access_t *access)
     if (val < 0)
     {
         block_Release (block);
-        msg_Err (access, "cannot read buffer: %s", vlc_strerror_c(errno));
+        msg_Err (access, "cannot read buffer: %m");
         access->info.b_eof = true;
         return NULL;
     }
@@ -264,6 +263,7 @@ static int AccessControl( access_t *access, int query, va_list args )
 {
     switch( query )
     {
+        /* */
         case ACCESS_CAN_SEEK:
         case ACCESS_CAN_FASTSEEK:
         case ACCESS_CAN_PAUSE:
@@ -271,16 +271,27 @@ static int AccessControl( access_t *access, int query, va_list args )
             *va_arg( args, bool* ) = false;
             break;
 
+        /* */
         case ACCESS_GET_PTS_DELAY:
             *va_arg(args,int64_t *) = INT64_C(1000)
                 * var_InheritInteger( access, "live-caching" );
             break;
 
+        /* */
         case ACCESS_SET_PAUSE_STATE:
             /* Nothing to do */
             break;
 
+        case ACCESS_GET_TITLE_INFO:
+        case ACCESS_SET_TITLE:
+        case ACCESS_SET_SEEKPOINT:
+        case ACCESS_SET_PRIVATE_ID_STATE:
+        case ACCESS_GET_CONTENT_TYPE:
+        case ACCESS_GET_META:
+            return VLC_EGENERIC;
+
         default:
+            msg_Warn( access, "Unimplemented query %d in control", query );
             return VLC_EGENERIC;
 
     }

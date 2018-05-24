@@ -4,7 +4,7 @@
  *
  * See the README.txt file for copyright information and how to reach the author(s).
  *
- * $Id: 6b276df1fa1e73e195376d406f8cb0ed04d7581a $
+ * $Id: f79c9aa8d69c49638ec3326cb36f15af978f38f0 $
  */
 
 #ifdef HAVE_CONFIG_H
@@ -35,7 +35,6 @@ CAtmoChannelAssignment::CAtmoChannelAssignment(CAtmoChannelAssignment &source)
 
 CAtmoChannelAssignment::~CAtmoChannelAssignment(void)
 {
-  delete[] m_mappings;
   free(m_psz_name);
 }
 
@@ -49,15 +48,14 @@ void CAtmoChannelAssignment::setSize(int numChannels)
 {
   if(numChannels != m_num_channels)
   {
-     delete[] m_mappings;
+     delete []m_mappings;
+     m_mappings = NULL;
      m_num_channels = numChannels;
      if(m_num_channels > 0)
      {
        m_mappings = new int[m_num_channels];
        memset(m_mappings, 0, sizeof(int) * m_num_channels);
      }
-     else
-       m_mappings = NULL;
   }
 }
 

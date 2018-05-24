@@ -2,7 +2,7 @@
  * utils.c: misc. stuff
  *****************************************************************************
  * Copyright (C) 1996-2012 VLC authors and VideoLAN
- * $Id: 7189d1aa4ce9dcbac98420ed9ae1d162e667af62 $
+ * $Id: 5c180dc29e406b5b6a44a65c2424ff0d12fd075d $
  *
  * Author: Frédéric Yhuel <fyhuel _AT_ viotech _DOT_ net>
  *
@@ -97,8 +97,9 @@ chunk_t *chunk_New( sms_stream_t* sms, uint64_t duration,\
 
 void chunk_Free( chunk_t *chunk )
 {
-    free( chunk->data );
-    free( chunk );
+    if( chunk->data )
+        FREENULL( chunk->data );
+    FREENULL( chunk );
 }
 
 sms_stream_t * sms_New( void )
@@ -108,19 +109,12 @@ sms_stream_t * sms_New( void )
 
     sms->qlevels = vlc_array_new();
     sms->chunks = vlc_array_new();
-    if ( unlikely(!sms->qlevels || !sms->chunks) )
-    {
-        sms_Free( sms );
-        return NULL;
-    }
     sms->type = UNKNOWN_ES;
     return sms;
 }
 
 void sms_Free( sms_stream_t *sms )
 {
-    if ( !sms )
-        return;
     if( sms->qlevels )
     {
         for( int n = 0; n < vlc_array_count( sms->qlevels ); n++ )
@@ -144,6 +138,7 @@ void sms_Free( sms_stream_t *sms )
     free( sms->name );
     free( sms->url_template );
     free( sms );
+    sms = NULL;
 }
 
 quality_level_t *get_qlevel( sms_stream_t *sms, const unsigned qid )
@@ -174,10 +169,10 @@ void sms_queue_free( sms_queue_t* queue )
     while( item )
     {
         next = item->next;
-        free( item );
+        FREENULL( item );
         item = next;
     }
-    free( queue );
+    FREENULL( queue );
 }
 
 int sms_queue_put( sms_queue_t *queue, const uint64_t value )

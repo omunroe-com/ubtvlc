@@ -2,7 +2,7 @@
  * CompatibilityFixes.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2011-2012 VLC authors and VideoLAN
- * $Id: d193928ab44704ff6abdbfa380869c5d108e391a $
+ * $Id: 651a4b9a0a0bede1114970c796b54da7a0857d9a $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *
@@ -28,9 +28,7 @@
 #define OSX_SNOW_LEOPARD (NSAppKitVersionNumber < 1115 && NSAppKitVersionNumber >= 1038)
 #define OSX_LION (NSAppKitVersionNumber < 1162 && NSAppKitVersionNumber >= 1115.2)
 #define OSX_MOUNTAIN_LION (NSAppKitVersionNumber < 1244 && NSAppKitVersionNumber >= 1162)
-#define OSX_MAVERICKS (NSAppKitVersionNumber < 1334 && NSAppKitVersionNumber >= 1244)
-#define OSX_YOSEMITE (NSAppKitVersionNumber >= 1334)
-
+#define OSX_MAVERICKS NSAppKitVersionNumber >= 1244
 
 #pragma mark -
 #pragma Fixes for OS X Snow Leopard (10.6)
@@ -44,10 +42,6 @@ enum {
 enum {
     NSApplicationPresentationFullScreen                 = (1 << 10),
     NSApplicationPresentationAutoHideToolbar            = (1 << 11)
-};
-
-enum {
-    NSFullScreenWindowMask      = 1 << 14
 };
 
 enum {
@@ -71,10 +65,6 @@ typedef NSInteger NSWindowAnimationBehavior;
 
 @interface NSEvent (IntroducedInLion)
 - (BOOL)isDirectionInvertedFromDevice;
-@end
-
-@interface NSAnimationContext (IntroducedInLion)
-+ (void)runAnimationGroup:(void (^)(NSAnimationContext *context))changes completionHandler:(void (^)(void))completionHandler;
 @end
 
 #endif

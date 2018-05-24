@@ -1,8 +1,8 @@
 /*****************************************************************************
- * libvlc-module.c: Options for the core (libvlc itself) module
+ * libvlc-module.c: Options for the main (libvlc itself) module
  *****************************************************************************
  * Copyright (C) 1998-2009 VLC authors and VideoLAN
- * $Id: f0ee030c9045243d775c1673da4988e0cf4e8c79 $
+ * $Id: 142de69d4ee8a6629475388392c2d04a3686b4b0 $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *          Samuel Hocevar <sam@zoy.org>
@@ -25,7 +25,9 @@
  *****************************************************************************/
 
 // Pretend we are a builtin module
-#define MODULE_NAME core
+#define MODULE_NAME main
+#define MODULE_PATH main
+
 
 #ifdef HAVE_CONFIG_H
 # include "config.h"
@@ -47,7 +49,7 @@ static const char *const ppsz_snap_formats[] =
 { "png", "jpg", "tiff" };
 
 /*****************************************************************************
- * Configuration options for the core module. Each module will also separatly
+ * Configuration options for the main program. Each module will also separatly
  * define its own configuration options.
  * Look into configuration.h if you need to know more about the following
  * macros.
@@ -593,11 +595,6 @@ static const char *const ppsz_clock_descriptions[] =
     "Language of the subtitle track you want to use " \
     "(comma separated, two or three letters country code, you may use 'any' as a fallback).")
 
-#define INPUT_MENUTRACK_LANG_TEXT N_("Menu language")
-#define INPUT_MENUTRACK_LANG_LONGTEXT N_( \
-    "Language of the menus you want to use with DVD/BluRay " \
-    "(comma separated, two or three letters country code, you may use 'any' as a fallback).")
-
 /// \todo Document how to find it
 #define INPUT_AUDIOTRACK_ID_TEXT N_("Audio track ID")
 #define INPUT_AUDIOTRACK_ID_LONGTEXT N_( \
@@ -829,8 +826,7 @@ static const char *const ppsz_prefres[] = {
 
 #define HTTP_CERT_TEXT N_("HTTP/TLS server certificate")
 #define CERT_LONGTEXT N_( \
-   "This X.509 certicate file (PEM format) is used for server-side TLS. " \
-   "On OS X, the string is used as a label to search the certificate in the keychain." )
+   "This X.509 certicate file (PEM format) is used for server-side TLS." )
 
 #define HTTP_KEY_TEXT N_("HTTP/TLS server private key")
 #define KEY_LONGTEXT N_( \
@@ -1030,6 +1026,10 @@ static const char *const ppsz_prefres[] = {
      "This option is useful if you want to lower the latency when " \
      "reading a stream")
 
+#define PLUGIN_PATH_LONGTEXT N_( \
+    "Additional path for VLC to look for its modules. You can add " \
+    "several paths by concatenating them using \" PATH_SEP \" as separator")
+
 #define VLM_CONF_TEXT N_("VLM configuration file")
 #define VLM_CONF_LONGTEXT N_( \
     "Read a VLM configuration file as soon as VLM is started." )
@@ -1113,7 +1113,17 @@ static const char *const ppsz_prefres[] = {
     "Automatically preparse files added to the playlist " \
     "(to retrieve some metadata)." )
 
-#define METADATA_NETWORK_TEXT N_( "Allow metadata network access" )
+#define ALBUM_ART_TEXT N_( "Album art policy" )
+#define ALBUM_ART_LONGTEXT N_( \
+    "Choose how album art will be downloaded." )
+
+static const int pi_albumart_values[] = { ALBUM_ART_WHEN_ASKED,
+                                          ALBUM_ART_WHEN_PLAYED,
+                                          ALBUM_ART_ALL };
+static const char *const ppsz_albumart_descriptions[] =
+    { N_("Manual download only"),
+      N_("When track starts playing"),
+      N_("As soon as track is added") };
 
 #define SD_TEXT N_( "Services discovery modules")
 #define SD_LONGTEXT N_( \
@@ -1157,6 +1167,10 @@ static const char *const ppsz_prefres[] = {
 #define ML_LONGTEXT N_( \
     "The media library is automatically saved and reloaded each time you " \
     "start VLC." )
+
+#define LOAD_ML_TEXT N_( "Load Media Library" )
+#define LOAD_ML_LONGTEXT N_( \
+    "Enable this option to load the SQL-based Media Library at VLC startup" )
 
 #define PLTREE_TEXT N_("Display playlist tree")
 #define PLTREE_LONGTEXT N_( \
@@ -1349,8 +1363,6 @@ static const char *const mouse_wheel_texts[] =
 #define AUDIO_TRACK_KEY_LONGTEXT N_("Cycle through the available audio tracks(languages).")
 #define SUBTITLE_TRACK_KEY_TEXT N_("Cycle subtitle track")
 #define SUBTITLE_TRACK_KEY_LONGTEXT N_("Cycle through the available subtitle tracks.")
-#define SUBTITLE_TOGGLE_KEY_TEXT N_("Toggle subtitles")
-#define SUBTITLE_TOGGLE_KEY_LONGTEXT N_("Toggle subtitle track visibility.")
 #define PROGRAM_SID_NEXT_KEY_TEXT N_("Cycle next program Service ID")
 #define PROGRAM_SID_NEXT_KEY_LONGTEXT N_("Cycle through the available next program Service IDs (SIDs).")
 #define PROGRAM_SID_PREV_KEY_TEXT N_("Cycle previous program Service ID")
@@ -1423,6 +1435,7 @@ static const char *const mouse_wheel_texts[] =
  * Quick usage guide for the configuration options:
  *
  * add_category_hint( N_(text), N_(longtext), b_advanced_option )
+ * add_subcategory_hint( N_(text), N_(longtext), b_advanced_option )
  * add_usage_hint( N_(text), b_advanced_option )
  * add_string( option_name, value, N_(text), N_(longtext),
                b_advanced_option )
@@ -1621,7 +1634,7 @@ vlc_module_begin ()
     set_section( N_("On Screen Display") , NULL )
     add_category_hint( N_("Subpictures"), SUB_CAT_LONGTEXT , false )
 
-    add_bool( "spu", 1, SPU_TEXT, SPU_LONGTEXT, false )
+    add_bool( "spu", 1, SPU_TEXT, SPU_LONGTEXT, true )
         change_safe ()
     add_bool( "osd", 1, OSD_TEXT, OSD_LONGTEXT, false )
     add_module( "text-renderer", "text renderer", NULL, TEXTRENDERER_TEXT,
@@ -1673,10 +1686,6 @@ vlc_module_begin ()
         change_safe ()
     add_string( "sub-language", "",
                  INPUT_SUBTRACK_LANG_TEXT, INPUT_SUBTRACK_LANG_LONGTEXT,
-                  false )
-        change_safe ()
-    add_string( "menu-language", "",
-                 INPUT_MENUTRACK_LANG_TEXT, INPUT_MENUTRACK_LANG_LONGTEXT,
                   false )
         change_safe ()
     add_integer( "audio-track-id", -1, INPUT_AUDIOTRACK_ID_TEXT,
@@ -1860,7 +1869,6 @@ vlc_module_begin ()
     add_string( "input-title-format", "$Z", INPUT_TITLE_FORMAT_TEXT, INPUT_TITLE_FORMAT_LONGTEXT, false );
 
 /* Decoder options */
-    set_subcategory( SUBCAT_INPUT_VCODEC )
     add_category_hint( N_("Decoders"), CODEC_CAT_LONGTEXT , true )
     add_string( "codec", NULL, CODEC_TEXT,
                 CODEC_LONGTEXT, true )
@@ -1872,7 +1880,7 @@ vlc_module_begin ()
     add_module( "access", "access", NULL, ACCESS_TEXT, ACCESS_LONGTEXT, true )
 
     set_subcategory( SUBCAT_INPUT_DEMUX )
-    add_module( "demux", "demux", "any", DEMUX_TEXT, DEMUX_LONGTEXT, true )
+    add_module( "demux", "demux", NULL, DEMUX_TEXT, DEMUX_LONGTEXT, true )
     set_subcategory( SUBCAT_INPUT_VCODEC )
     set_subcategory( SUBCAT_INPUT_ACODEC )
     set_subcategory( SUBCAT_INPUT_SCODEC )
@@ -1893,7 +1901,7 @@ vlc_module_begin ()
                                 SOUT_DISPLAY_LONGTEXT, true )
     add_bool( "sout-keep", false, SOUT_KEEP_TEXT,
                                 SOUT_KEEP_LONGTEXT, true )
-    add_bool( "sout-all", true, SOUT_ALL_TEXT,
+    add_bool( "sout-all", 0, SOUT_ALL_TEXT,
                                 SOUT_ALL_LONGTEXT, true )
     add_bool( "sout-audio", 1, SOUT_AUDIO_TEXT,
                                 SOUT_AUDIO_LONGTEXT, true )
@@ -2029,9 +2037,10 @@ vlc_module_begin ()
     add_bool( "auto-preparse", true, PREPARSE_TEXT,
               PREPARSE_LONGTEXT, false )
 
-    add_obsolete_integer( "album-art" )
-    add_bool( "metadata-network-access", false, METADATA_NETWORK_TEXT,
-                 METADATA_NETWORK_TEXT, false )
+    add_integer( "album-art", ALBUM_ART_WHEN_ASKED, ALBUM_ART_TEXT,
+                 ALBUM_ART_LONGTEXT, false )
+        change_integer_list( pi_albumart_values,
+                             ppsz_albumart_descriptions )
 
     set_subcategory( SUBCAT_PLAYLIST_SD )
     add_string( "services-discovery", "", SD_TEXT, SD_LONGTEXT, true )
@@ -2075,7 +2084,7 @@ vlc_module_begin ()
     add_bool( "interact", true, INTERACTION_TEXT,
               INTERACTION_LONGTEXT, false )
 
-    add_bool ( "stats", false, STATS_TEXT, STATS_LONGTEXT, true )
+    add_bool ( "stats", true, STATS_TEXT, STATS_LONGTEXT, true )
 
     set_subcategory( SUBCAT_INTERFACE_MAIN )
     add_module_cat( "intf", SUBCAT_INTERFACE_MAIN, NULL, INTF_TEXT,
@@ -2133,7 +2142,7 @@ vlc_module_begin ()
 #   define KEY_TOGGLE_FULLSCREEN  "Command+f"
 #   define KEY_LEAVE_FULLSCREEN   "Esc"
 #   define KEY_PLAY_PAUSE         "Space"
-#   define KEY_SIMPLE_PAUSE       NULL
+#   define KEY_PAUSE              NULL
 #   define KEY_PLAY               NULL
 #   define KEY_FASTER             "Command+="
 #   define KEY_SLOWER             "Command+-"
@@ -2174,7 +2183,6 @@ vlc_module_begin ()
 #   define KEY_AUDIODELAY_DOWN    "f"
 #   define KEY_AUDIO_TRACK        "l"
 #   define KEY_SUBTITLE_TRACK     "s"
-#   define KEY_SUBTITLE_TOGGLE    "Shift+s"
 #   define KEY_PROGRAM_SID_NEXT   "x"
 #   define KEY_PROGRAM_SID_PREV   "Shift+x"
 #   define KEY_ASPECT_RATIO       "a"
@@ -2234,7 +2242,7 @@ vlc_module_begin ()
 #   define KEY_PLAY_BOOKMARK9     NULL
 #   define KEY_PLAY_BOOKMARK10    NULL
 #   define KEY_RECORD             "Command+Shift+r"
-#   define KEY_WALLPAPER          NULL
+#   define KEY_WALLPAPER          "w"
 #   define KEY_AUDIODEVICE_CYCLE  "Shift+a"
 #   define KEY_PLAY_CLEAR         NULL
 
@@ -2248,7 +2256,7 @@ vlc_module_begin ()
      */
 #   define KEY_TOGGLE_FULLSCREEN  "f"
 #   define KEY_LEAVE_FULLSCREEN   "Esc"
-#   define KEY_SIMPLE_PAUSE       "Browser Stop"
+#   define KEY_PAUSE              "Browser Stop"
 #   define KEY_PLAY               "Browser Refresh"
 #   define KEY_FASTER             "+"
 #   define KEY_SLOWER             "-"
@@ -2309,7 +2317,6 @@ vlc_module_begin ()
 
 #   define KEY_AUDIO_TRACK        "b"
 #   define KEY_SUBTITLE_TRACK     "v"
-#   define KEY_SUBTITLE_TOGGLE    "Shift+v"
 #   define KEY_PROGRAM_SID_NEXT   "x"
 #   define KEY_PROGRAM_SID_PREV   "Shift+x"
 #   define KEY_ASPECT_RATIO       "a"
@@ -2385,7 +2392,7 @@ vlc_module_begin ()
              LEAVE_FULLSCREEN_KEY_LONGTEXT, false )
     add_key( "key-play-pause", KEY_PLAY_PAUSE, PLAY_PAUSE_KEY_TEXT,
              PLAY_PAUSE_KEY_LONGTEXT, false )
-    add_key( "key-pause", KEY_SIMPLE_PAUSE, PAUSE_KEY_TEXT,
+    add_key( "key-pause", KEY_PAUSE, PAUSE_KEY_TEXT,
              PAUSE_KEY_LONGTEXT, true )
     add_key( "key-play", KEY_PLAY, PLAY_KEY_TEXT,
              PLAY_KEY_LONGTEXT, true )
@@ -2480,8 +2487,6 @@ vlc_module_begin ()
              AUDI_DEVICE_CYCLE_KEY_LONGTEXT, false )
     add_key( "key-subtitle-track", KEY_SUBTITLE_TRACK,
              SUBTITLE_TRACK_KEY_TEXT, SUBTITLE_TRACK_KEY_LONGTEXT, false )
-    add_key( "key-subtitle-toggle", KEY_SUBTITLE_TOGGLE,
-             SUBTITLE_TOGGLE_KEY_TEXT, SUBTITLE_TOGGLE_KEY_LONGTEXT, false )
     add_key( "key-program-sid-next", KEY_PROGRAM_SID_NEXT,
              PROGRAM_SID_NEXT_KEY_TEXT, PROGRAM_SID_NEXT_KEY_LONGTEXT, false )
     add_key( "key-program-sid-prev", KEY_PROGRAM_SID_PREV,
@@ -2693,7 +2698,7 @@ vlc_module_begin ()
    /* Usage (mainly useful for cmd line stuff) */
     /* add_usage_hint( PLAYLIST_USAGE ) */
 
-    set_description( N_("core program") )
+    set_description( N_("main program") )
 vlc_module_end ()
 
 /*****************************************************************************

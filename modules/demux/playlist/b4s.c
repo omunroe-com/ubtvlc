@@ -2,7 +2,7 @@
  * b4s.c : B4S playlist format import
  *****************************************************************************
  * Copyright (C) 2005-2009 VLC authors and VideoLAN
- * $Id: d9c04656b83455d2354f02968227dbfce18ed5fd $
+ * $Id: 7009195a35e193a321f4302aaca235e9ed802ee5 $
  *
  * Authors: Sigmund Augdal Helberg <dnumgis@videolan.org>
  *
@@ -32,7 +32,6 @@
 #include <vlc_common.h>
 #include <vlc_demux.h>
 #include <vlc_xml.h>
-#include <vlc_strings.h>
 
 #include "playlist.h"
 
@@ -191,7 +190,6 @@ static int Demux( demux_t *p_demux )
                 // Read the element name
                 if( !strcmp( node, "entry" ) )
                 {
-                    resolve_xml_special_chars( psz_mrl );
                     p_input = input_item_New( psz_mrl, psz_title );
                     if( psz_now )
                         input_item_SetNowPlaying( p_input, psz_now );

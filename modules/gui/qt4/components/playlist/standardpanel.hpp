@@ -2,7 +2,7 @@
  * standardpanel.hpp : Panels for the playlist
  ****************************************************************************
  * Copyright (C) 2000-2005 the VideoLAN team
- * $Id: 57ab0aef3c5ea82c868f5371a052f8bf7ca1ef20 $
+ * $Id: 5b20a53ff7cd43ef742eee1a61b85094645fde80 $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *
@@ -30,7 +30,6 @@
 
 #include "qt4.hpp"
 #include "components/playlist/playlist.hpp"
-#include "components/playlist/vlc_model.hpp"
 
 #include <QWidget>
 #include <QModelIndexList>
@@ -38,7 +37,8 @@
 #include <vlc_playlist.h> /* playlist_item_t */
 
 class QSignalMapper;
-class VLCProxyModel;
+class PLModel;
+class MLModel;
 class QKeyEvent;
 class QWheelEvent;
 class QStackedLayout;
@@ -50,6 +50,7 @@ class PlIconView;
 class PlListView;
 class PicFlowView;
 
+class LocationBar;
 class PLSelector;
 class PlaylistWidget;
 class PixmapAnimator;
@@ -60,7 +61,7 @@ class StandardPLPanel: public QWidget
 
 public:
     StandardPLPanel( PlaylistWidget *, intf_thread_t *,
-                     playlist_item_t *, PLSelector *, VLCModel * );
+                     playlist_item_t *, PLSelector *, PLModel *, MLModel * );
     virtual ~StandardPLPanel();
 
     enum { ICON_VIEW = 0,
@@ -74,9 +75,10 @@ public:
     static QMenu *viewSelectionMenu(StandardPLPanel *obj);
 
 protected:
-    VLCModel *model;
+    PLModel *model;
+    MLModel *mlmodel;
     virtual void wheelEvent( QWheelEvent *e );
-    bool popup( const QPoint &point );
+    bool popup( const QModelIndex & index, const QPoint &point, const QModelIndexList &selectionlist );
 
 private:
     intf_thread_t *p_intf;
@@ -95,15 +97,19 @@ private:
 
     QSignalMapper *selectColumnsSigMapper;
 
-    int lastActivatedPLItemId;
-    int currentRootIndexPLId;
+    int lastActivatedId;
+    int currentRootIndexId;
 
     void createTreeView();
     void createIconView();
     void createListView();
     void createCoverView();
     void updateZoom( int i_zoom );
+    void changeModel ( bool b_ml );
     bool eventFilter ( QObject * watched, QEvent * event );
+
+    /* for popup */
+    QModelIndex popupIndex;  /* FIXME: don't store here, pass as Action param */
 
     /* Wait spinner */
     PixmapAnimator *spinnerAnimation;
@@ -129,7 +135,11 @@ private slots:
 
     void popupPlView( const QPoint & );
     void popupSelectColumn( QPoint );
-    void popupAction( QAction * );
+    void popupPromptAndCreateNode();
+    void popupInfoDialog();
+    void popupExplore();
+    void popupStream();
+    void popupSave();
     void increaseZoom() { updateZoom( i_zoom + 1 ); };
     void decreaseZoom() { updateZoom( i_zoom - 1 ); };
     void toggleColumnShown( int );

@@ -1,5 +1,5 @@
-AUTOMAKE_OPTIONS = subdir-objects
 pkgconfigdir = $(libdir)/pkgconfig
+
 AM_CPPFLAGS = -DMODULE_STRING=\"libvlc\"
 AM_CFLAGS = $(CFLAGS_libvlc)
 
@@ -51,7 +51,8 @@ libvlc_la_SOURCES = \
 	media_list_path.h \
 	media_list_player.c \
 	media_library.c \
-	media_discoverer.c
+	media_discoverer.c \
+	../src/revision.c
 EXTRA_DIST = libvlc.pc.in libvlc.sym ../include/vlc/libvlc_version.h.in
 
 libvlc_la_LIBADD = \
@@ -59,16 +60,12 @@ libvlc_la_LIBADD = \
 libvlc_la_LDFLAGS = \
 	$(LDFLAGS_libvlc) \
 	-no-undefined \
-	-version-info 10:0:5 \
+	-version-info 9:0:4 \
 	-export-symbols $(srcdir)/libvlc.sym
 libvlc_la_DEPENDENCIES = libvlc.sym
 if HAVE_WIN32
 libvlc_la_DEPENDENCIES += ../src/libvlc_win32_rc.$(OBJEXT)
-libvlc_la_LDFLAGS += -Wl,../src/libvlc_win32_rc.$(OBJEXT) -avoid-version \
-					 -Wc,--static -Wc,-static-libgcc
-endif
-if HAVE_OS2
-libvlc_la_LDFLAGS += -avoid-version
+libvlc_la_LDFLAGS += -Wl,../src/libvlc_win32_rc.$(OBJEXT) -avoid-version
 endif
 
 pkgconfig_DATA = libvlc.pc

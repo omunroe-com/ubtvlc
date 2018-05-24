@@ -5,7 +5,7 @@ LANG=C
 export LANG
 
 TEMPFILE=/tmp/vlclist.tmp.$$
-LISTFILE=MODULES_LIST
+LISTFILE=LIST
 
 
 rm -f $TEMPFILE
@@ -17,7 +17,7 @@ echo "------------------------------------"
 
 i=0
 
-for modfile in `find . -name "Modules.am" -o -name "Makefile.am"`
+for modfile in `find . -name "Modules.am"`
 do
  for module in `awk '/^SOURCES_/{sub(/SOURCES_/,"",$1); print $1}' "$modfile"`\
                `awk '/^lib.*_plugin_la_SOURCES/{sub(/lib/,""); sub(/_plugin_la_SOURCES/,"",$1); print $1}' "$modfile"`

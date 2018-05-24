@@ -2,7 +2,7 @@
  * playlist.c
  *****************************************************************************
  * Copyright (C) 2007-2011 the VideoLAN team
- * $Id: ab4faf1329f67f0a7c3e785999ee1045827a5d84 $
+ * $Id: 29f5e4bcc1ac8841a368954c7196726a21218aac $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *
@@ -40,17 +40,16 @@
 #include "../vlc.h"
 #include "../libs.h"
 #include "input.h"
+#include "playlist.h"
 #include "variables.h"
-#include "misc.h"
 
-void vlclua_set_playlist_internal( lua_State *L, playlist_t *pl )
-{
-    vlclua_set_object( L, vlclua_set_playlist_internal, pl );
-}
-
+/*****************************************************************************
+ * Internal lua<->vlc utils
+ *****************************************************************************/
 playlist_t *vlclua_get_playlist_internal( lua_State *L )
 {
-    return vlclua_get_object( L, vlclua_set_playlist_internal );
+    vlc_object_t *p_this = vlclua_get_this( L );
+    return pl_Get( p_this );
 }
 
 static int vlclua_playlist_prev( lua_State * L )

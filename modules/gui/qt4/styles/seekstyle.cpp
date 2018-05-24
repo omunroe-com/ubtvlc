@@ -33,12 +33,6 @@
 #define RADIUS 3
 #define CHAPTERSSPOTSIZE 3
 
-SeekStyle::SeekStyleOption::SeekStyleOption()
-    : QStyleOptionSlider(), buffering( 1.0 ), length(0), animate(false), animationopacity( 1.0 )
-{
-
-}
-
 SeekStyle::SeekStyle() : QProxyStyle( QStyleFactory::create( QLatin1String("Windows") ) )
 {
 
@@ -48,19 +42,10 @@ int SeekStyle::pixelMetric( PixelMetric metric, const QStyleOption *option, cons
 {
     const QStyleOptionSlider *slider;
 
-    if ( widget && ( slider = qstyleoption_cast<const QStyleOptionSlider *>( option ) ) )
-    {
-        switch( metric )
-        {
-        case QStyle::PM_SliderThickness:
-        case QStyle::PM_SliderLength:
-            return widget->minimumSize().height();
-        default:
-            break;
-        }
-    }
-
-    return QProxyStyle::pixelMetric( metric, option, widget );
+    if ( widget && metric == QStyle::PM_SliderThickness && ( slider = qstyleoption_cast<const QStyleOptionSlider *>( option ) ) )
+        return widget->minimumSize().height();
+    else
+        return QProxyStyle::pixelMetric( metric, option, widget );
 }
 
 void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex *option, QPainter *painter, const QWidget *widget ) const
@@ -69,14 +54,14 @@ void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex
     {
         painter->setRenderHints( QPainter::Antialiasing );
 
-        if ( const SeekStyle::SeekStyleOption *slideroptions =
-             qstyleoption_cast<const SeekStyle::SeekStyleOption *>( option ) )
+        if ( const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>( option ) )
         {
+            const SeekSlider *seekSlider = qobject_cast<const SeekSlider*>( widget );
             qreal sliderPos = -1;
 
             /* Get the needed subcontrols to draw the slider */
-            QRect groove = subControlRect(CC_Slider, slideroptions, SC_SliderGroove, widget);
-            QRect handle = subControlRect(CC_Slider, slideroptions, SC_SliderHandle, widget);
+            QRect groove = subControlRect(CC_Slider, slider, SC_SliderGroove, widget);
+            QRect handle = subControlRect(CC_Slider, slider, SC_SliderHandle, widget);
 
             /* Adjust the size of the groove so the handle stays centered */
             groove.adjust( handle.width() / 2, 0, -handle.width() / 2, 0 );
@@ -87,14 +72,14 @@ void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex
             // had to remove 1 from the rect bottom.
             groove.adjust( 0, (qreal)groove.height() / 3.7, 0, (qreal)-groove.height() / 3.7 - 1 );
 
-            if ( ( slideroptions->subControls & SC_SliderGroove ) && groove.isValid() )
+            if ( ( slider->subControls & SC_SliderGroove ) && groove.isValid() )
             {
-                sliderPos = ( ( (qreal)groove.width() ) / (qreal)slideroptions->maximum )
-                        * (qreal)slideroptions->sliderPosition;
+                sliderPos = ( ( (qreal)groove.width() ) / (qreal)slider->maximum )
+                        * (qreal)slider->sliderPosition;
 
                 /* set the background color and gradient */
-                QColor backgroundBase( slideroptions->palette.window().color() );
-                QLinearGradient backgroundGradient( 0, 0, 0, slideroptions->rect.height() );
+                QColor backgroundBase( slider->palette.window().color() );
+                QLinearGradient backgroundGradient( 0, 0, 0, slider->rect.height() );
                 backgroundGradient.setColorAt( 0.0, backgroundBase.darker( 140 ) );
                 backgroundGradient.setColorAt( 1.0, backgroundBase );
 
@@ -120,7 +105,7 @@ void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex
                 valueRect.setWidth( sliderPos );
 
                 /* draw foreground */
-                if ( slideroptions->sliderPosition > slideroptions->minimum && slideroptions->sliderPosition <= slideroptions->maximum )
+                if ( slider->sliderPosition > slider->minimum && slider->sliderPosition <= slider->maximum )
                 {
                     painter->setPen( Qt::NoPen );
                     painter->setBrush( foregroundGradient );
@@ -128,10 +113,10 @@ void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex
                 }
 
                 /* draw buffering overlay */
-                if ( slideroptions->buffering < 1.0 )
+                if ( seekSlider && seekSlider->f_buffering < 1.0 )
                 {
                     QRect innerRect = groove.adjusted( 1, 1,
-                                        groove.width() * ( -1.0 + slideroptions->buffering ) - 1, 0 );
+                                        groove.width() * ( -1.0 + seekSlider->f_buffering ) - 1, 0 );
                     QColor overlayColor = QColor( "Orange" );
                     overlayColor.setAlpha( 128 );
                     painter->setBrush( overlayColor );
@@ -139,38 +124,39 @@ void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex
                 }
             }
 
-            if ( slideroptions->subControls & SC_SliderTickmarks ) {
-                QStyleOptionSlider tmpSlider = *slideroptions;
+            if ( slider->subControls & SC_SliderTickmarks ) {
+                QStyleOptionSlider tmpSlider = *slider;
                 tmpSlider.subControls = SC_SliderTickmarks;
                 QProxyStyle::drawComplexControl(cc, &tmpSlider, painter, widget);
             }
 
-            if ( slideroptions->subControls & SC_SliderHandle && handle.isValid() )
+            if ( slider->subControls & SC_SliderHandle && handle.isValid() )
             {
                 /* Useful for debugging */
                 //painter->setBrush( QColor( 0, 0, 255, 150 ) );
                 //painter->drawRect( handle );
 
-                if ( option->state & QStyle::State_MouseOver || slideroptions->animate )
+                if ( option->state & QStyle::State_MouseOver || (seekSlider && seekSlider->isAnimationRunning() ) )
                 {
-                    QPalette p = slideroptions->palette;
+                    QPalette p = slider->palette;
 
                     /* draw chapters tickpoints */
-                    if ( slideroptions->points.size() && slideroptions->length && groove.width() )
+                    if ( seekSlider->chapters && seekSlider->inputLength && groove.width() )
                     {
                         QColor background = p.color( QPalette::Active, QPalette::Window );
                         QColor foreground = p.color( QPalette::Active, QPalette::WindowText );
                         foreground.setHsv( foreground.hue(),
                                         ( background.saturation() + foreground.saturation() ) / 2,
                                         ( background.value() + foreground.value() ) / 2 );
-                        if ( slideroptions->orientation == Qt::Horizontal ) /* TODO: vertical */
+                        if ( slider->orientation == Qt::Horizontal ) /* TODO: vertical */
                         {
-                            foreach( int64_t time, slideroptions->points )
+                            QList<SeekPoint> points = seekSlider->chapters->getPoints();
+                            foreach( SeekPoint point, points )
                             {
-                                int x = groove.x() + time / 1000000.0 / slideroptions->length * groove.width();
+                                int x = groove.x() + point.time / 1000000.0 / seekSlider->inputLength * groove.width();
                                 painter->setPen( foreground );
                                 painter->setBrush( Qt::NoBrush );
-                                painter->drawLine( x, slideroptions->rect.height(), x, slideroptions->rect.height() - CHAPTERSSPOTSIZE );
+                                painter->drawLine( x, slider->rect.height(), x, slider->rect.height() - CHAPTERSSPOTSIZE );
                             }
                         }
                     }
@@ -204,7 +190,8 @@ void SeekStyle::drawComplexControl( ComplexControl cc, const QStyleOptionComplex
                         shadowGradient.setColorAt( 1.0, shadowLight );
 
                         painter->setPen( Qt::NoPen );
-                        painter->setOpacity( slideroptions->animationopacity );
+                        if ( seekSlider != NULL )
+                            painter->setOpacity( seekSlider->mHandleOpacity );
 
                         /* draw the handle's shadow */
                         painter->setBrush( shadowGradient );

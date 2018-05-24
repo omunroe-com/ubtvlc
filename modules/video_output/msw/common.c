@@ -1,8 +1,8 @@
 /*****************************************************************************
- * common.c: Windows video output common code
+ * common.c:
  *****************************************************************************
  * Copyright (C) 2001-2009 VLC authors and VideoLAN
- * $Id: fbf790c8a9241884ba0379c1388159e492276f5a $
+ * $Id: 45f1f5e92ccff7e5931a43e7bf7bfa3e9b49757a $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -21,28 +21,43 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
-/*****************************************************************************
- * Preamble: This file contains the functions related to the init of the vout
- *           structure, the common display code, the screensaver, but not the
- *           events and the Window Creation (events.c)
- *****************************************************************************/
 
+/*****************************************************************************
+ * Preamble: This file contains the functions related to the creation of
+ *             a window and the handling of its messages (events).
+ *****************************************************************************/
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+#include <assert.h>
 
 #include <vlc_common.h>
 #include <vlc_vout_display.h>
+#include <vlc_vout_window.h>
 
 #include <windows.h>
-#include <assert.h>
+#include <windowsx.h>
+#include <shellapi.h>
+
+#ifdef MODULE_NAME_IS_directdraw
+#include <ddraw.h>
+#endif
+#ifdef MODULE_NAME_IS_direct3d
+#include <d3d9.h>
+#endif
+#ifdef MODULE_NAME_IS_glwin32
+#include "../opengl.h"
+#endif
+#ifdef MODULE_NAME_IS_direct2d
+#include <d2d1.h>
+#endif
 
 #include "common.h"
 
 #include <vlc_windows_interfaces.h>
 
 static void CommonChangeThumbnailClip(vout_display_t *, bool show);
-static int  CommonControlSetFullscreen(vout_display_t *, bool is_fullscreen);
+static int CommonControlSetFullscreen(vout_display_t *, bool is_fullscreen);
 
 static void DisableScreensaver(vout_display_t *);
 static void RestoreScreensaver(vout_display_t *);
@@ -213,7 +228,7 @@ int CommonUpdatePicture(picture_t *picture, picture_t **fallback,
     /* fill in buffer info in first plane */
     picture->p->p_pixels = data;
     picture->p->i_pitch  = pitch;
-    picture->p->i_lines  = picture->format.i_visible_height;
+    picture->p->i_lines  = picture->format.i_height;
 
     /*  Fill chroma planes for planar YUV */
     if (picture->format.i_chroma == VLC_CODEC_I420 ||
@@ -226,7 +241,7 @@ int CommonUpdatePicture(picture_t *picture, picture_t **fallback,
 
             p->p_pixels = o->p_pixels + o->i_lines * o->i_pitch;
             p->i_pitch  = pitch / 2;
-            p->i_lines  = picture->format.i_visible_height / 2;
+            p->i_lines  = picture->format.i_height / 2;
         }
         /* The dx/d3d buffer is always allocated as YV12 */
         if (vlc_fourcc_AreUVPlanesSwapped(picture->format.i_chroma, VLC_CODEC_YV12)) {
@@ -403,8 +418,8 @@ void UpdateRects(vout_display_t *vd,
     /* src image dimensions */
     rect_src.left   = 0;
     rect_src.top    = 0;
-    rect_src.right  = vd->fmt.i_visible_width;
-    rect_src.bottom = vd->fmt.i_visible_height;
+    rect_src.right  = source->i_width;
+    rect_src.bottom = source->i_height;
 
     /* Clip the source image */
     rect_src_clipped.left = source->i_x_offset +

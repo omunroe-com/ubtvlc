@@ -2,7 +2,7 @@
  * playlist_model.hpp : Model for a playlist tree
  ****************************************************************************
  * Copyright (C) 2006-2011 the VideoLAN team
- * $Id: f9d1d0c3b32bae40c8ba1ed255bbf7bbecbc2339 $
+ * $Id: 71bd23ec25b3acbbeb8a527c644ba3c6d12c7e7d $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jakob Leben <jleben@videolan.org>
@@ -41,7 +41,8 @@
 #include <QAbstractItemModel>
 #include <QVariant>
 #include <QModelIndex>
-#include <QAction>
+#include <QTimer>
+#include <QMutex>
 
 class PLItem;
 class PLSelector;
@@ -56,7 +57,7 @@ public:
              playlist_item_t *, QObject *parent = 0 );
     virtual ~PLModel();
 
-    /* Qt main PLModel */
+    /* Qt4 main PLModel */
     static PLModel* getPLModel( intf_thread_t *p_intf )
     {
         if(!p_intf->p_sys->pl_model )
@@ -74,6 +75,8 @@ public:
 
     /* Data structure */
     virtual QVariant data( const QModelIndex &index, const int role ) const;
+    virtual QVariant headerData( int section, Qt::Orientation orientation,
+                         int role = Qt::DisplayRole ) const;
     virtual int rowCount( const QModelIndex &parent = QModelIndex() ) const;
     virtual Qt::ItemFlags flags( const QModelIndex &index ) const;
     virtual QModelIndex index( const int r, const int c, const QModelIndex &parent ) const;
@@ -89,29 +92,36 @@ public:
     /* Sort */
     virtual void sort( const int column, Qt::SortOrder order = Qt::AscendingOrder );
 
-    /*** VLCModelSubInterface subclassing ***/
-    virtual void rebuild( playlist_item_t * p = NULL );
-    virtual void doDelete( QModelIndexList selected );
-    virtual void createNode( QModelIndex index, QString name );
-    virtual void renameNode( QModelIndex index, QString name );
-    virtual void removeAll();
+    /**** Custom ****/
 
     /* Lookups */
+    QModelIndex index( const int i_id, const int c );
     virtual QModelIndex rootIndex() const;
-    virtual void filter( const QString& search_text, const QModelIndex & root, bool b_recursive );
-    virtual QModelIndex currentIndex() const;
-    virtual QModelIndex indexByPLID( const int i_plid, const int c ) const;
-    virtual QModelIndex indexByInputItemID( const int i_inputitem_id, const int c ) const;
     virtual bool isTree() const;
     virtual bool canEdit() const;
-    virtual bool action( QAction *action, const QModelIndexList &indexes );
-    virtual bool isSupportedAction( actions action, const QModelIndex & ) const;
+    virtual QModelIndex currentIndex() const;
+    int itemId( const QModelIndex &index ) const;
+    virtual input_item_t *getInputItem( const QModelIndex & ) const;
+    virtual QString getURI( const QModelIndex &index ) const;
+    QString getTitle( const QModelIndex &index ) const;
+    virtual bool isCurrentItem( const QModelIndex &index, playLocation where ) const;
 
-protected:
-    /* VLCModel subclassing */
-    bool isParent( const QModelIndex &index, const QModelIndex &current) const;
-    bool isLeaf( const QModelIndex &index ) const;
-    PLItem *getItem( const QModelIndex & index ) const;
+    /* */
+    void search( const QString& search_text, const QModelIndex & root, bool b_recursive );
+    void rebuild( playlist_item_t * p = NULL );
+
+    virtual void doDelete( QModelIndexList selected );
+    virtual void createNode( QModelIndex index, QString name );
+
+signals:
+    void currentIndexChanged( const QModelIndex& );
+    void rootIndexChanged();
+
+public slots:
+    virtual void activateItem( const QModelIndex &index );
+    void clearPlaylist();
+    void ensureArtRequested( const QModelIndex &index );
+    virtual void actionSlot( QAction *action );
 
 private:
     /* General */
@@ -119,13 +129,34 @@ private:
 
     playlist_t *p_playlist;
 
+    static QIcon icons[ITEM_TYPE_NUMBER];
+
+    /* single row linear inserts agregation */
+    void bufferedRowInsert( PLItem *item, PLItem *parent, int pos );
+    bool isBufferedForInsert( PLItem *parent, int i_item );
+    PLItem *insertBufferRoot;
+    int insertbuffer_firstrow;
+    int insertbuffer_lastrow;
+    QTimer insertBufferCommitTimer;
+    QList<PLItem *> insertBuffer;
+    QMutex insertBufferMutex;
+
     /* Custom model private methods */
     /* Lookups */
+    PLItem *getItem( const QModelIndex & index ) const
+    {
+        if( index.isValid() )
+            return static_cast<PLItem*>( index.internalPointer() );
+        else return rootItem;
+    }
     QModelIndex index( PLItem *, const int c ) const;
+    bool isCurrent( const QModelIndex &index ) const;
+    bool isParent( const QModelIndex &index, const QModelIndex &current) const;
 
     /* Shallow actions (do not affect core playlist) */
     void updateTreeItem( PLItem * );
     void removeItem ( PLItem * );
+    void removeItem( int );
     void recurseDelete( QList<AbstractPLItem*> children, QModelIndexList *fullList );
     void takeItem( PLItem * ); //will not delete item
     void insertChildren( PLItem *node, QList<PLItem*>& items, int i_pos );
@@ -141,27 +172,25 @@ private:
     void sort( QModelIndex caller, QModelIndex rootIndex, const int column, Qt::SortOrder order );
 
     /* Lookups */
-    PLItem *findByPLId( PLItem *, int i_plitemid ) const;
-    PLItem *findByInputId( PLItem *, int i_input_itemid ) const;
-    PLItem *findInner(PLItem *, int i_id, bool b_isinputid ) const;
-    enum pl_nodetype
-    {
-        ROOTTYPE_CURRENT_PLAYING,
-        ROOTTYPE_MEDIA_LIBRARY,
-        ROOTTYPE_OTHER
-    };
-    pl_nodetype getPLRootType() const;
+    PLItem *findById( PLItem *, int ) const;
+    PLItem *findByInput( PLItem *, int ) const;
+    PLItem *findInner(PLItem *, int , bool ) const;
+
+    PLItem *p_cached_item;
+    PLItem *p_cached_item_bi;
+    int i_cached_id;
+    int i_cached_input_id;
 
     /* */
     QString latestSearch;
 
 private slots:
     void processInputItemUpdate( input_item_t *);
-    void processInputItemUpdate();
-    void processItemRemoval( int i_pl_itemid );
-    void processItemAppend( int i_pl_itemid, int i_pl_itemidparent );
+    void processInputItemUpdate( input_thread_t* p_input );
+    void processItemRemoval( int i_id );
+    void processItemAppend( int item, int parent );
+    void commitBufferedRowInserts();
     void activateItem( playlist_item_t *p_item );
-    void activateItem( const QModelIndex &index );
 };
 
 class PlMimeData : public QMimeData
@@ -170,7 +199,7 @@ class PlMimeData : public QMimeData
 
 public:
     PlMimeData() {}
-    virtual ~PlMimeData();
+    ~PlMimeData();
     void appendItem( input_item_t *p_item );
     QList<input_item_t*> inputItems() const;
     QStringList formats () const;

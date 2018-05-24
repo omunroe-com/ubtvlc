@@ -89,7 +89,6 @@ struct stream_sys_t
     int          read_fd;
     bool         can_pace;
     bool         can_pause;
-    int64_t      pts_delay;
 };
 
 extern char **environ;
@@ -155,8 +154,7 @@ static void *Thread (void *data)
             {
                 if (j == 0)
                     errno = EPIPE;
-                msg_Err (stream, "cannot write data: %s",
-                         vlc_strerror_c(errno));
+                msg_Err (stream, "cannot write data (%m)");
                 error = true;
                 break;
             }
@@ -183,19 +181,16 @@ static int Peek (stream_t *, const uint8_t **, unsigned int);
  */
 static int Read (stream_t *stream, void *buf, unsigned int buflen)
 {
-    stream_sys_t *sys = stream->p_sys;
-    unsigned ret = 0;
+    stream_sys_t *p_sys = stream->p_sys;
+    block_t *peeked;
+    ssize_t length;
 
     if (buf == NULL) /* caller skips data, get big enough peek buffer */
         buflen = Peek (stream, &(const uint8_t *){ NULL }, buflen);
 
-    block_t *peeked = sys->peeked;
-    if (peeked != NULL)
+    if ((peeked = p_sys->peeked) != NULL)
     {   /* dequeue peeked data */
-        size_t length = peeked->i_buffer;
-        if (length > buflen)
-            length = buflen;
-
+        length = (buflen > peeked->i_buffer) ? peeked->i_buffer : buflen;
         if (buf != NULL)
         {
             memcpy (buf, peeked->p_buffer, length);
@@ -204,25 +199,24 @@ static int Read (stream_t *stream, void *buf, unsigned int buflen)
         buflen -= length;
         peeked->p_buffer += length;
         peeked->i_buffer -= length;
-
         if (peeked->i_buffer == 0)
         {
             block_Release (peeked);
-            sys->peeked = NULL;
+            p_sys->peeked = NULL;
         }
+        p_sys->offset += length;
 
-        sys->offset += length;
-        ret += length;
+        if (buflen > 0)
+            length += Read (stream, buf, buflen);
+        return length;
     }
     assert ((buf != NULL) || (buflen == 0));
 
-    ssize_t val = net_Read (stream, sys->read_fd, NULL, buf, buflen, false);
-    if (val > 0)
-    {
-        sys->offset += val;
-        ret += val;
-    }
-    return ret;
+    length = net_Read (stream, p_sys->read_fd, NULL, buf, buflen, false);
+    if (length < 0)
+        return 0;
+    p_sys->offset += length;
+    return length;
 }
 
 /**
@@ -230,36 +224,28 @@ static int Read (stream_t *stream, void *buf, unsigned int buflen)
  */
 static int Peek (stream_t *stream, const uint8_t **pbuf, unsigned int len)
 {
-    stream_sys_t *sys = stream->p_sys;
-    block_t *peeked = sys->peeked;
-    size_t curlen;
+    stream_sys_t *p_sys = stream->p_sys;
+    block_t *peeked = p_sys->peeked;
+    size_t curlen = 0;
+    int fd = p_sys->read_fd;
 
-    if (peeked != NULL)
-    {
-        curlen = peeked->i_buffer;
-        if (curlen < len)
-           peeked = block_Realloc (peeked, 0, len);
-    }
-    else
-    {
-        curlen = 0;
+    if (peeked == NULL)
         peeked = block_Alloc (len);
-    }
+    else if ((curlen = peeked->i_buffer) < len)
+        peeked = block_Realloc (peeked, 0, len);
 
-    sys->peeked = peeked;
-    if (unlikely(peeked == NULL))
+    if ((p_sys->peeked = peeked) == NULL)
         return 0;
 
-    while (curlen < len)
+    if (curlen < len)
     {
-        ssize_t val;
-
-        val = net_Read (stream, sys->read_fd, NULL,
-                        peeked->p_buffer + curlen, len - curlen, false);
-        if (val <= 0)
-            break;
-        curlen += val;
-        peeked->i_buffer = curlen;
+        ssize_t val = net_Read (stream, fd, NULL, peeked->p_buffer + curlen,
+                                len - curlen, true);
+        if (val >= 0)
+        {
+            curlen += val;
+            peeked->i_buffer = curlen;
+        }
     }
     *pbuf = peeked->p_buffer;
     return curlen;
@@ -289,9 +275,6 @@ static int Control (stream_t *stream, int query, va_list args)
             break;
         case STREAM_GET_SIZE:
             *(va_arg (args, uint64_t *)) = 0;
-            break;
-        case STREAM_GET_PTS_DELAY:
-            *va_arg (args, int64_t *) = p_sys->pts_delay;
             break;
         case STREAM_SET_PAUSE_STATE:
         {
@@ -334,7 +317,6 @@ static int Open (stream_t *stream, const char *path)
     stream_Control (stream->p_source, STREAM_CAN_PAUSE, &p_sys->can_pause);
     stream_Control (stream->p_source, STREAM_CAN_CONTROL_PACE,
                     &p_sys->can_pace);
-    stream_Control (stream->p_source, STREAM_GET_PTS_DELAY, &p_sys->pts_delay);
 
     /* I am not a big fan of the pyramid style, but I cannot think of anything
      * better here. There are too many failure cases. */
@@ -369,7 +351,7 @@ static int Open (stream_t *stream, const char *path)
                 }
                 else
                 {
-                    msg_Err (stream, "cannot execute %s", path);
+                    msg_Err (stream, "Cannot execute %s", path);
                     p_sys->pid = -1;
                 }
                 posix_spawn_file_actions_destroy (&actions);
@@ -378,7 +360,7 @@ static int Open (stream_t *stream, const char *path)
             switch (p_sys->pid = fork ())
             {
                 case -1:
-                    msg_Err (stream, "cannot fork: %s", vlc_strerror_c(errno));
+                    msg_Err (stream, "Cannot fork (%m)");
                     break;
                 case 0:
                     dup2 (comp[0], 0);

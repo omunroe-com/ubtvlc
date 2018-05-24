@@ -2,7 +2,7 @@
  * dialogs_provider.hpp : Dialogs provider
  ****************************************************************************
  * Copyright (C) 2006-2008 the VideoLAN team
- * $Id: 990590b0b00f241122a77c527a53d113fda43c3b $
+ * $Id: bc967b0b95f97266a967b8bca9c11ceb4a71a05b $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -83,6 +83,10 @@ public:
         delete instance;
         instance = NULL;
     }
+    static bool isAlive()
+    {
+        return ( instance != NULL );
+    }
 
     QStringList showSimpleOpen( const QString& help = QString(),
                                 int filters = EXT_FILTER_MEDIA |
@@ -90,8 +94,6 @@ public:
                                 EXT_FILTER_PLAYLIST,
                                 const QString& path = QString() );
     bool isDying() { return b_isDying; }
-    static QString getDirectoryDialog( intf_thread_t *p_intf);
-
 protected:
     QSignalMapper *menusMapper;
     QSignalMapper *menusUpdateMapper;
@@ -109,9 +111,10 @@ private:
 
     void openDialog( int );
     void addFromSimple( bool, bool );
-    void saveAPlaylist(playlist_t *p_playlist, playlist_item_t *p_node);
 
 public slots:
+    void playMRL( const QString & );
+
     void playlistDialog();
     void bookmarksDialog();
     void mediaInfoDialog();
@@ -137,6 +140,8 @@ public slots:
     void openFileGenericDialog( intf_dialog_args_t * );
 
     void simpleOpenDialog();
+    void simplePLAppendDialog();
+    void simpleMLAppendDialog();
 
     void openDialog();
     void openDiscDialog();
@@ -150,6 +155,7 @@ public slots:
 
     void PLOpenDir();
     void PLAppendDir();
+    void MLAppendDir();
 
     void streamingDialog( QWidget *parent, const QString& mrl, bool b_stream = true,
                           QStringList options = QStringList("") );
@@ -157,8 +163,7 @@ public slots:
     void openAndTranscodingDialogs();
 
     void openAPlaylist();
-    void savePlayingToPlaylist();
-    void saveRecentsToPlaylist();
+    void saveAPlaylist();
 
     void loadSubtitlesFile();
 

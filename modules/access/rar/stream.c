@@ -2,7 +2,7 @@
  * stream.c: uncompressed RAR stream filter
  *****************************************************************************
  * Copyright (C) 2008-2010 Laurent Aimar
- * $Id: 7929d97b943537ba77b7917c6fbb1d557a5fab30 $
+ * $Id: ab09d1ad63ce976ff7c5fb1affa7c0469b320804 $
  *
  * Author: Laurent Aimar <fenrir _AT_ videolan _DOT_ org>
  *
@@ -21,6 +21,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
+/*****************************************************************************
+ * Preamble
+ *****************************************************************************/
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -35,6 +38,24 @@
 
 #include "rar.h"
 
+/*****************************************************************************
+ * Module descriptor
+ *****************************************************************************/
+static int  Open (vlc_object_t *);
+static void Close(vlc_object_t *);
+
+vlc_module_begin()
+    set_category(CAT_INPUT)
+    set_subcategory(SUBCAT_INPUT_STREAM_FILTER)
+    set_description(N_("Uncompressed RAR"))
+    set_capability("stream_filter", 1)
+    set_callbacks(Open, Close)
+    add_shortcut("rar")
+vlc_module_end()
+
+/****************************************************************************
+ * Local definitions/prototypes
+ ****************************************************************************/
 struct stream_sys_t {
     stream_t *payload;
 };
@@ -62,7 +83,7 @@ static int Control(stream_t *s, int query, va_list args)
     }
 }
 
-int RarStreamOpen(vlc_object_t *object)
+static int Open(vlc_object_t *object)
 {
     stream_t *s = (stream_t*)object;
 
@@ -72,11 +93,9 @@ int RarStreamOpen(vlc_object_t *object)
     int count;
     rar_file_t **files;
     const int64_t position = stream_Tell(s->p_source);
-    if ((RarParse(s->p_source, &count, &files, false) &&
-         RarParse(s->p_source, &count, &files, true )) || count == 0 )
-    {
+    if (RarParse(s->p_source, &count, &files)) {
         stream_Seek(s->p_source, position);
-        msg_Info(s, "Invalid or unsupported RAR archive");
+        msg_Err(s, "Invalid or unsupported RAR archive");
         free(files);
         return VLC_EGENERIC;
     }
@@ -133,7 +152,7 @@ int RarStreamOpen(vlc_object_t *object)
 
     char *tmp;
     if (asprintf(&tmp, "%s.m3u", s->psz_path) < 0) {
-        RarStreamClose(object);
+        Close(object);
         return VLC_ENOMEM;
     }
     free(s->psz_path);
@@ -142,7 +161,7 @@ int RarStreamOpen(vlc_object_t *object)
     return VLC_SUCCESS;
 }
 
-void RarStreamClose(vlc_object_t *object)
+static void Close(vlc_object_t *object)
 {
     stream_t *s = (stream_t*)object;
     stream_sys_t *sys = s->p_sys;
@@ -150,3 +169,4 @@ void RarStreamClose(vlc_object_t *object)
     stream_Delete(sys->payload);
     free(sys);
 }
+

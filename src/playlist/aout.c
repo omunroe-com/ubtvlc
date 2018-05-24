@@ -24,8 +24,6 @@
 # include "config.h"
 #endif
 
-#include <math.h>
-
 #include <vlc_common.h>
 #include <vlc_aout.h>
 #include <vlc_playlist.h>
@@ -78,9 +76,7 @@ int playlist_VolumeUp (playlist_t *pl, int value, float *volp)
 {
     int ret = -1;
 
-    float stepSize = var_InheritFloat (pl, "volume-step") / (float)AOUT_VOLUME_DEFAULT;
-
-    float delta = value * stepSize;
+    float delta = value * var_InheritFloat (pl, "volume-step");
 
     audio_output_t *aout = playlist_GetAout (pl);
     if (aout != NULL)
@@ -88,12 +84,11 @@ int playlist_VolumeUp (playlist_t *pl, int value, float *volp)
         float vol = aout_VolumeGet (aout);
         if (vol >= 0.)
         {
-            vol += delta;
+            vol += delta / (float)AOUT_VOLUME_DEFAULT;
             if (vol < 0.)
                 vol = 0.;
             if (vol > 2.)
                 vol = 2.;
-            vol = (roundf (vol / stepSize)) * stepSize;
             if (volp != NULL)
                 *volp = vol;
             ret = aout_VolumeSet (aout, vol);
@@ -133,8 +128,12 @@ void playlist_EnableAudioFilter (playlist_t *pl, const char *name, bool add)
 {
     audio_output_t *aout = playlist_GetAout (pl);
 
-    aout_ChangeFilterString (VLC_OBJECT(pl), VLC_OBJECT(aout),
-                             "audio-filter", name, add);
+    if (aout_ChangeFilterString (VLC_OBJECT(pl), VLC_OBJECT(aout),
+                                 "audio-filter", name, add))
+    {
+        if (aout != NULL)
+            aout_InputRequestRestart (aout);
+    }
     if (aout != NULL)
         vlc_object_release (aout);
 }

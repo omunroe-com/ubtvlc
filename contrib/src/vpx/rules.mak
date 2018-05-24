@@ -1,6 +1,6 @@
 # libvpx
 
-VPX_VERSION := v1.3.0
+VPX_VERSION := v1.1.0
 VPX_URL := http://webm.googlecode.com/files/libvpx-$(VPX_VERSION).tar.bz2
 
 $(TARBALLS)/libvpx-$(VPX_VERSION).tar.bz2:
@@ -10,10 +10,21 @@ $(TARBALLS)/libvpx-$(VPX_VERSION).tar.bz2:
 
 libvpx: libvpx-$(VPX_VERSION).tar.bz2 .sum-vpx
 	$(UNPACK)
-	$(APPLY) $(SRC)/vpx/libvpx-sysroot.patch
 	$(APPLY) $(SRC)/vpx/libvpx-no-cross.patch
+	$(APPLY) $(SRC)/vpx/libvpx-no-abi.patch
+	$(APPLY) $(SRC)/vpx/windows.patch
+ifdef HAVE_MACOSX
 	$(APPLY) $(SRC)/vpx/libvpx-mac.patch
-	$(APPLY) $(SRC)/vpx/libvpx-ios.patch
+	$(APPLY) $(SRC)/vpx/libvpx-mac-mountain-lion.patch
+endif
+ifdef HAVE_WIN32
+	$(APPLY) $(SRC)/vpx/libvpx-win32.patch
+endif
+ifneq ($(which bash),/bin/bash)
+	sed -i.orig \
+		s,^\#!/bin/bash,\#!`which bash`,g \
+		`grep -Rl ^\#!/bin/bash libvpx-$(VPX_VERSION)`
+endif
 	$(MOVE)
 
 DEPS_vpx =
@@ -23,8 +34,6 @@ VPX_CROSS := $(HOST)-
 else
 VPX_CROSS :=
 endif
-
-VPX_LDFLAGS := $(LDFLAGS)
 
 ifeq ($(ARCH),arm)
 VPX_ARCH := armv7
@@ -42,18 +51,18 @@ else ifeq ($(ARCH),x86_64)
 VPX_ARCH := x86_64
 endif
 
-ifdef HAVE_ANDROID
-VPX_OS := android
-else ifdef HAVE_LINUX
+ifdef HAVE_LINUX
 VPX_OS := linux
-else ifdef HAVE_MACOSX
+else ifdef HAVE_DARWIN_OS
+ifeq ($(ARCH),arm)
+VPX_OS := darwin
+else
 ifeq ($(OSX_VERSION),10.5)
 VPX_OS := darwin9
 else
 VPX_OS := darwin10
 endif
-else ifdef HAVE_IOS
-VPX_OS := darwin11
+endif
 else ifdef HAVE_SOLARIS
 VPX_OS := solaris
 else ifdef HAVE_WIN64 # must be before WIN32
@@ -73,16 +82,12 @@ endif
 
 VPX_CONF := \
 	--enable-runtime-cpu-detect \
-	--disable-docs \
-	--disable-examples \
-	--disable-unit-tests \
 	--disable-install-bins \
-	--disable-install-docs
-
-ifndef BUILD_ENCODERS
-	VPX_CONF += --disable-vp8-encoder --disable-vp9-encoder
-endif
-
+	--disable-install-srcs \
+	--disable-install-libs \
+	--disable-install-docs \
+	--disable-examples \
+	--disable-vp8-decoder
 ifndef HAVE_WIN32
 VPX_CONF += --enable-pic
 endif
@@ -90,21 +95,20 @@ ifdef HAVE_MACOSX
 VPX_CONF += --sdk-path=$(MACOSX_SDK)
 endif
 ifdef HAVE_IOS
-VPX_CONF += --sdk-path=$(IOS_SDK) --enable-vp8-decoder --disable-vp8-encoder --disable-vp9-encoder
-VPX_LDFLAGS := -L$(IOS_SDK)/usr/lib -arch $(ARCH) -syslibroot $(IOS_SDK) -ios_version_min 6.1
-endif
-ifdef HAVE_ANDROID
-# vpx configure.sh overrides our sysroot and it looks for it itself, and
-# uses that path to look for the compiler (which we already know)
-VPX_CONF += --sdk-path=$(shell dirname $(shell which $(HOST)-gcc))
-# needed for cpu-features.h
-VPX_CONF += --extra-cflags="-I $(ANDROID_NDK)/sources/cpufeatures/"
+VPX_CONF += --sdk-path=$(SDKROOT)
 endif
 
 .vpx: libvpx
-	cd $< && LDFLAGS="$(VPX_LDFLAGS)" CROSS=$(VPX_CROSS) ./configure --target=$(VPX_TARGET) \
-		$(VPX_CONF) --prefix=$(PREFIX)
-	cd $< && $(MAKE)
-	cd $< && ../../../contrib/src/pkg-static.sh vpx.pc
+	cd $< && CROSS=$(VPX_CROSS) ./configure --target=$(VPX_TARGET) \
+		$(VPX_CONF)
 	cd $< && $(MAKE) install
+	rm -Rf -- "$(PREFIX)/include/vpx/"
+	mkdir -p -- "$(PREFIX)/include/vpx/"
+	# Of course! Why the hell would it be listed or in make install?
+	cp $</vpx/*.h $</vpx_ports/*.h "$(PREFIX)/include/vpx/"
+	rm -f -- "$(PREFIX)/include/vpx/config.h"
+	$(RANLIB) $</libvpx.a
+	# Of course! Why the hell would it be listed or in make install?
+	mkdir -p -- "$(PREFIX)/lib"
+	install -- $</libvpx.a "$(PREFIX)/lib/libvpx.a"
 	touch $@

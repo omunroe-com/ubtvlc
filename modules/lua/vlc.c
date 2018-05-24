@@ -2,7 +2,7 @@
  * vlc.c: Generic lua interface functions
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: df235d06c7ff09c1477d963560a655551d0ca993 $
+ * $Id: 6f9b50528db293c636fa55e534fa4231899a8a8d $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *          Pierre d'Herbemont <pdherbemont # videolan.org>
@@ -32,13 +32,15 @@
 #include <assert.h>
 #include <sys/stat.h>
 
-#include "vlc.h"
-
+#include <vlc_common.h>
 #include <vlc_plugin.h>
+#include <vlc_meta.h>
 #include <vlc_charset.h>
 #include <vlc_fs.h>
 #include <vlc_services_discovery.h>
 #include <vlc_stream.h>
+
+#include "vlc.h"
 
 /*****************************************************************************
  * Module descriptor
@@ -213,7 +215,7 @@ int vlclua_dir_list( const char *luadirname, char ***pppsz_dir_list )
         i++;
     free( datadir );
 
-#if !(defined(__APPLE__) || defined(_WIN32))
+#if !(defined(__APPLE__) || defined(_WIN32) || defined(__OS2__))
     char *psz_libpath = config_GetLibDir();
     if( likely(psz_libpath != NULL) )
     {
@@ -260,7 +262,7 @@ void vlclua_dir_list_free( char **ppsz_dir_list )
  *****************************************************************************/
 int vlclua_scripts_batch_execute( vlc_object_t *p_this,
                                   const char * luadirname,
-                                  int (*func)(vlc_object_t *, const char *, const luabatch_context_t *),
+                                  int (*func)(vlc_object_t *, const char *, void *),
                                   void * user_data)
 {
     char **ppsz_dir_list = NULL;
@@ -377,17 +379,12 @@ void vlclua_read_meta_data( vlc_object_t *p_this, lua_State *L,
     TRY_META( "date", Date );
     TRY_META( "setting", Setting );
     TRY_META( "url", URL );
-    TRY_META( "language",  Language );
+    TRY_META( "language", Language );
     TRY_META( "nowplaying", NowPlaying );
-    TRY_META( "publisher",  Publisher );
-    TRY_META( "encodedby",  EncodedBy );
-    TRY_META( "arturl",     ArtURL );
-    TRY_META( "trackid",    TrackID );
-    TRY_META( "director",   Director );
-    TRY_META( "season",     Season );
-    TRY_META( "episode",    Episode );
-    TRY_META( "show_name",  ShowName );
-    TRY_META( "actors",     Actors );
+    TRY_META( "publisher", Publisher );
+    TRY_META( "encodedby", EncodedBy );
+    TRY_META( "arturl", ArtURL );
+    TRY_META( "trackid", TrackID );
 }
 
 #undef vlclua_read_custom_meta_data

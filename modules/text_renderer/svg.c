@@ -2,7 +2,7 @@
  * svg.c : Put SVG on the video
  *****************************************************************************
  * Copyright (C) 2002, 2003 VLC authors and VideoLAN
- * $Id: 49f0557b26566ee83aa4ecdf56ee69e7279c70c4 $
+ * $Id: c30223fd8e5e8cf1d566bfaf1d261e5e664e124a $
  *
  * Authors: Olivier Aubert <oaubert@lisi.univ-lyon1.fr>
  *
@@ -35,7 +35,12 @@
 #include <vlc_filter.h>
 
 #include <sys/types.h>
-#include <unistd.h>
+
+#ifdef HAVE_UNISTD_H
+#    include <unistd.h>
+#elif defined( _WIN32 )
+#   include <io.h>
+#endif
 
 #include <glib.h>
 #include <glib/gstdio.h>

@@ -620,7 +620,5 @@ static void Parse( demux_t *p_demux )
             }
         }
     }
-
-    free( psz_dup );
 }
 

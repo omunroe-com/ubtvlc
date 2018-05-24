@@ -2,7 +2,7 @@
  * volume.c
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: b361647545c9f847087877e5ba8ad1a589cd6528 $
+ * $Id: 6b9409ff8c9568a926ae1d209e7821d5da405cca $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *          Pierre d'Herbemont <pdherbemont # videolan.org>
@@ -41,6 +41,7 @@
 
 #include "../vlc.h"
 #include "../libs.h"
+#include "playlist.h"
 
 /*****************************************************************************
  * Volume related

@@ -2,7 +2,7 @@
  * directory.c: expands a directory (directory: access plug-in)
  *****************************************************************************
  * Copyright (C) 2002-2008 VLC authors and VideoLAN
- * $Id: 3d72dc09ab3944409f6e95e43fe91eb8dac9ba22 $
+ * $Id: 71a446b91d70f28e5e8f463d6cb6740b3a9d1c16 $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan dot org>
  *          Rémi Denis-Courmont
@@ -37,8 +37,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#   include <fcntl.h>
+#elif defined( _WIN32 )
+#   include <io.h>
+#endif
 
 #include <vlc_fs.h>
 #include <vlc_url.h>
@@ -194,7 +198,10 @@ int DirInit (access_t *p_access, DIR *handle)
     p_access->pf_read  = NULL;
     p_access->pf_block = DirBlock;
     p_access->pf_seek  = NULL;
-    p_access->pf_control = DirControl;
+    p_access->pf_control= DirControl;
+    free (p_access->psz_demux);
+    p_access->psz_demux = strdup ("xspf-open");
+
     return VLC_SUCCESS;
 
 error:
@@ -462,6 +469,7 @@ int DirControl( access_t *p_access, int i_query, va_list args )
 {
     switch( i_query )
     {
+        /* */
         case ACCESS_CAN_SEEK:
         case ACCESS_CAN_FASTSEEK:
             *va_arg( args, bool* ) = false;
@@ -472,17 +480,24 @@ int DirControl( access_t *p_access, int i_query, va_list args )
             *va_arg( args, bool* ) = true;
             break;
 
+        /* */
         case ACCESS_GET_PTS_DELAY:
             *va_arg( args, int64_t * ) = DEFAULT_PTS_DELAY * 1000;
             break;
 
+        /* */
+        case ACCESS_SET_PAUSE_STATE:
+        case ACCESS_GET_TITLE_INFO:
+        case ACCESS_SET_TITLE:
+        case ACCESS_SET_SEEKPOINT:
+        case ACCESS_SET_PRIVATE_ID_STATE:
         case ACCESS_GET_CONTENT_TYPE:
-            *va_arg( args, char** ) = strdup("application/xspf+xml");
-            return VLC_SUCCESS;
+        case ACCESS_GET_META:
+            return VLC_EGENERIC;
 
         default:
+            msg_Warn( p_access, "unimplemented query in control" );
             return VLC_EGENERIC;
     }
-    (void) p_access;
     return VLC_SUCCESS;
 }

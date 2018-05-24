@@ -15,7 +15,6 @@ $(TARBALLS)/SDL-$(SDL_VERSION).tar.gz:
 
 sdl: SDL-$(SDL_VERSION).tar.gz .sum-sdl
 	$(UNPACK)
-	$(APPLY) $(SRC)/sdl/direct_palette_ref.diff
 	$(MOVE)
 
 SDLCONF := $(HOSTCONF) \

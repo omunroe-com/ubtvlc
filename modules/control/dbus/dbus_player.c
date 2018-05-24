@@ -1,11 +1,11 @@
 /*****************************************************************************
- * dbus_player.c : dbus control module (mpris v2.2) - Player object
+ * dbus_player.c : dbus control module (mpris v1.0) - /Player object
  *****************************************************************************
  * Copyright © 2006-2011 Rafaël Carré
  * Copyright © 2007-2011 Mirsal Ennaime
  * Copyright © 2009-2011 The VideoLAN team
  * Copyright © 2013      Alex Merry
- * $Id: 09069343f412e7abaa6bab466decfb06877fc260 $
+ * $Id: 3d37e6a21bf67bd6ed88425de2c6104edb5f6d81 $
  *
  * Authors:    Mirsal Ennaime <mirsal at mirsal fr>
  *             Rafaël Carré <funman at videolanorg>
@@ -44,7 +44,8 @@ MarshalPosition( intf_thread_t *p_intf, DBusMessageIter *container )
 {
     /* returns position in microseconds */
     dbus_int64_t i_pos;
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input;
+    p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist );
 
     if( !p_input )
         i_pos = 0;
@@ -86,7 +87,7 @@ DBUS_METHOD( SetPosition )
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
 
-    input_thread_t *p_input = pl_CurrentInput( p_this );
+    input_thread_t *p_input = playlist_CurrentInput( PL );
 
     if( p_input )
     {
@@ -137,7 +138,7 @@ DBUS_METHOD( Seek )
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
     }
 
-    input_thread_t *p_input = pl_CurrentInput( p_this );
+    input_thread_t *p_input = playlist_CurrentInput( PL );
     if( p_input && var_GetBool( p_input, "can-seek" ) )
     {
         i_pos = var_GetTime( p_input, "time" );
@@ -207,7 +208,7 @@ DBUS_METHOD( Stop )
 DBUS_METHOD( Play )
 {
     REPLY_INIT;
-    input_thread_t *p_input =  pl_CurrentInput( p_this );
+    input_thread_t *p_input =  playlist_CurrentInput( PL );
 
     if( !p_input || var_GetInteger( p_input, "state" ) != PLAYING_S )
         playlist_Play( PL );
@@ -221,7 +222,7 @@ DBUS_METHOD( Play )
 DBUS_METHOD( Pause )
 {
     REPLY_INIT;
-    input_thread_t *p_input = pl_CurrentInput( p_this );
+    input_thread_t *p_input = playlist_CurrentInput( PL );
 
     if( p_input && var_GetInteger(p_input, "state") == PLAYING_S )
         playlist_Pause( PL );
@@ -235,7 +236,7 @@ DBUS_METHOD( Pause )
 DBUS_METHOD( PlayPause )
 {
     REPLY_INIT;
-    input_thread_t *p_input = pl_CurrentInput( p_this );
+    input_thread_t *p_input = playlist_CurrentInput( PL );
 
     if( p_input && var_GetInteger(p_input, "state") == PLAYING_S )
         playlist_Pause( PL );
@@ -323,7 +324,8 @@ static int
 MarshalCanPause( intf_thread_t *p_intf, DBusMessageIter *container )
 {
     dbus_bool_t b_can_pause = FALSE;
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input;
+    p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist );
 
     if( p_input )
     {
@@ -355,7 +357,8 @@ static int
 MarshalCanSeek( intf_thread_t *p_intf, DBusMessageIter *container )
 {
     dbus_bool_t b_can_seek = FALSE;
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input;
+    p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist );
 
     if( p_input )
     {
@@ -398,10 +401,10 @@ DBUS_METHOD( ShuffleSet )
 static int
 MarshalPlaybackStatus( intf_thread_t *p_intf, DBusMessageIter *container )
 {
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input;
     const char *psz_playback_status;
 
-    if( p_input != NULL )
+    if( ( p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist ) ) )
     {
         switch( var_GetInteger( p_input, "state" ) )
         {
@@ -432,9 +435,9 @@ static int
 MarshalRate( intf_thread_t *p_intf, DBusMessageIter *container )
 {
     double d_rate;
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input;
 
-    if( p_input != NULL )
+    if( ( p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist ) ) )
     {
         d_rate = var_GetFloat( p_input, "rate" );
         vlc_object_release( (vlc_object_t*) p_input );
@@ -458,8 +461,8 @@ DBUS_METHOD( RateSet )
     if( VLC_SUCCESS != DemarshalSetPropertyValue( p_from, &d_rate ) )
         return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 
-    input_thread_t *p_input = pl_CurrentInput( p_this );
-    if( p_input != NULL )
+    input_thread_t *p_input;
+    if( ( p_input = playlist_CurrentInput( PL ) ) )
     {
         var_SetFloat( p_input, "rate", (float) d_rate );
         vlc_object_release( (vlc_object_t*) p_input );
@@ -548,10 +551,10 @@ static int
 MarshalMetadata( intf_thread_t *p_intf, DBusMessageIter *container )
 {
     DBusMessageIter a;
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input = NULL;
     input_item_t   *p_item  = NULL;
 
-    if( p_input != NULL )
+    if( ( p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist ) ) )
     {
         p_item = input_GetItem( p_input );
 
@@ -594,7 +597,7 @@ DBUS_SIGNAL( SeekedSignal )
 
     dbus_int64_t i_pos = 0;
     intf_thread_t *p_intf = (intf_thread_t*) p_data;
-    input_thread_t *p_input = pl_CurrentInput( p_intf );
+    input_thread_t *p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist );
 
     if( p_input )
     {
@@ -872,8 +875,6 @@ PropertiesChangedSignal( intf_thread_t    *p_intf,
         free( ppsz_properties[i] );
     }
 
-    free( ppsz_properties );
-
     if( !dbus_message_iter_close_container( &args, &changed_properties ) )
         return DBUS_HANDLER_RESULT_NEED_MEMORY;
 
@@ -883,6 +884,8 @@ PropertiesChangedSignal( intf_thread_t    *p_intf,
 
     if( !dbus_message_iter_close_container( &args, &invalidated_properties ) )
         return DBUS_HANDLER_RESULT_NEED_MEMORY;
+
+    free( ppsz_properties );
 
     SIGNAL_SEND;
 }

@@ -19,7 +19,7 @@ opus: opus-$(OPUS_VERSION).tar.gz .sum-opus
 	$(UPDATE_AUTOCONFIG)
 	$(MOVE)
 
-OPUS_CONF= --disable-extra-programs --disable-doc
+OPUS_CONF=
 ifndef HAVE_FPU
 OPUS_CONF += --enable-fixed-point
 endif

@@ -1,8 +1,8 @@
 /*****************************************************************************
  * ControlsBar.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2012-2014 VLC authors and VideoLAN
- * $Id: 3da5f9be6b1e50aae0903a1d2183acc4c32def8c $
+ * Copyright (C) 2012-2013 VLC authors and VideoLAN
+ * $Id: 77506234850c18c32df24e4bed3b57b5b6559ba6 $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *          David Fuhrmann <david dot fuhrmann at googlemail dot com>
@@ -27,7 +27,6 @@
 #import "CoreInteraction.h"
 #import "MainMenu.h"
 #import "fspanel.h"
-#import "CompatibilityFixes.h"
 
 /*****************************************************************************
  * VLCControlsBarCommon
@@ -50,8 +49,6 @@
         b_nativeFullscreenMode = var_InheritBool(VLCIntf, "macosx-nativefullscreenmode");
 #endif
 
-    [o_drop_view setDrawBorder: NO];
-
     [o_play_btn setToolTip: _NS("Play/Pause")];
     [[o_play_btn cell] accessibilitySetOverrideValue:_NS("Click to play or pause the current media.") forAttribute:NSAccessibilityDescriptionAttribute];
     [[o_play_btn cell] accessibilitySetOverrideValue:[o_play_btn toolTip] forAttribute:NSAccessibilityTitleAttribute];
@@ -73,39 +70,39 @@
     [[o_fullscreen_btn cell] accessibilitySetOverrideValue:[o_fullscreen_btn toolTip] forAttribute:NSAccessibilityTitleAttribute];
 
     if (!b_dark_interface) {
-        [o_bottombar_view setImagesLeft: imageFromRes(@"bottom-background") middle: imageFromRes(@"bottom-background") right: imageFromRes(@"bottom-background")];
+        [o_bottombar_view setImagesLeft: [NSImage imageNamed:@"bottom-background"] middle: [NSImage imageNamed:@"bottom-background"] right: [NSImage imageNamed:@"bottom-background"]];
 
-        [o_bwd_btn setImage: imageFromRes(@"backward-3btns")];
-        [o_bwd_btn setAlternateImage: imageFromRes(@"backward-3btns-pressed")];
-        o_play_img = [imageFromRes(@"play") retain];
-        o_play_pressed_img = [imageFromRes(@"play-pressed") retain];
-        o_pause_img = [imageFromRes(@"pause") retain];
-        o_pause_pressed_img = [imageFromRes(@"pause-pressed") retain];
-        [o_fwd_btn setImage: imageFromRes(@"forward-3btns")];
-        [o_fwd_btn setAlternateImage: imageFromRes(@"forward-3btns-pressed")];
+        [o_bwd_btn setImage: [NSImage imageNamed:@"backward-3btns"]];
+        [o_bwd_btn setAlternateImage: [NSImage imageNamed:@"backward-3btns-pressed"]];
+        o_play_img = [[NSImage imageNamed:@"play"] retain];
+        o_play_pressed_img = [[NSImage imageNamed:@"play-pressed"] retain];
+        o_pause_img = [[NSImage imageNamed:@"pause"] retain];
+        o_pause_pressed_img = [[NSImage imageNamed:@"pause-pressed"] retain];
+        [o_fwd_btn setImage: [NSImage imageNamed:@"forward-3btns"]];
+        [o_fwd_btn setAlternateImage: [NSImage imageNamed:@"forward-3btns-pressed"]];
 
-        [o_time_sld_background setImagesLeft: imageFromRes(@"progression-track-wrapper-left") middle: imageFromRes(@"progression-track-wrapper-middle") right: imageFromRes(@"progression-track-wrapper-right")];
-        [o_time_sld_fancygradient_view setImagesLeft:imageFromRes(@"progression-fill-left") middle:imageFromRes(@"progression-fill-middle") right:imageFromRes(@"progression-fill-right")];
+        [o_time_sld_background setImagesLeft: [NSImage imageNamed:@"progression-track-wrapper-left"] middle: [NSImage imageNamed:@"progression-track-wrapper-middle"] right: [NSImage imageNamed:@"progression-track-wrapper-right"]];
+        [o_time_sld_fancygradient_view setImagesLeft:[NSImage imageNamed:@"progression-fill-left"] middle:[NSImage imageNamed:@"progression-fill-middle"] right:[NSImage imageNamed:@"progression-fill-right"]];
 
-        [o_fullscreen_btn setImage: imageFromRes(@"fullscreen-one-button")];
-        [o_fullscreen_btn setAlternateImage: imageFromRes(@"fullscreen-one-button-pressed")];
+        [o_fullscreen_btn setImage: [NSImage imageNamed:@"fullscreen-one-button"]];
+        [o_fullscreen_btn setAlternateImage: [NSImage imageNamed:@"fullscreen-one-button-pressed"]];
     } else {
-        [o_bottombar_view setImagesLeft: imageFromRes(@"bottomdark-left") middle: imageFromRes(@"bottom-background_dark") right: imageFromRes(@"bottomdark-right")];
+        [o_bottombar_view setImagesLeft: [NSImage imageNamed:@"bottomdark-left"] middle: [NSImage imageNamed:@"bottom-background_dark"] right: [NSImage imageNamed:@"bottomdark-right"]];
 
-        [o_bwd_btn setImage: imageFromRes(@"backward-3btns-dark")];
-        [o_bwd_btn setAlternateImage: imageFromRes(@"backward-3btns-dark-pressed")];
-        o_play_img = [imageFromRes(@"play_dark") retain];
-        o_play_pressed_img = [imageFromRes(@"play-pressed_dark") retain];
-        o_pause_img = [imageFromRes(@"pause_dark") retain];
-        o_pause_pressed_img = [imageFromRes(@"pause-pressed_dark") retain];
-        [o_fwd_btn setImage: imageFromRes(@"forward-3btns-dark")];
-        [o_fwd_btn setAlternateImage: imageFromRes(@"forward-3btns-dark-pressed")];
+        [o_bwd_btn setImage: [NSImage imageNamed:@"backward-3btns-dark"]];
+        [o_bwd_btn setAlternateImage: [NSImage imageNamed:@"backward-3btns-dark-pressed"]];
+        o_play_img = [[NSImage imageNamed:@"play_dark"] retain];
+        o_play_pressed_img = [[NSImage imageNamed:@"play-pressed_dark"] retain];
+        o_pause_img = [[NSImage imageNamed:@"pause_dark"] retain];
+        o_pause_pressed_img = [[NSImage imageNamed:@"pause-pressed_dark"] retain];
+        [o_fwd_btn setImage: [NSImage imageNamed:@"forward-3btns-dark"]];
+        [o_fwd_btn setAlternateImage: [NSImage imageNamed:@"forward-3btns-dark-pressed"]];
 
-        [o_time_sld_background setImagesLeft: imageFromRes(@"progression-track-wrapper-left_dark") middle: imageFromRes(@"progression-track-wrapper-middle_dark") right: imageFromRes(@"progression-track-wrapper-right_dark")];
-        [o_time_sld_fancygradient_view setImagesLeft:imageFromRes(@"progressbar-fill-left_dark") middle:imageFromRes(@"progressbar-fill-middle_dark") right:imageFromRes(@"progressbar-fill-right_dark")];
+        [o_time_sld_background setImagesLeft: [NSImage imageNamed:@"progression-track-wrapper-left_dark"] middle: [NSImage imageNamed:@"progression-track-wrapper-middle_dark"] right: [NSImage imageNamed:@"progression-track-wrapper-right_dark"]];
+        [o_time_sld_fancygradient_view setImagesLeft:[NSImage imageNamed:@"progressbar-fill-left_dark"] middle:[NSImage imageNamed:@"progressbar-fill-middle_dark"] right:[NSImage imageNamed:@"progressbar-fill-right_dark"]];
 
-        [o_fullscreen_btn setImage: imageFromRes(@"fullscreen-one-button-pressed_dark")];
-        [o_fullscreen_btn setAlternateImage: imageFromRes(@"fullscreen-one-button-pressed_dark")];
+        [o_fullscreen_btn setImage: [NSImage imageNamed:@"fullscreen-one-button-pressed_dark"]];
+        [o_fullscreen_btn setAlternateImage: [NSImage imageNamed:@"fullscreen-one-button-pressed_dark"]];
     }
 
     [o_play_btn setImage: o_play_img];
@@ -146,7 +143,7 @@
 
     // remove fullscreen button for lion fullscreen
     if (b_nativeFullscreenMode) {
-        CGFloat f_width = [o_fullscreen_btn frame].size.width;
+        float f_width = [o_fullscreen_btn frame].size.width;
 
         NSRect frame = [o_time_fld frame];
         frame.origin.x += f_width;
@@ -447,14 +444,6 @@
         [o_fullscreen_btn setState:b_fullscreen];
 }
 
-- (void)dealloc {
-    [o_play_img release];
-    [o_play_pressed_img release];
-    [o_pause_img release];
-    [o_pause_pressed_img release];
-    [super dealloc];
-}
-
 @end
 
 
@@ -504,74 +493,74 @@
     [[o_volume_up_btn cell] accessibilitySetOverrideValue:_NS("Click to play the audio at maximum volume.") forAttribute:NSAccessibilityDescriptionAttribute];
     [[o_volume_up_btn cell] accessibilitySetOverrideValue:[o_volume_up_btn toolTip] forAttribute:NSAccessibilityTitleAttribute];
 
-    [o_effects_btn setToolTip: _NS("Audio Effects")];
+    [o_effects_btn setToolTip: _NS("Effects")];
     [[o_effects_btn cell] accessibilitySetOverrideValue:_NS("Click to show an Audio Effects panel featuring an equalizer and further filters.") forAttribute:NSAccessibilityDescriptionAttribute];
     [[o_effects_btn cell] accessibilitySetOverrideValue:[o_effects_btn toolTip] forAttribute:NSAccessibilityTitleAttribute];
 
     if (!b_dark_interface) {
-        [o_stop_btn setImage: imageFromRes(@"stop")];
-        [o_stop_btn setAlternateImage: imageFromRes(@"stop-pressed")];
+        [o_stop_btn setImage: [NSImage imageNamed:@"stop"]];
+        [o_stop_btn setAlternateImage: [NSImage imageNamed:@"stop-pressed"]];
 
-        [o_playlist_btn setImage: imageFromRes(@"playlist-btn")];
-        [o_playlist_btn setAlternateImage: imageFromRes(@"playlist-btn-pressed")];
-        o_repeat_img = [imageFromRes(@"repeat") retain];
-        o_repeat_pressed_img = [imageFromRes(@"repeat-pressed") retain];
-        o_repeat_all_img  = [imageFromRes(@"repeat-all") retain];
-        o_repeat_all_pressed_img = [imageFromRes(@"repeat-all-pressed") retain];
-        o_repeat_one_img = [imageFromRes(@"repeat-one") retain];
-        o_repeat_one_pressed_img = [imageFromRes(@"repeat-one-pressed") retain];
-        o_shuffle_img = [imageFromRes(@"shuffle") retain];
-        o_shuffle_pressed_img = [imageFromRes(@"shuffle-pressed") retain];
-        o_shuffle_on_img = [imageFromRes(@"shuffle-blue") retain];
-        o_shuffle_on_pressed_img = [imageFromRes(@"shuffle-blue-pressed") retain];
+        [o_playlist_btn setImage: [NSImage imageNamed:@"playlist-btn"]];
+        [o_playlist_btn setAlternateImage: [NSImage imageNamed:@"playlist-btn-pressed"]];
+        o_repeat_img = [[NSImage imageNamed:@"repeat"] retain];
+        o_repeat_pressed_img = [[NSImage imageNamed:@"repeat-pressed"] retain];
+        o_repeat_all_img  = [[NSImage imageNamed:@"repeat-all"] retain];
+        o_repeat_all_pressed_img = [[NSImage imageNamed:@"repeat-all-pressed"] retain];
+        o_repeat_one_img = [[NSImage imageNamed:@"repeat-one"] retain];
+        o_repeat_one_pressed_img = [[NSImage imageNamed:@"repeat-one-pressed"] retain];
+        o_shuffle_img = [[NSImage imageNamed:@"shuffle"] retain];
+        o_shuffle_pressed_img = [[NSImage imageNamed:@"shuffle-pressed"] retain];
+        o_shuffle_on_img = [[NSImage imageNamed:@"shuffle-blue"] retain];
+        o_shuffle_on_pressed_img = [[NSImage imageNamed:@"shuffle-blue-pressed"] retain];
 
-        [o_volume_down_btn setImage: imageFromRes(@"volume-low")];
-        [o_volume_track_view setImage: imageFromRes(@"volume-slider-track")];
-        [o_volume_up_btn setImage: imageFromRes(@"volume-high")];
+        [o_volume_down_btn setImage: [NSImage imageNamed:@"volume-low"]];
+        [o_volume_track_view setImage: [NSImage imageNamed:@"volume-slider-track"]];
+        [o_volume_up_btn setImage: [NSImage imageNamed:@"volume-high"]];
         [o_volume_sld setUsesBrightArtwork: YES];
 
         if (b_nativeFullscreenMode) {
-            [o_effects_btn setImage: imageFromRes(@"effects-one-button")];
-            [o_effects_btn setAlternateImage: imageFromRes(@"effects-one-button-pressed")];
+            [o_effects_btn setImage: [NSImage imageNamed:@"effects-one-button"]];
+            [o_effects_btn setAlternateImage: [NSImage imageNamed:@"effects-one-button-pressed"]];
         } else {
-            [o_effects_btn setImage: imageFromRes(@"effects-double-buttons")];
-            [o_effects_btn setAlternateImage: imageFromRes(@"effects-double-buttons-pressed")];
+            [o_effects_btn setImage: [NSImage imageNamed:@"effects-double-buttons"]];
+            [o_effects_btn setAlternateImage: [NSImage imageNamed:@"effects-double-buttons-pressed"]];
         }
 
-        [o_fullscreen_btn setImage: imageFromRes(@"fullscreen-double-buttons")];
-        [o_fullscreen_btn setAlternateImage: imageFromRes(@"fullscreen-double-buttons-pressed")];
+        [o_fullscreen_btn setImage: [NSImage imageNamed:@"fullscreen-double-buttons"]];
+        [o_fullscreen_btn setAlternateImage: [NSImage imageNamed:@"fullscreen-double-buttons-pressed"]];
     } else {
-        [o_stop_btn setImage: imageFromRes(@"stop_dark")];
-        [o_stop_btn setAlternateImage: imageFromRes(@"stop-pressed_dark")];
+        [o_stop_btn setImage: [NSImage imageNamed:@"stop_dark"]];
+        [o_stop_btn setAlternateImage: [NSImage imageNamed:@"stop-pressed_dark"]];
 
-        [o_playlist_btn setImage: imageFromRes(@"playlist_dark")];
-        [o_playlist_btn setAlternateImage: imageFromRes(@"playlist-pressed_dark")];
-        o_repeat_img = [imageFromRes(@"repeat_dark") retain];
-        o_repeat_pressed_img = [imageFromRes(@"repeat-pressed_dark") retain];
-        o_repeat_all_img  = [imageFromRes(@"repeat-all-blue_dark") retain];
-        o_repeat_all_pressed_img = [imageFromRes(@"repeat-all-blue-pressed_dark") retain];
-        o_repeat_one_img = [imageFromRes(@"repeat-one-blue_dark") retain];
-        o_repeat_one_pressed_img = [imageFromRes(@"repeat-one-blue-pressed_dark") retain];
-        o_shuffle_img = [imageFromRes(@"shuffle_dark") retain];
-        o_shuffle_pressed_img = [imageFromRes(@"shuffle-pressed_dark") retain];
-        o_shuffle_on_img = [imageFromRes(@"shuffle-blue_dark") retain];
-        o_shuffle_on_pressed_img = [imageFromRes(@"shuffle-blue-pressed_dark") retain];
+        [o_playlist_btn setImage: [NSImage imageNamed:@"playlist_dark"]];
+        [o_playlist_btn setAlternateImage: [NSImage imageNamed:@"playlist-pressed_dark"]];
+        o_repeat_img = [[NSImage imageNamed:@"repeat_dark"] retain];
+        o_repeat_pressed_img = [[NSImage imageNamed:@"repeat-pressed_dark"] retain];
+        o_repeat_all_img  = [[NSImage imageNamed:@"repeat-all-blue_dark"] retain];
+        o_repeat_all_pressed_img = [[NSImage imageNamed:@"repeat-all-blue-pressed_dark"] retain];
+        o_repeat_one_img = [[NSImage imageNamed:@"repeat-one-blue_dark"] retain];
+        o_repeat_one_pressed_img = [[NSImage imageNamed:@"repeat-one-blue-pressed_dark"] retain];
+        o_shuffle_img = [[NSImage imageNamed:@"shuffle_dark"] retain];
+        o_shuffle_pressed_img = [[NSImage imageNamed:@"shuffle-pressed_dark"] retain];
+        o_shuffle_on_img = [[NSImage imageNamed:@"shuffle-blue_dark"] retain];
+        o_shuffle_on_pressed_img = [[NSImage imageNamed:@"shuffle-blue-pressed_dark"] retain];
 
-        [o_volume_down_btn setImage: imageFromRes(@"volume-low_dark")];
-        [o_volume_track_view setImage: imageFromRes(@"volume-slider-track_dark")];
-        [o_volume_up_btn setImage: imageFromRes(@"volume-high_dark")];
+        [o_volume_down_btn setImage: [NSImage imageNamed:@"volume-low_dark"]];
+        [o_volume_track_view setImage: [NSImage imageNamed:@"volume-slider-track_dark"]];
+        [o_volume_up_btn setImage: [NSImage imageNamed:@"volume-high_dark"]];
         [o_volume_sld setUsesBrightArtwork: NO];
 
         if (b_nativeFullscreenMode) {
-            [o_effects_btn setImage: imageFromRes(@"effects-one-button_dark")];
-            [o_effects_btn setAlternateImage: imageFromRes(@"effects-one-button-pressed-dark")];
+            [o_effects_btn setImage: [NSImage imageNamed:@"effects-one-button_dark"]];
+            [o_effects_btn setAlternateImage: [NSImage imageNamed:@"effects-one-button-pressed-dark"]];
         } else {
-            [o_effects_btn setImage: imageFromRes(@"effects-double-buttons_dark")];
-            [o_effects_btn setAlternateImage: imageFromRes(@"effects-double-buttons-pressed_dark")];
+            [o_effects_btn setImage: [NSImage imageNamed:@"effects-double-buttons_dark"]];
+            [o_effects_btn setAlternateImage: [NSImage imageNamed:@"effects-double-buttons-pressed_dark"]];
         }
 
-        [o_fullscreen_btn setImage: imageFromRes(@"fullscreen-double-buttons_dark")];
-        [o_fullscreen_btn setAlternateImage: imageFromRes(@"fullscreen-double-buttons-pressed_dark")];
+        [o_fullscreen_btn setImage: [NSImage imageNamed:@"fullscreen-double-buttons_dark"]];
+        [o_fullscreen_btn setAlternateImage: [NSImage imageNamed:@"fullscreen-double-buttons-pressed_dark"]];
     }
     [o_repeat_btn setImage: o_repeat_img];
     [o_repeat_btn setAlternateImage: o_repeat_pressed_img];
@@ -653,7 +642,7 @@ else \
 [[item animator] setFrame: frame]
 
     NSRect frame;
-    CGFloat f_space = [o_effects_btn frame].size.width;
+    float f_space = [o_effects_btn frame].size.width;
     // extra margin between button and volume up button
     if (b_nativeFullscreenMode)
         f_space += 2;
@@ -676,11 +665,11 @@ else \
 
     if (!b_nativeFullscreenMode) {
         if (b_dark_interface) {
-            [o_fullscreen_btn setImage: imageFromRes(@"fullscreen-double-buttons_dark")];
-            [o_fullscreen_btn setAlternateImage: imageFromRes(@"fullscreen-double-buttons-pressed_dark")];
+            [o_fullscreen_btn setImage: [NSImage imageNamed:@"fullscreen-double-buttons_dark"]];
+            [o_fullscreen_btn setAlternateImage: [NSImage imageNamed:@"fullscreen-double-buttons-pressed_dark"]];
         } else {
-            [o_fullscreen_btn setImage: imageFromRes(@"fullscreen-double-buttons")];
-            [o_fullscreen_btn setAlternateImage: imageFromRes(@"fullscreen-double-buttons-pressed")];
+            [o_fullscreen_btn setImage: [NSImage imageNamed:@"fullscreen-double-buttons"]];
+            [o_fullscreen_btn setAlternateImage: [NSImage imageNamed:@"fullscreen-double-buttons-pressed"]];
         }
     }
 
@@ -703,7 +692,7 @@ else \
 [[item animator] setFrame: frame]
 
     NSRect frame;
-    CGFloat f_space = [o_effects_btn frame].size.width;
+    float f_space = [o_effects_btn frame].size.width;
     // extra margin between button and volume up button
     if (b_nativeFullscreenMode)
         f_space += 2;
@@ -725,11 +714,11 @@ else \
 
     if (!b_nativeFullscreenMode) {
         if (b_dark_interface) {
-            [[o_fullscreen_btn animator] setImage: imageFromRes(@"fullscreen-one-button_dark")];
-            [[o_fullscreen_btn animator] setAlternateImage: imageFromRes(@"fullscreen-one-button-pressed_dark")];
+            [[o_fullscreen_btn animator] setImage: [NSImage imageNamed:@"fullscreen-one-button_dark"]];
+            [[o_fullscreen_btn animator] setAlternateImage: [NSImage imageNamed:@"fullscreen-one-button-pressed_dark"]];
         } else {
-            [[o_fullscreen_btn animator] setImage: imageFromRes(@"fullscreen-one-button")];
-            [[o_fullscreen_btn animator] setAlternateImage: imageFromRes(@"fullscreen-one-button-pressed")];
+            [[o_fullscreen_btn animator] setImage: [NSImage imageNamed:@"fullscreen-one-button"]];
+            [[o_fullscreen_btn animator] setAlternateImage: [NSImage imageNamed:@"fullscreen-one-button-pressed"]];
         }
     }
 
@@ -774,15 +763,15 @@ else \
     [o_next_btn setEnabled: b_enabled];
 
     if (b_dark_interface) {
-        [o_prev_btn setImage: imageFromRes(@"previous-6btns-dark")];
-        [o_prev_btn setAlternateImage: imageFromRes(@"previous-6btns-dark-pressed")];
-        [o_next_btn setImage: imageFromRes(@"next-6btns-dark")];
-        [o_next_btn setAlternateImage: imageFromRes(@"next-6btns-dark-pressed")];
+        [o_prev_btn setImage: [NSImage imageNamed:@"previous-6btns-dark"]];
+        [o_prev_btn setAlternateImage: [NSImage imageNamed:@"previous-6btns-dark-pressed"]];
+        [o_next_btn setImage: [NSImage imageNamed:@"next-6btns-dark"]];
+        [o_next_btn setAlternateImage: [NSImage imageNamed:@"next-6btns-dark-pressed"]];
     } else {
-        [o_prev_btn setImage: imageFromRes(@"previous-6btns")];
-        [o_prev_btn setAlternateImage: imageFromRes(@"previous-6btns-pressed")];
-        [o_next_btn setImage: imageFromRes(@"next-6btns")];
-        [o_next_btn setAlternateImage: imageFromRes(@"next-6btns-pressed")];
+        [o_prev_btn setImage: [NSImage imageNamed:@"previous-6btns"]];
+        [o_prev_btn setAlternateImage: [NSImage imageNamed:@"previous-6btns-pressed"]];
+        [o_next_btn setImage: [NSImage imageNamed:@"next-6btns"]];
+        [o_next_btn setAlternateImage: [NSImage imageNamed:@"next-6btns-pressed"]];
     }
 
     NSRect frame;
@@ -822,15 +811,15 @@ else \
         [[o_progress_view animator] setFrame: frame];
 
     if (b_dark_interface) {
-        [[o_fwd_btn animator] setImage:imageFromRes(@"forward-6btns-dark")];
-        [[o_fwd_btn animator] setAlternateImage:imageFromRes(@"forward-6btns-dark-pressed")];
-        [[o_bwd_btn animator] setImage:imageFromRes(@"backward-6btns-dark")];
-        [[o_bwd_btn animator] setAlternateImage:imageFromRes(@"backward-6btns-dark-pressed")];
+        [[o_fwd_btn animator] setImage:[NSImage imageNamed:@"forward-6btns-dark"]];
+        [[o_fwd_btn animator] setAlternateImage:[NSImage imageNamed:@"forward-6btns-dark-pressed"]];
+        [[o_bwd_btn animator] setImage:[NSImage imageNamed:@"backward-6btns-dark"]];
+        [[o_bwd_btn animator] setAlternateImage:[NSImage imageNamed:@"backward-6btns-dark-pressed"]];
     } else {
-        [[o_fwd_btn animator] setImage:imageFromRes(@"forward-6btns")];
-        [[o_fwd_btn animator] setAlternateImage:imageFromRes(@"forward-6btns-pressed")];
-        [[o_bwd_btn animator] setImage:imageFromRes(@"backward-6btns")];
-        [[o_bwd_btn animator] setAlternateImage:imageFromRes(@"backward-6btns-pressed")];
+        [[o_fwd_btn animator] setImage:[NSImage imageNamed:@"forward-6btns"]];
+        [[o_fwd_btn animator] setAlternateImage:[NSImage imageNamed:@"forward-6btns-pressed"]];
+        [[o_bwd_btn animator] setImage:[NSImage imageNamed:@"backward-6btns"]];
+        [[o_bwd_btn animator] setAlternateImage:[NSImage imageNamed:@"backward-6btns-pressed"]];
     }
 
     preliminaryFrame.origin.x = [o_prev_btn frame].origin.x + [o_prev_btn frame].size.width + [o_bwd_btn frame].size.width + [o_play_btn frame].size.width + [o_fwd_btn frame].size.width;
@@ -904,15 +893,15 @@ else \
         [[o_progress_view animator] setFrame: frame];
 
     if (b_dark_interface) {
-        [[o_fwd_btn animator] setImage:imageFromRes(@"forward-3btns-dark")];
-        [[o_fwd_btn animator] setAlternateImage:imageFromRes(@"forward-3btns-dark-pressed")];
-        [[o_bwd_btn animator] setImage:imageFromRes(@"backward-3btns-dark")];
-        [[o_bwd_btn animator] setAlternateImage:imageFromRes(@"backward-3btns-dark-pressed")];
+        [[o_fwd_btn animator] setImage:[NSImage imageNamed:@"forward-3btns-dark"]];
+        [[o_fwd_btn animator] setAlternateImage:[NSImage imageNamed:@"forward-3btns-dark-pressed"]];
+        [[o_bwd_btn animator] setImage:[NSImage imageNamed:@"backward-3btns-dark"]];
+        [[o_bwd_btn animator] setAlternateImage:[NSImage imageNamed:@"backward-3btns-dark-pressed"]];
     } else {
-        [[o_fwd_btn animator] setImage:imageFromRes(@"forward-3btns")];
-        [[o_fwd_btn animator] setAlternateImage:imageFromRes(@"forward-3btns-pressed")];
-        [[o_bwd_btn animator] setImage:imageFromRes(@"backward-3btns")];
-        [[o_bwd_btn animator] setAlternateImage:imageFromRes(@"backward-3btns-pressed")];
+        [[o_fwd_btn animator] setImage:[NSImage imageNamed:@"forward-3btns"]];
+        [[o_fwd_btn animator] setAlternateImage:[NSImage imageNamed:@"forward-3btns-pressed"]];
+        [[o_bwd_btn animator] setImage:[NSImage imageNamed:@"backward-3btns"]];
+        [[o_bwd_btn animator] setAlternateImage:[NSImage imageNamed:@"backward-3btns-pressed"]];
     }
 
     [self toggleForwardBackwardMode: NO];
@@ -933,14 +922,14 @@ else \
 - (void)addPlaymodeButtons:(BOOL)b_fast
 {
     NSRect frame;
-    CGFloat f_space = [o_repeat_btn frame].size.width + [o_shuffle_btn frame].size.width - 6.;
+    float f_space = [o_repeat_btn frame].size.width + [o_shuffle_btn frame].size.width - 6.;
 
     if (b_dark_interface) {
-        [[o_playlist_btn animator] setImage:imageFromRes(@"playlist_dark")];
-        [[o_playlist_btn animator] setAlternateImage:imageFromRes(@"playlist-pressed_dark")];
+        [[o_playlist_btn animator] setImage:[NSImage imageNamed:@"playlist_dark"]];
+        [[o_playlist_btn animator] setAlternateImage:[NSImage imageNamed:@"playlist-pressed_dark"]];
     } else {
-        [[o_playlist_btn animator] setImage:imageFromRes(@"playlist-btn")];
-        [[o_playlist_btn animator] setAlternateImage:imageFromRes(@"playlist-btn-pressed")];
+        [[o_playlist_btn animator] setImage:[NSImage imageNamed:@"playlist-btn"]];
+        [[o_playlist_btn animator] setAlternateImage:[NSImage imageNamed:@"playlist-btn-pressed"]];
     }
     frame = [o_playlist_btn frame];
     frame.size.width--;
@@ -966,16 +955,16 @@ else \
 - (void)removePlaymodeButtons:(BOOL)b_fast
 {
     NSRect frame;
-    CGFloat f_space = [o_repeat_btn frame].size.width + [o_shuffle_btn frame].size.width - 6.;
+    float f_space = [o_repeat_btn frame].size.width + [o_shuffle_btn frame].size.width - 6.;
     [o_repeat_btn setHidden: YES];
     [o_shuffle_btn setHidden: YES];
 
     if (b_dark_interface) {
-        [[o_playlist_btn animator] setImage:imageFromRes(@"playlist-1btn-dark")];
-        [[o_playlist_btn animator] setAlternateImage:imageFromRes(@"playlist-1btn-dark-pressed")];
+        [[o_playlist_btn animator] setImage:[NSImage imageNamed:@"playlist-1btn-dark"]];
+        [[o_playlist_btn animator] setAlternateImage:[NSImage imageNamed:@"playlist-1btn-dark-pressed"]];
     } else {
-        [[o_playlist_btn animator] setImage:imageFromRes(@"playlist-1btn")];
-        [[o_playlist_btn animator] setAlternateImage:imageFromRes(@"playlist-1btn-pressed")];
+        [[o_playlist_btn animator] setImage:[NSImage imageNamed:@"playlist-1btn"]];
+        [[o_playlist_btn animator] setAlternateImage:[NSImage imageNamed:@"playlist-1btn-pressed"]];
     }
     frame = [o_playlist_btn frame];
     frame.size.width++;
@@ -1073,11 +1062,6 @@ else \
     [self setShuffle];
 }
 
-- (IBAction)togglePlaylist:(id)sender
-{
-    [[[VLCMain sharedInstance] mainWindow] changePlaylistState: psUserEvent];
-}
-
 - (IBAction)volumeAction:(id)sender
 {
     if (sender == o_volume_sld)
@@ -1148,20 +1132,6 @@ else \
     }
 
     [[VLCMainMenu sharedInstance] setRateControlsEnabled: b_control];
-}
-
-- (void)dealloc {
-    [o_repeat_img release];
-    [o_repeat_pressed_img release];
-    [o_repeat_all_img release];
-    [o_repeat_all_pressed_img release];
-    [o_repeat_one_img release];
-    [o_repeat_one_pressed_img release];
-    [o_shuffle_img release];
-    [o_shuffle_pressed_img release];
-    [o_shuffle_on_img release];
-    [o_shuffle_on_pressed_img release];
-    [super dealloc];
 }
 
 @end

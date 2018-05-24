@@ -26,7 +26,8 @@ OPTIONS="
       --enable-sse --enable-mmx
       --enable-libcddb
       --enable-zvbi --disable-telx
-      --enable-nls"
+      --enable-nls
+      --disable-dirac"
 
 if gcc -v 2>/dev/null -a echo | gcc -mno-cygwin -E -2>/dev/null 2>&1
 then

@@ -1,25 +1,25 @@
 /*****************************************************************************
  * file.c
  *****************************************************************************
- * Copyright (C) 2001, 2002 VLC authors and VideoLAN
- * $Id: 846a0b3fe5e6eb8a6313c504146dcf0695e73131 $
+ * Copyright (C) 2001, 2002 the VideoLAN team
+ * $Id: a1f529faf0e7d708a47c0e0d45eafbf74614cf4e $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 /*****************************************************************************
@@ -34,9 +34,6 @@
 #include <time.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -149,8 +146,7 @@ static int Open( vlc_object_t *p_this )
         fd = vlc_dup (fd);
         if (fd == -1)
         {
-            msg_Err (p_access, "cannot use file descriptor: %s",
-                     vlc_strerror_c(errno));
+            msg_Err (p_access, "cannot use file descriptor: %m");
             return VLC_EGENERIC;
         }
     }
@@ -163,8 +159,7 @@ static int Open( vlc_object_t *p_this )
         fd = vlc_dup (STDOUT_FILENO);
         if (fd == -1)
         {
-            msg_Err (p_access, "cannot use standard output: %s",
-                     vlc_strerror_c(errno));
+            msg_Err (p_access, "cannot use standard output: %m");
             return VLC_EGENERIC;
         }
         msg_Dbg( p_access, "using stdout" );
@@ -196,8 +191,7 @@ static int Open( vlc_object_t *p_this )
             if (fd != -1)
                 break;
             if (fd == -1)
-                msg_Err (p_access, "cannot create %s: %s", path,
-                         vlc_strerror_c(errno));
+                msg_Err (p_access, "cannot create %s: %m", path);
             if (overwrite || errno != EEXIST)
                 break;
             flags &= ~O_EXCL;
@@ -249,17 +243,6 @@ static int Control( sout_access_out_t *p_access, int i_query, va_list args )
             break;
         }
 
-        case ACCESS_OUT_CAN_SEEK:
-        {
-            bool *pb = va_arg( args, bool * );
-            struct stat st;
-            if( fstat( (intptr_t)p_access->p_sys, &st ) == -1 )
-                *pb = false;
-            else
-                *pb = S_ISREG( st.st_mode ) || S_ISBLK( st.st_mode );
-            break;
-        }
-
         default:
             return VLC_EGENERIC;
     }
@@ -296,7 +279,7 @@ static ssize_t Write( sout_access_out_t *p_access, block_t *p_buffer )
             if (errno == EINTR)
                 continue;
             block_ChainRelease (p_buffer);
-            msg_Err( p_access, "cannot write: %s", vlc_strerror_c(errno) );
+            msg_Err( p_access, "cannot write: %m" );
             return -1;
         }
 

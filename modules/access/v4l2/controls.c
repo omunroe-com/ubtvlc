@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <assert.h>
-#include <errno.h>
 #include <sys/ioctl.h>
 
 #include <vlc_common.h>
@@ -177,7 +176,7 @@ static int ControlSetCallback (vlc_object_t *obj, const char *var,
 
     if (ret)
     {
-        msg_Err (obj, "cannot set control %s: %s", var, vlc_strerror_c(errno));
+        msg_Err (obj, "cannot set control %s: %m", var);
         return VLC_EGENERIC;
     }
     (void) old;
@@ -683,12 +682,11 @@ static vlc_v4l2_ctrl_t *ControlAddIntMenu (vlc_object_t *obj, int fd,
 
         if (v4l2_ioctl (fd, VIDIOC_QUERYMENU, &menu) < 0)
             continue;
-        msg_Dbg (obj, "  choice %"PRIu32") %"PRId64, menu.index,
-                 (uint64_t)menu.value);
+        msg_Dbg (obj, "  choice %"PRIu32") %"PRId64, menu.index, menu.value);
 
         vlc_value_t text;
         val.i_int = menu.index;
-        sprintf (name, "%"PRId64, (int64_t)menu.value);
+        sprintf (name, "%"PRId64, menu.value);
         text.psz_string = name;
         var_Change (obj, c->name, VLC_VAR_ADDCHOICE, &val, &text);
     }

@@ -19,10 +19,6 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 --]]
 
-function descriptor()
-    return { scope="network" }
-end
-
 -- Replace non alphanumeric char by +
 function get_query( title )
     -- If we have a .EXT remove the extension.

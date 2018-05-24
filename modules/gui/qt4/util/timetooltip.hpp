@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Copyright © 2011 VideoLAN
- * $Id: 53a1f78975febac1cf2ad7e80f7cf1d6fba60f55 $
+ * $Id: af1036849d6fb7023915ae4e29b2ee9824fe2d88 $
  *
  * Authors: Ludovic Fauvet <etix@l0cal.com>
  *
@@ -21,8 +21,6 @@
 
 #ifndef TIMETOOLTIP_H
 #define TIMETOOLTIP_H
-
-#include "qt4.hpp"
 
 #include <QWidget>
 #include <QBitmap>
@@ -56,6 +54,7 @@ private:
     QPainterPath mPainterPath;
     QBitmap mMask;
     int mTipX;
+    bool mInitialized;
 };
 
 #endif // TIMETOOLTIP_H

@@ -172,7 +172,6 @@ static void rootprocess (int fd)
                 close (sock);
                 continue;
             }
-            close (sock);
         }
         send_err (fd, errno);
     }

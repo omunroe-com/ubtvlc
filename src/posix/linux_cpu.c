@@ -44,7 +44,7 @@ static uint32_t cpu_flags = 0;
 
 static void vlc_CPU_init (void)
 {
-    FILE *info = fopen ("/proc/cpuinfo", "rte");
+    FILE *info = fopen ("/proc/cpuinfo", "rt");
     if (info == NULL)
         return;
 

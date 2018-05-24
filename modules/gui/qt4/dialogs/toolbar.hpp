@@ -2,7 +2,7 @@
  * toolbar.hpp : ToolbarEdit dialogs
  ****************************************************************************
  * Copyright (C) 2008-2011 the VideoLAN team
- * $Id: 276decb2001857542e1321466b6cf5967841d29f $
+ * $Id: d4df4871ece07ae508114444a4502025abfaa745 $
  *
  * Authors: Jean-Baptiste Kempf <jb (at) videolan.org>
  *
@@ -48,25 +48,6 @@ class DroppingController;
 class QComboBox;
 class QRubberBand;
 
-class PreviewWidget : public QWidget
-{
-    Q_OBJECT
-
-public:
-    PreviewWidget( QWidget *, QWidget *, QWidget * );
-
-public slots:
-    void setBarsTopPosition( int b );
-
-protected:
-    virtual void paintEvent(QPaintEvent *);
-    virtual bool eventFilter(QObject *obj, QEvent *event);
-
-private:
-    QWidget * bars[3];
-    bool b_top;
-};
-
 class WidgetListing : public QListWidget
 {
     Q_OBJECT
@@ -89,8 +70,8 @@ public:
     virtual ~ToolbarEditDialog();
 
 private:
-    QCheckBox *flatBox, *bigBox, *shinyBox, *positionCheckbox;
-    QComboBox *profileCombo;
+    QCheckBox *flatBox, *bigBox, *shinyBox;
+    QComboBox *positionCombo, *profileCombo;
 
     WidgetListing *widgetListing;
     DroppingController *controller1, *controller2, *controllerA;

@@ -2,7 +2,7 @@
  * sd.c: Services discovery related functions
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: f162847adf8708b2d869df2b058bf5e015655738 $
+ * $Id: fe5fbb720f10417e56cc328dd3b7c91655bbb86c $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *          Fabio Ritrovato <sephiroth87 at videolan dot org>
@@ -41,6 +41,7 @@
 
 #include "../vlc.h"
 #include "../libs.h"
+#include "playlist.h"
 
 /*****************************************************************************
  *
@@ -91,11 +92,6 @@ vlclua_item_meta(encodedby, EncodedBy)
 vlclua_item_meta(arturl, ArtworkURL)
 vlclua_item_meta(trackid, TrackID)
 vlclua_item_meta(tracktotal, TrackTotal)
-vlclua_item_meta(director  , Director  )
-vlclua_item_meta(season    , Season    )
-vlclua_item_meta(episode   , Episode   )
-vlclua_item_meta(showname  , ShowName  )
-vlclua_item_meta(actors    , Actors    )
 
 static const luaL_Reg vlclua_item_reg[] = {
     vlclua_item_luareg(title)
@@ -116,11 +112,6 @@ static const luaL_Reg vlclua_item_reg[] = {
     vlclua_item_luareg(arturl)
     vlclua_item_luareg(trackid)
     vlclua_item_luareg(tracktotal)
-    vlclua_item_luareg(director  )
-    vlclua_item_luareg(season    )
-    vlclua_item_luareg(episode   )
-    vlclua_item_luareg(showname  )
-    vlclua_item_luareg(actors    )
     { NULL, NULL }
 };
 
@@ -329,21 +320,6 @@ static int vlclua_sd_remove_item( lua_State *L )
     return 1;
 }
 
-static int vlclua_sd_remove_node( lua_State *L )
-{
-    services_discovery_t *p_sd = (services_discovery_t *)vlclua_get_this( L );
-    if( !lua_isnil( L, 1 ) )
-    {
-        input_item_t **pp_input = luaL_checkudata( L, 1, "node" );
-        if( *pp_input )
-            services_discovery_RemoveItem( p_sd, *pp_input );
-        /* Make sure we won't try to remove it again */
-        *pp_input = NULL;
-    }
-    return 1;
-}
-
-
 static int vlclua_sd_remove_all_items_nodes( lua_State *L )
 {
     services_discovery_t *p_sd = (services_discovery_t *)vlclua_get_this( L );
@@ -371,6 +347,7 @@ static int vlclua_node_add_subitem( lua_State *L )
                 lua_pushvalue( L, -2 );
                 vlclua_read_options( p_sd, L, &i_options, &ppsz_options );
 
+                input_item_node_t *p_input_node = input_item_node_Create( *pp_node );
                 input_item_t *p_input = input_item_NewExt( psz_path,
                                                            psz_path, i_options,
                                                            (const char **)ppsz_options,
@@ -379,8 +356,6 @@ static int vlclua_node_add_subitem( lua_State *L )
 
                 if( p_input )
                 {
-                    input_item_node_t *p_input_node = input_item_node_Create( *pp_node );
-
                     vlclua_read_meta_data( p_sd, L, p_input );
                     /* This one is to be tested... */
                     vlclua_read_custom_meta_data( p_sd, L, p_input );
@@ -431,6 +406,7 @@ static int vlclua_node_add_subnode( lua_State *L )
             if( lua_isstring( L, -1 ) )
             {
                 const char *psz_name = lua_tostring( L, -1 );
+                input_item_node_t *p_input_node = input_item_node_Create( *pp_node );
                 input_item_t *p_input = input_item_NewWithType( "vlc://nop",
                                                                 psz_name, 0, NULL, 0,
                                                                 -1, ITEM_TYPE_NODE );
@@ -438,8 +414,6 @@ static int vlclua_node_add_subnode( lua_State *L )
 
                 if( p_input )
                 {
-                    input_item_node_t *p_input_node = input_item_node_Create( *pp_node );
-
                     lua_getfield( L, -1, "arturl" );
                     if( lua_isstring( L, -1 ) && strcmp( lua_tostring( L, -1 ), "" ) )
                     {
@@ -475,33 +449,21 @@ static int vlclua_node_add_subnode( lua_State *L )
 /*****************************************************************************
  *
  *****************************************************************************/
-static const luaL_Reg vlclua_sd_sd_reg[] = {
-    { "add_node", vlclua_sd_add_node },
-    { "add_item", vlclua_sd_add_item },
-    { "remove_item", vlclua_sd_remove_item },
-    { "remove_node", vlclua_sd_remove_node },
-    { "remove_all_items_nodes", vlclua_sd_remove_all_items_nodes },
-    { NULL, NULL }
-};
-
-void luaopen_sd_sd( lua_State *L )
-{
-    lua_newtable( L );
-    luaL_register( L, NULL, vlclua_sd_sd_reg );
-    lua_setfield( L, -2, "sd" );
-}
-
-static const luaL_Reg vlclua_sd_intf_reg[] = {
+static const luaL_Reg vlclua_sd_reg[] = {
     { "get_services_names", vlclua_sd_get_services_names },
     { "add", vlclua_sd_add },
     { "remove", vlclua_sd_remove },
     { "is_loaded", vlclua_sd_is_loaded },
+    { "add_node", vlclua_sd_add_node },
+    { "add_item", vlclua_sd_add_item },
+    { "remove_item", vlclua_sd_remove_item },
+    { "remove_all_items_nodes", vlclua_sd_remove_all_items_nodes },
     { NULL, NULL }
 };
 
-void luaopen_sd_intf( lua_State *L )
+void luaopen_sd( lua_State *L )
 {
     lua_newtable( L );
-    luaL_register( L, NULL, vlclua_sd_intf_reg );
+    luaL_register( L, NULL, vlclua_sd_reg );
     lua_setfield( L, -2, "sd" );
 }

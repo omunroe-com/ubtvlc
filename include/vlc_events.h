@@ -3,7 +3,7 @@
  * Interface used to send events.
  *****************************************************************************
  * Copyright (C) 2007 VLC authors and VideoLAN
- * $Id: c3425102b47c0ed953b527412521d1c8698b083e $
+ * $Id: 9e37f7f5753243d52a4fba2616d958598083a53f $
  *
  * Authors: Pierre d'Herbemont
  *
@@ -129,12 +129,7 @@ typedef enum vlc_event_type_t {
     vlc_ServicesDiscoveryItemRemoved,
     vlc_ServicesDiscoveryItemRemoveAll,
     vlc_ServicesDiscoveryStarted,
-    vlc_ServicesDiscoveryEnded,
-
-    /* Addons Manager events */
-    vlc_AddonFound,
-    vlc_AddonsDiscoveryEnded,
-    vlc_AddonChanged
+    vlc_ServicesDiscoveryEnded
 } vlc_event_type_t;
 
 /* Event definition */
@@ -207,11 +202,6 @@ typedef struct vlc_event_t
             void * unused;
         } services_discovery_ended;
 
-        /* Addons */
-        struct vlc_addon_generic_event
-        {
-            addon_entry_t * p_entry;
-        } addon_generic_event;
     } u;
 } vlc_event_t;
 

@@ -2,7 +2,7 @@
  * theme_repository.cpp
  *****************************************************************************
  * Copyright (C) 2004 the VideoLAN team
- * $Id: 7df22830553940ba4fb5023933979e36db06c663 $
+ * $Id: 7f7dfe6467d06e0fdfe41dab6e97efada8edb662 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *
@@ -25,7 +25,11 @@
 #include "os_factory.hpp"
 #include "../commands/async_queue.hpp"
 #include "../commands/cmd_dialogs.hpp"
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#elif defined( _WIN32 )
+#   include <direct.h>
+#endif
 
 #include <fstream>
 
@@ -136,14 +140,15 @@ ThemeRepository::~ThemeRepository()
 
 void ThemeRepository::parseDirectory( const string &rDir_locale )
 {
-    const char *pszDirContent;
+    DIR *pDir;
+    char *pszDirContent;
     // Path separator
     const string &sep = OSFactory::instance( getIntf() )->getDirSeparator();
 
     // Open the dir
     // FIXME: parseDirectory should be invoked with UTF-8 input instead!!
     string rDir = sFromLocale( rDir_locale );
-    DIR *pDir = vlc_opendir( rDir.c_str() );
+    pDir = vlc_opendir( rDir.c_str() );
 
     if( pDir == NULL )
     {
@@ -173,6 +178,8 @@ void ThemeRepository::parseDirectory( const string &rDir_locale )
 
             msg_Dbg( getIntf(), "found skin %s", path.c_str() );
         }
+
+        free( pszDirContent );
     }
 
     closedir( pDir );

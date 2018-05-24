@@ -2,7 +2,7 @@
  * bookmarks.m: MacOS X Bookmarks window
  *****************************************************************************
  * Copyright (C) 2005 - 2012 VLC authors and VideoLAN
- * $Id: a322cdda2cc9a3066161b9cb55cb56f67d7555bd $
+ * $Id: e2564d3296424903d304a20e625ad652aa8fe45f $
  *
  * Authors: Felix Paul Kühne <fkuehne at videolan dot org>
  *
@@ -36,6 +36,7 @@
 
 #import "bookmarks.h"
 #import "wizard.h"
+#import <vlc_interface.h>
 #import "CompatibilityFixes.h"
 
 @interface VLCBookmarks (Internal)
@@ -71,19 +72,12 @@ static VLCBookmarks *_o_sharedInstance = nil;
         [o_bookmarks_window setCollectionBehavior: NSWindowCollectionBehaviorFullScreenAuxiliary];
 
     [self initStrings];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(inputChangedEvent:)
-                                                 name:VLCInputChangedNotification
-                                               object:nil];
 }
 
 - (void)dealloc
 {
     if (p_old_input)
         vlc_object_release(p_old_input);
-
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
 
     [super dealloc];
 }
@@ -124,13 +118,8 @@ static VLCBookmarks *_o_sharedInstance = nil;
 {
     /* show the window, called from intf.m */
     [o_bookmarks_window displayIfNeeded];
-    [o_bookmarks_window setLevel: [[[VLCMain sharedInstance] voutController] currentStatusWindowLevel]];
+    [o_bookmarks_window setLevel: [[[VLCMain sharedInstance] voutController] currentWindowLevel]];
     [o_bookmarks_window makeKeyAndOrderFront:nil];
-}
-
--(void)inputChangedEvent:(NSNotification *)o_notification
-{
-    [o_tbl_dataTable reloadData];
 }
 
 - (IBAction)add:(id)sender
@@ -357,6 +346,15 @@ clear:
 }
 
 /*****************************************************************************
+ * callback stuff
+ *****************************************************************************/
+
+-(id)dataTable
+{
+    return o_tbl_dataTable;
+}
+
+/*****************************************************************************
  * data source methods
  *****************************************************************************/
 
@@ -389,13 +387,11 @@ clear:
     input_thread_t * p_input = pl_CurrentInput(VLCIntf);
     seekpoint_t **pp_bookmarks;
     int i_bookmarks;
-    id ret = @"";
+    id ret;
 
     if (!p_input)
         return @"";
     else if (input_Control(p_input, INPUT_GET_BOOKMARKS, &pp_bookmarks, &i_bookmarks) != VLC_SUCCESS)
-        ret = @"";
-    else if (row >= i_bookmarks)
         ret = @"";
     else {
         NSString * identifier = [theTableColumn identifier];

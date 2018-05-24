@@ -2,7 +2,7 @@
  * subsdec.c : text subtitle decoder
  *****************************************************************************
  * Copyright (C) 2000-2006 VLC authors and VideoLAN
- * $Id: 1b4276e299a2a6668047231d29ac705ae93076ba $
+ * $Id: a9929b573baf89ab67ba8c1da5d94cbb0c3d1daf $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *          Samuel Hocevar <sam@zoy.org>
@@ -32,7 +32,6 @@
 #endif
 
 #include <limits.h>
-#include <errno.h>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -309,8 +308,7 @@ static int OpenDecoder( vlc_object_t *p_this )
     {
         p_sys->iconv_handle = vlc_iconv_open ("UTF-8", encoding);
         if (p_sys->iconv_handle == (vlc_iconv_t)(-1))
-            msg_Err (p_dec, "cannot convert from %s: %s", encoding,
-                     vlc_strerror_c(errno));
+            msg_Err (p_dec, "cannot convert from %s: %m", encoding);
     }
     free (var);
 

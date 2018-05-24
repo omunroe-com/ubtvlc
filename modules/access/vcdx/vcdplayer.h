@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Copyright (C) 2003, 2004 Rocky Bernstein (for VLC authors and VideoLAN)
- * $Id: 122060e8a5ad358d43d4d0886885d8ec78fbc74e $
+ * $Id: 5d07c53d5d634d0694a610c13942db0687b7e46a $
  *
  * Authors: Rocky Bernstein <rocky@panix.com>
  *
@@ -147,8 +147,6 @@ typedef struct vcdplayer_input_s
   vcdplayer_play_item_info_t *entry;
 
   unsigned int i_titles;                /* # of navigatable titles. */
-  unsigned int i_cur_title;
-  unsigned int i_cur_chapter;
 
   /*
      # tracks + menu for segments + menu for LIDs
@@ -162,7 +160,6 @@ typedef struct vcdplayer_input_s
   bool           b_track_length; /* Use track as max unit in seek */
   input_thread_t *p_input;
   access_t       *p_access;
-  uint64_t       size;
  
 } vcdplayer_t;
 

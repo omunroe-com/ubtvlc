@@ -1,5 +1,5 @@
 # ASS
-ASS_VERSION := 0.12.0
+ASS_VERSION := 0.11.2
 ASS_URL := https://github.com/libass/libass/releases/download/$(ASS_VERSION)/libass-$(ASS_VERSION).tar.gz
 
 PKGS += ass
@@ -15,13 +15,8 @@ ifdef HAVE_IOS
 WITH_FONTCONFIG = 0
 WITH_HARFBUZZ = 1
 else
-ifdef HAVE_WINRT
-WITH_FONTCONFIG = 0
-WITH_HARFBUZZ = 1
-else
 WITH_FONTCONFIG = 1
 WITH_HARFBUZZ = 1
-endif
 endif
 endif
 
@@ -32,8 +27,9 @@ $(TARBALLS)/libass-$(ASS_VERSION).tar.gz:
 
 libass: libass-$(ASS_VERSION).tar.gz .sum-ass
 	$(UNPACK)
+ifdef HAVE_MACOSX
 	$(APPLY) $(SRC)/ass/ass-macosx.patch
-	$(UPDATE_AUTOCONFIG)
+endif
 	$(MOVE)
 
 DEPS_ass = freetype2 $(DEPS_freetype2) fribidi
@@ -53,6 +49,7 @@ ASS_CONF += --disable-harfbuzz
 endif
 
 .ass: libass
+	$(UPDATE_AUTOCONFIG)
 	cd $< && $(HOSTVARS) CFLAGS="$(CFLAGS) -O3" ./configure $(HOSTCONF) $(ASS_CONF)
 	cd $< && $(MAKE) install
 	touch $@

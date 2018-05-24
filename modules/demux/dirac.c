@@ -2,7 +2,7 @@
  * dirac.c : Dirac Video demuxer
  *****************************************************************************
  * Copyright (C) 2002-2008 VLC authors and VideoLAN
- * $Id: 48908330b2ed033c3665edf890469fd241bae882 $
+ * $Id: 8811487750131b642804d5136a62fba90a23b151 $
  *
  * Authors: David Flynn <davidf@rd.bbc.co.uk>
  * Based on vc1.c by: Laurent Aimar <fenrir@via.ecp.fr>
@@ -56,7 +56,6 @@ vlc_module_begin();
     add_integer( DEMUX_CFG_PREFIX DEMUX_DTSOFFSET, 0,
                  DEMUX_DTSOFFSET_TEXT, DEMUX_DTSOFFSET_LONGTEXT, false )
     set_callbacks( Open, Close );
-    add_shortcut( "dirac" )
 vlc_module_end();
 
 /*****************************************************************************

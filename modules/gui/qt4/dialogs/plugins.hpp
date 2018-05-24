@@ -2,7 +2,7 @@
  * plugins.hpp : Plug-ins and extensions listing
  ****************************************************************************
  * Copyright (C) 2008 the VideoLAN team
- * $Id: d49c70c97296be92d3f1d3e953a41bfd8e206eb8 $
+ * $Id: 5b26800df8e5eb7fdd1f917895fe8eb0a5dd14cc $
  *
  * Authors: Jean-Baptiste Kempf <jb (at) videolan.org>
  *
@@ -28,13 +28,10 @@
 #include "util/singleton.hpp"
 
 #include <vlc_extensions.h>
-#include <vlc_addons.h>
 
 #include <QStringList>
 #include <QTreeWidgetItem>
-#include <QPushButton>
 #include <QAbstractListModel>
-#include <QSortFilterProxyModel>
 #include <QStyledItemDelegate>
 
 class QLabel;
@@ -42,22 +39,17 @@ class QTabWidget;
 class QComboBox;
 class QTreeWidget;
 class QLineEdit;
-//class QTextBrowser;
+class QTextBrowser;
 class QListView;
 class QStyleOptionViewItem;
 class QPainter;
 class QKeyEvent;
 class PluginTab;
 class ExtensionTab;
-class AddonsTab;
 class ExtensionListItem;
 class SearchLineEdit;
 class ExtensionCopy;
-class ExtensionsManager;
-class AddonsManager;
-class PixmapAnimator;
-class DelegateAnimationHelper;
-class AddonsSortFilterProxyModel;
+
 
 class PluginDialog : public QVLCFrame, public Singleton<PluginDialog>
 {
@@ -70,7 +62,6 @@ private:
     QTabWidget *tabs;
     PluginTab *pluginTab;
     ExtensionTab *extensionTab;
-    AddonsTab *addonsTab;
 
     friend class Singleton<PluginDialog>;
 };
@@ -125,33 +116,6 @@ private:
     friend class PluginDialog;
 };
 
-class AddonsTab : public QVLCFrame
-{
-    Q_OBJECT
-    friend class PluginDialog;
-
-private slots:
-    void moreInformation();
-    void installChecked( int );
-    void reposync();
-
-private:
-    AddonsTab( intf_thread_t *p_intf );
-    virtual ~AddonsTab();
-    bool eventFilter ( QObject * watched, QEvent * event );
-
-    enum
-    {
-        ONLYLOCALADDONS = 0,
-        WITHONLINEADDONS
-    };
-    QListView *addonsView;
-    AddonsSortFilterProxyModel *addonsModel;
-    /* Wait spinner */
-    PixmapAnimator *spinnerAnimation;
-    bool b_localdone;
-};
-
 class PluginTreeItem : public QTreeWidgetItem
 {
 public:
@@ -182,17 +146,16 @@ public:
         QPixmap *icon;
     };
 
-    ExtensionListModel( QObject *parent, ExtensionsManager *EM );
-    ExtensionListModel( QObject *parent = 0 );
+    ExtensionListModel( QListView *view, intf_thread_t *p_intf );
     virtual ~ExtensionListModel();
 
     enum
     {
-        SummaryRole = Qt::UserRole,
+        DescriptionRole = Qt::UserRole,
         VersionRole,
         AuthorRole,
         LinkRole,
-        FilenameRole
+        NameRole
     };
 
     virtual QVariant data( const QModelIndex& index, int role ) const;
@@ -200,87 +163,19 @@ public:
                                const QModelIndex& = QModelIndex() ) const;
     virtual int rowCount( const QModelIndex& = QModelIndex() ) const;
 
-protected slots:
+private slots:
     void updateList();
 
 private:
-    ExtensionsManager *EM;
+
+    intf_thread_t *p_intf;
     QList<ExtensionCopy*> extensions;
-};
-
-class AddonsListModel: public ExtensionListModel
-{
-    Q_OBJECT
-
-public:
-    AddonsListModel( AddonsManager *AM, QObject *parent = 0 );
-    virtual QVariant data( const QModelIndex& index, int role ) const;
-    virtual QModelIndex index( int row, int column = 0,
-                               const QModelIndex& = QModelIndex() ) const;
-    virtual int rowCount( const QModelIndex& = QModelIndex() ) const;
-    virtual Qt::ItemFlags flags( const QModelIndex &index ) const;
-    virtual bool setData( const QModelIndex &index, const QVariant &value, int role );
-
-    enum
-    {
-        TypeRole = FilenameRole + 1,
-        DescriptionRole,
-        UUIDRole,
-        FlagsRole,
-        StateRole,
-        DownloadsCountRole,
-        ScoreRole
-    };
-
-    static QColor getColorByAddonType( int );
-
-protected slots:
-    void addonAdded( addon_entry_t * );
-    void addonChanged( const addon_entry_t * );
-
-protected:
-
-    class Addon
-    {
-    public:
-        Addon( addon_entry_t * );
-        ~Addon();
-        bool operator==( const Addon & other ) const;
-        bool operator==( const addon_entry_t * p_other ) const;
-        QVariant data( int ) const;
-    private:
-        addon_entry_t * p_entry;
-    };
-
-    QList<Addon*> addons;
-    AddonsManager *AM;
-};
-
-class AddonsSortFilterProxyModel : public QSortFilterProxyModel
-{
-    Q_OBJECT
-
-public:
-    AddonsSortFilterProxyModel( QObject *parent = 0 );
-
-public slots:
-    virtual void setTypeFilter( int );
-    virtual void setStatusFilter( int );
-
-protected:
-    virtual bool filterAcceptsRow( int, const QModelIndex & ) const;
-
-private:
-    int i_type_filter;
-    int i_status_filter;
 };
 
 class ExtensionItemDelegate : public QStyledItemDelegate
 {
-    Q_OBJECT
-
 public:
-    ExtensionItemDelegate( QObject *parent );
+    ExtensionItemDelegate( intf_thread_t *p_intf, QListView *view );
     virtual ~ExtensionItemDelegate();
 
     virtual void paint( QPainter *painter,
@@ -288,43 +183,10 @@ public:
                         const QModelIndex &index ) const;
     virtual QSize sizeHint( const QStyleOptionViewItem &option,
                             const QModelIndex &index ) const;
-    virtual void initStyleOption( QStyleOptionViewItem *option,
-                                  const QModelIndex &index ) const;
 
-protected:
-    QMargins margins;
-};
-
-
-class AddonItemDelegate : public ExtensionItemDelegate
-{
-    Q_OBJECT
-
-public:
-    AddonItemDelegate( QObject *parent );
-    ~AddonItemDelegate();
-
-    virtual void paint( QPainter *painter,
-                        const QStyleOptionViewItem &option,
-                        const QModelIndex &index ) const;
-    virtual QSize sizeHint( const QStyleOptionViewItem &option,
-                            const QModelIndex &index ) const;
-    virtual QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    virtual void updateEditorGeometry(QWidget *editor, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    virtual void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
-    virtual void setEditorData(QWidget *editor, const QModelIndex &index) const;
-
-    void setAnimator( DelegateAnimationHelper *animator );
-
-public slots:
-    void editButtonClicked();
-
-signals:
-    void showInfo();
-
-protected:
-    DelegateAnimationHelper *animator;
-    QWidget *progressbar;
+private:
+    QListView *view;
+    intf_thread_t *p_intf;
 };
 
 class ExtensionInfoDialog : public QVLCDialog
@@ -332,13 +194,6 @@ class ExtensionInfoDialog : public QVLCDialog
 public:
     ExtensionInfoDialog( const QModelIndex &index,
                          intf_thread_t *p_intf, QWidget *parent );
-};
-
-class AddonInfoDialog : public QVLCDialog
-{
-public:
-    AddonInfoDialog( const QModelIndex &index,
-                     intf_thread_t *p_intf, QWidget *parent );
 };
 
 #endif

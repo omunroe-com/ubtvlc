@@ -158,11 +158,6 @@ static CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType type, CGEv
              @"com.jriver.MediaCenter18",
              @"com.jriver.MediaCenter19",
              @"com.jriver.MediaCenter20",
-             @"co.rackit.mate",
-             @"com.ttitt.b-music",
-             @"com.beardedspice.BeardedSpice",
-             @"com.plug.Plug",
-             @"com.netease.163music",
             nil
     ];
 }
@@ -255,6 +250,7 @@ static CGEventRef tapEventCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 
     [_delegate mediaKeyTap:self receivedMediaKeyEvent:event];
 }
+
 
 -(void)eventTapThread;
 {

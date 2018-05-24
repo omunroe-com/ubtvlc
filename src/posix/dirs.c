@@ -123,7 +123,7 @@ static char *config_GetTypeDir (const char *xdg_name)
     if (asprintf (&path, "%s/%s", dir, file) == -1)
         return NULL;
 
-    FILE *stream = fopen (path, "rte");
+    FILE *stream = fopen (path, "rt");
     free (path);
     path = NULL;
     if (stream != NULL)

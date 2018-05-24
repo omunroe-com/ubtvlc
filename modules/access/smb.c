@@ -2,7 +2,7 @@
  * smb.c: SMB input module
  *****************************************************************************
  * Copyright (C) 2001-2009 VLC authors and VideoLAN
- * $Id: 60b26ee4a46340d3d178a87e650326849f64da09 $
+ * $Id: 1e681aa276f765f33080e9ec8d893993a17d17f9 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -91,7 +91,6 @@ static int Control( access_t *, int, va_list );
 struct access_sys_t
 {
     int i_smb;
-    uint64_t size;
 };
 
 #ifdef _WIN32
@@ -219,8 +218,8 @@ static int Open( vlc_object_t *p_this )
 #endif
     if( (i_smb = smbc_open( psz_uri, O_RDONLY, 0 )) < 0 )
     {
-        msg_Err( p_access, "open failed for '%s' (%s)",
-                 p_access->psz_location, vlc_strerror_c(errno) );
+        msg_Err( p_access, "open failed for '%s' (%m)",
+                 p_access->psz_location );
         free( psz_uri );
         return VLC_EGENERIC;
     }
@@ -232,10 +231,10 @@ static int Open( vlc_object_t *p_this )
     if( i_ret )
     {
         errno = i_ret;
-        msg_Err( p_access, "stat failed (%s)", vlc_strerror_c(errno) );
+        msg_Err( p_access, "stat failed (%m)" );
     }
     else
-        p_sys->size = filestat.st_size;
+        p_access->info.i_size = filestat.st_size;
 
     free( psz_uri );
 
@@ -272,7 +271,7 @@ static int Seek( access_t *p_access, uint64_t i_pos )
     i_ret = smbc_lseek( p_sys->i_smb, i_pos, SEEK_SET );
     if( i_ret == -1 )
     {
-        msg_Err( p_access, "seek failed (%s)", vlc_strerror_c(errno) );
+        msg_Err( p_access, "seek failed (%m)" );
         return VLC_EGENERIC;
     }
 
@@ -295,7 +294,7 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
     i_read = smbc_read( p_sys->i_smb, p_buffer, i_len );
     if( i_read < 0 )
     {
-        msg_Err( p_access, "read failed (%s)", vlc_strerror_c(errno) );
+        msg_Err( p_access, "read failed (%m)" );
         return -1;
     }
 
@@ -319,10 +318,6 @@ static int Control( access_t *p_access, int i_query, va_list args )
         *va_arg( args, bool* ) = true;
         break;
 
-    case ACCESS_GET_SIZE:
-        *va_arg( args, uint64_t * ) = p_access->p_sys->size;
-        break;
-
     case ACCESS_GET_PTS_DELAY:
         *va_arg( args, int64_t * ) = INT64_C(1000)
             * var_InheritInteger( p_access, "network-caching" );
@@ -332,8 +327,17 @@ static int Control( access_t *p_access, int i_query, va_list args )
         /* Nothing to do */
         break;
 
-    default:
+    case ACCESS_GET_TITLE_INFO:
+    case ACCESS_SET_TITLE:
+    case ACCESS_SET_SEEKPOINT:
+    case ACCESS_SET_PRIVATE_ID_STATE:
+    case ACCESS_GET_CONTENT_TYPE:
         return VLC_EGENERIC;
+
+    default:
+        msg_Warn( p_access, "unimplemented query in control" );
+        return VLC_EGENERIC;
+
     }
 
     return VLC_SUCCESS;

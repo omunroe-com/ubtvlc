@@ -2,7 +2,7 @@
  * file.c: configuration file handling
  *****************************************************************************
  * Copyright (C) 2001-2007 VLC authors and VideoLAN
- * $Id: 7bab109d00bf72c5ec02bf7c3eefa55a70315ed6 $
+ * $Id: 1c0b876883d138e8e084b5f82ffe8a4ded305bcb $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -35,7 +35,9 @@
 #elif defined(HAVE_USELOCALE)
 #include <locale.h>
 #endif
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include <vlc_common.h>
 #include "../libvlc.h"
@@ -82,8 +84,8 @@ static FILE *config_OpenConfigFile( vlc_object_t *p_obj )
     FILE *p_stream = vlc_fopen( psz_filename, "rt" );
     if( p_stream == NULL && errno != ENOENT )
     {
-        msg_Err( p_obj, "cannot open config file (%s): %s",
-                 psz_filename, vlc_strerror_c(errno) );
+        msg_Err( p_obj, "cannot open config file (%s): %m",
+                 psz_filename );
 
     }
 #if !( defined(_WIN32) || defined(__APPLE__) || defined(__OS2__) )
@@ -227,9 +229,8 @@ int config_LoadConfigFile( vlc_object_t *p_this )
                 if ((l > item->max.i) || (l < item->min.i))
                     errno = ERANGE;
                 if (errno)
-                    msg_Warn (p_this, "Integer value (%s) for %s: %s",
-                              psz_option_value, psz_option_name,
-                              vlc_strerror_c(errno));
+                    msg_Warn (p_this, "Integer value (%s) for %s: %m",
+                              psz_option_value, psz_option_name);
                 else
                     item->value.i = l;
                 break;
@@ -252,8 +253,7 @@ int config_LoadConfigFile( vlc_object_t *p_this )
 
     if (ferror (file))
     {
-        msg_Err (p_this, "error reading configuration: %s",
-                 vlc_strerror_c(errno));
+        msg_Err (p_this, "error reading configuration: %m");
         clearerr (file);
     }
     fclose (file);
@@ -300,8 +300,7 @@ int config_CreateDir( vlc_object_t *p_this, const char *psz_dirname )
         }
     }
 
-    msg_Warn( p_this, "could not create %s: %s", psz_dirname,
-              vlc_strerror_c(errno) );
+    msg_Warn( p_this, "could not create %s: %m", psz_dirname );
     return -1;
 }
 
@@ -400,8 +399,7 @@ int config_SaveConfigFile (vlc_object_t *p_this)
     FILE *file = fdopen (fd, "wt");
     if (file == NULL)
     {
-        msg_Err (p_this, "cannot create configuration file: %s",
-                 vlc_strerror_c(errno));
+        msg_Err (p_this, "cannot create configuration file: %m");
         vlc_rwlock_unlock (&config_lock);
         close (fd);
         vlc_mutex_unlock (&lock);

@@ -15,13 +15,10 @@ $(TARBALLS)/freetype-$(FREETYPE2_VERSION).tar.gz:
 
 freetype: freetype-$(FREETYPE2_VERSION).tar.gz .sum-freetype2
 	$(UNPACK)
-	$(call pkg_static, "builds/unix/freetype2.in")
 	$(MOVE)
-
-DEPS_freetype2 = zlib $(DEPS_zlib)
 
 .freetype2: freetype
 	sed -i.orig s/-ansi// $</builds/unix/configure
-	cd $< && GNUMAKE=$(MAKE) $(HOSTVARS) ./configure --with-harfbuzz=no --with-zlib=yes --without-png $(HOSTCONF)
+	cd $< && GNUMAKE=$(MAKE) $(HOSTVARS) ./configure --without-png $(HOSTCONF)
 	cd $< && $(MAKE) && $(MAKE) install
 	touch $@

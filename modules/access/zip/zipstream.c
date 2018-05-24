@@ -2,7 +2,7 @@
  * zipstream.c: stream_filter that creates a XSPF playlist from a Zip archive
  *****************************************************************************
  * Copyright (C) 2009 VLC authors and VideoLAN
- * $Id: 8fd966d64c3d030445813aa05238663e68767aa4 $
+ * $Id: 3bb9232caa6374d72585e155f6b99ef162c7170c $
  *
  * Authors: Jean-Philippe André <jpeg@videolan.org>
  *
@@ -34,6 +34,9 @@
 
 /* FIXME remove */
 #include <vlc_input.h>
+
+#define FILENAME_TEXT N_( "Media in Zip" )
+#define FILENAME_LONGTEXT N_( "Path to the media in the Zip archive" )
 
 /** **************************************************************************
  * Module descriptor
@@ -319,6 +322,7 @@ static int Control( stream_t *s, int i_query, va_list args )
             return VLC_EGENERIC;
 
         case STREAM_UPDATE_SIZE:
+        case STREAM_CONTROL_ACCESS:
         case STREAM_CAN_SEEK:
         case STREAM_CAN_FASTSEEK:
         case STREAM_SET_RECORD_STATE:
@@ -436,8 +440,6 @@ static int GetFilesInZip( stream_t *p_this, unzFile file,
             != UNZ_OK )
         {
             msg_Warn( p_this, "can't get info about file in zip" );
-            free( psz_fileName );
-            free( p_fileInfo );
             return VLC_EGENERIC;
         }
 
@@ -713,12 +715,10 @@ static node* findOrCreateParentNode( node *root, const char *fullpath )
 
     while( current )
     {
-        if( !strcmp( current->name, folder ) )
+        if( current->name && !strcmp( current->name, folder ) )
         {
             /* We found the folder, go recursively deeper */
-            node *parentNode = findOrCreateParentNode( current, sep );
-            free( path );
-            return parentNode;
+            return findOrCreateParentNode( current, sep );
         }
         current = current->next;
     }

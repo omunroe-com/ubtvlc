@@ -30,6 +30,7 @@
 */
 
 #include "pictureflow.hpp"
+#include "components/playlist/ml_model.hpp"
 
 #include <QApplication>
 #include <QImage>
@@ -493,16 +494,26 @@ QRect PictureFlowSoftwareRenderer::renderSlide(const SlideInfo &slide, int col1,
 
     QString artURL;
 
-    VLCModel *m = static_cast<VLCModel*>( state->model );
-
-    if( m )
+    PLModel* plm = qobject_cast<PLModel*>( state->model );
+#ifdef MEDIA_LIBRARY
+    MLModel* mlm = qobject_cast<MLModel*>( state->model );
+#endif
+    if( plm != 0 )
     {
-        index = m->index( slide.slideIndex, 0, m->currentIndex().parent() );
+        index = ((PLModel*)state->model)->index( slide.slideIndex, 0, state->model->currentIndex().parent() );
         if( !index.isValid() )
             return QRect();
-        artURL = m->data( index, COLUMN_COVER ).toString();
+        artURL = plm->data( index, COLUMN_COVER ).toString();
     }
-
+#ifdef MEDIA_LIBRARY
+    else if( mlm != 0 )
+    {
+        index = ((MLModel*)state->model)->index( slide.slideIndex, 0, QModelIndex() );
+        if( !index.isValid() )
+            return QRect();
+        artURL = mlm->data( index, COLUMN_COVER ).toString();
+    }
+#endif
     QString key = QString("%1%2%3%4").arg(VLCModel::getMeta( index, COLUMN_TITLE )).arg( VLCModel::getMeta( index, COLUMN_ARTIST ) ).arg(index.data( VLCModel::IsCurrentRole ).toBool() ).arg( artURL );
 
     QImage* src;
@@ -632,7 +643,7 @@ void PictureFlowSoftwareRenderer::render()
 // -----------------------------------------
 
 
-PictureFlow::PictureFlow(QWidget* parent, QAbstractItemModel* _p_model): QWidget(parent)
+PictureFlow::PictureFlow(QWidget* parent, VLCModel* _p_model): QWidget(parent)
 {
     d = new PictureFlowPrivate;
     d->picrole = Qt::DecorationRole;

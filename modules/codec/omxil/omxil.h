@@ -2,7 +2,7 @@
  * omxil.h: helper functions
  *****************************************************************************
  * Copyright (C) 2010 VLC authors and VideoLAN
- * $Id: 1d6ea7664d701ce5ed97267edd2d06b0d1927fad $
+ * $Id: c040d3bc0ea3f80e8d65941fdbd7b8d8122b068e $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -93,8 +93,6 @@ struct decoder_sys_t
     OmxPort out;
 
     bool b_error;
-
-    bool b_aspect_ratio_handled;
 
     date_t end_date;
 

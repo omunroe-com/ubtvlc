@@ -1,25 +1,25 @@
 /*****************************************************************************
  * projectm.cpp: visualization module based on libprojectM
  *****************************************************************************
- * Copyright © 2009-2011 VLC authors and VideoLAN
- * $Id: e80fbf45b49752a2dd764cde39f3f5a4af4a9dbe $
+ * Copyright © 2009-2011 the VideoLAN team
+ * $Id: fcb3059d7b3343a89af321232563f6d326b33f4e $
  *
  * Authors: Rémi Duraffort <ivoire@videolan.org>
  *          Laurent Aimar
  *
-  * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation; either version 2.1 of the License, or
- * (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2 of the License, or (at your option)
+ * any later version.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Lesser General Public License for more details.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 51
+ * Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -28,8 +28,6 @@
 #ifndef __STDC_CONSTANT_MACROS
 # define __STDC_CONSTANT_MACROS
 #endif
-
-#include <assert.h>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -293,7 +291,7 @@ static void *Thread( void *p_data )
     filter_sys_t *p_sys = p_filter->p_sys;
 
     video_format_t fmt;
-    vlc_gl_t *gl = NULL;
+    vlc_gl_t *gl;
     unsigned int i_last_width  = 0;
     unsigned int i_last_height = 0;
     locale_t loc;
@@ -319,8 +317,10 @@ static void *Thread( void *p_data )
 
     /* */
     video_format_Init( &fmt, 0 );
-    video_format_Setup( &fmt, VLC_CODEC_RGB32, p_sys->i_width, p_sys->i_height,
-                        p_sys->i_width, p_sys->i_height, 1, 1 );
+    video_format_Setup( &fmt, VLC_CODEC_RGB32,
+                        p_sys->i_width, p_sys->i_height, 0, 1 );
+    fmt.i_sar_num = 1;
+    fmt.i_sar_den = 1;
 
     vout_display_state_t state;
     memset( &state, 0, sizeof(state) );
@@ -350,8 +350,6 @@ static void *Thread( void *p_data )
         vlc_object_release( p_sys->p_vout );
         goto error;
     }
-
-    vlc_gl_MakeCurrent( gl );
 
     /* Work-around the projectM locale bug */
     loc = newlocale (LC_NUMERIC_MASK, "C", NULL);
@@ -448,7 +446,6 @@ static void *Thread( void *p_data )
                 uselocale (oldloc);
                 freelocale (loc);
             }
-            vlc_gl_ReleaseCurrent( gl );
             return NULL;
         }
         vlc_mutex_unlock( &p_sys->lock );
@@ -464,7 +461,7 @@ static void *Thread( void *p_data )
             vlc_gl_Unlock( gl );
         }
     }
-    assert(0);
+    abort();
 
 error:
     p_sys->b_error = true;

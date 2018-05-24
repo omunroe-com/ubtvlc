@@ -26,6 +26,7 @@
 #endif
 #include <stdarg.h>
 #include <assert.h>
+#include <errno.h>
 
 #include <vlc_common.h>
 #include <vlc_demux.h>
@@ -289,13 +290,12 @@ static int Open (vlc_object_t *obj)
         }
 
         char *salt = var_CreateGetNonEmptyString (demux, "srtp-salt");
-        int val = srtp_setkeystring (p_sys->srtp, key, salt ? salt : "");
+        errno = srtp_setkeystring (p_sys->srtp, key, salt ? salt : "");
         free (salt);
         free (key);
-        if (val)
+        if (errno)
         {
-            msg_Err (obj, "bad SRTP key/salt combination (%s)",
-                     vlc_strerror_c(val));
+            msg_Err (obj, "bad SRTP key/salt combination (%m)");
             goto error;
         }
     }

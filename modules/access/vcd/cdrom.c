@@ -2,7 +2,7 @@
  * cdrom.c: cdrom tools
  *****************************************************************************
  * Copyright (C) 1998-2001 VLC authors and VideoLAN
- * $Id: efa3cd2fa32c3e364790db2594240ef6d1581d57 $
+ * $Id: f0952d371753bc59eba52c01c5124291c36464f3 $
  *
  * Authors: Johan Bilien <jobi@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -42,8 +42,10 @@
 #   define INCL_DOSDEVIOCTL
 #endif
 
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
 #include <sys/types.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #ifdef HAVE_ARPA_INET_H
@@ -782,32 +784,29 @@ static int OpenVCDImage( vlc_object_t * p_this, const char *psz_dev,
     {
         /* psz_dev must be the cue file. Let's assume there's a .bin
          * file with the same filename */
-        if( asprintf( &psz_vcdfile, "%.*s.bin", (int)(p_pos - psz_dev),
-                      psz_dev ) < 0 )
-            psz_vcdfile = NULL;
+        psz_vcdfile = malloc( p_pos - psz_dev + 5 /* ".bin" */ );
+        strncpy( psz_vcdfile, psz_dev, p_pos - psz_dev );
+        strcpy( psz_vcdfile + (p_pos - psz_dev), ".bin");
         psz_cuefile = strdup( psz_dev );
     }
     else
-    if( p_pos )
     {
         /* psz_dev must be the actual vcd file. Let's assume there's a .cue
          * file with the same filename */
-        if( asprintf( &psz_cuefile, "%.*s.cue", (int)(p_pos - psz_dev),
-                      psz_dev ) < 0 )
-            psz_cuefile = NULL;
+        if( p_pos )
+        {
+            psz_cuefile = malloc( p_pos - psz_dev + 5 /* ".cue" */ );
+            strncpy( psz_cuefile, psz_dev, p_pos - psz_dev );
+            strcpy( psz_cuefile + (p_pos - psz_dev), ".cue");
+        }
+        else
+        {
+            if( asprintf( &psz_cuefile, "%s.cue", psz_dev ) == -1 )
+                psz_cuefile = NULL;
+        }
+        /* If we need to look up the .cue file, then we don't have to look for the vcd */
         psz_vcdfile = strdup( psz_dev );
     }
-    else
-    {
-        if( asprintf( &psz_cuefile, "%s.cue", psz_dev ) == -1 )
-            psz_cuefile = NULL;
-         /* If we need to look up the .cue file, then we don't have to look
-          * for the vcd */
-        psz_vcdfile = strdup( psz_dev );
-    }
-
-    if( psz_cuefile == NULL || psz_vcdfile == NULL )
-        goto error;
 
     /* Open the cue file and try to parse it */
     msg_Dbg( p_this,"trying .cue file: %s", psz_cuefile );

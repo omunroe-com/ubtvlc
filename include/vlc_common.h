@@ -335,7 +335,6 @@ typedef struct vlm_message_t vlm_message_t;
 /* misc */
 typedef struct vlc_meta_t    vlc_meta_t;
 typedef struct input_stats_t input_stats_t;
-typedef struct addon_entry_t addon_entry_t;
 
 /* Update */
 typedef struct update_t update_t;
@@ -805,12 +804,9 @@ VLC_API bool vlc_ureduce( unsigned *, unsigned *, uint64_t, uint64_t, uint64_t )
 #include <AvailabilityMacros.h>
 #endif
 
-#ifdef __MINGW32__
+#ifdef _WIN32
 # define vlc_memalign(align, size) (__mingw_aligned_malloc(size, align))
 # define vlc_free(base)            (__mingw_aligned_free(base))
-#elif defined(_MSC_VER)
-# define vlc_memalign(align, size) (_aligned_malloc(size, align))
-# define vlc_free(base)            (_aligned_free(base))
 #elif defined(__APPLE__) && !defined(MAC_OS_X_VERSION_10_6)
 static inline void *vlc_memalign(size_t align, size_t size)
 {

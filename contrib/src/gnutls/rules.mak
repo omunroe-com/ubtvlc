@@ -1,12 +1,10 @@
 # GnuTLS
 
-GNUTLS_VERSION := 3.2.18
-GNUTLS_URL := ftp://ftp.gnutls.org/gcrypt/gnutls/v3.2/gnutls-$(GNUTLS_VERSION).tar.xz
+GNUTLS_VERSION := 3.1.25
+GNUTLS_URL := ftp://ftp.gnutls.org/gcrypt/gnutls/v3.1/gnutls-$(GNUTLS_VERSION).tar.xz
 
-ifdef BUILD_NETWORK
-ifndef HAVE_DARWIN_OS
+ifndef HAVE_IOS
 PKGS += gnutls
-endif
 endif
 ifeq ($(call need_pkg,"gnutls >= 3.0.20"),)
 PKGS_FOUND += gnutls
@@ -27,9 +25,9 @@ ifdef HAVE_ANDROID
 endif
 	$(APPLY) $(SRC)/gnutls/gnutls-no-egd.patch
 	$(APPLY) $(SRC)/gnutls/read-file-limits.h.patch
-	$(APPLY) $(SRC)/gnutls/mac-keychain-lookup.patch
+	$(APPLY) $(SRC)/gnutls/downgrade-automake-requirement.patch
 ifdef HAVE_MACOSX
-	$(APPLY) $(SRC)/gnutls/gnutls-pkgconfig-osx.patch
+	$(APPLY) $(SRC)/gnutls/mac-keychain-lookup.patch
 endif
 	$(call pkg_static,"lib/gnutls.pc.in")
 	$(UPDATE_AUTOCONFIG)

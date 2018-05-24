@@ -2,7 +2,7 @@
  * meta.c: Get meta/artwork using lua scripts
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: 34c5d87bce95c8c567d0fa04f0173761760062f9 $
+ * $Id: a0c40d12832693c7eaf6a0c4e61e525bb5154906 $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *          Pierre d'Herbemont <pdherbemont # videolan.org>
@@ -32,6 +32,15 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+
+#include <vlc_common.h>
+#include <vlc_input.h>
+#include <vlc_meta.h>
+#include <vlc_demux.h>
+#include <vlc_art_finder.h>
+#include <vlc_url.h>
+#include <vlc_strings.h>
+#include <vlc_stream.h>
 
 #include "vlc.h"
 #include "libs.h"
@@ -80,8 +89,7 @@ static lua_State * init( vlc_object_t *p_this, input_item_t * p_item, const char
  * Run a lua entry point function
  *****************************************************************************/
 static int run( vlc_object_t *p_this, const char * psz_filename,
-                lua_State * L, const char *luafunction,
-                const luabatch_context_t *p_context )
+                lua_State * L, const char *luafunction )
 {
     /* Ugly hack to delete previous versions of the fetchart()
      * functions. */
@@ -93,26 +101,6 @@ static int run( vlc_object_t *p_this, const char * psz_filename,
     {
         msg_Warn( p_this, "Error loading script %s: %s", psz_filename,
                  lua_tostring( L, lua_gettop( L ) ) );
-        goto error;
-    }
-
-
-    meta_fetcher_scope_t e_scope = FETCHER_SCOPE_NETWORK; /* default to restricted one */
-    lua_getglobal( L, "descriptor" );
-    if( lua_isfunction( L, lua_gettop( L ) ) && !lua_pcall( L, 0, 1, 0 ) )
-    {
-        lua_getfield( L, -1, "scope" );
-        char *psz_scope = luaL_strdupornull( L, -1 );
-        if ( psz_scope && !strcmp( psz_scope, "local" ) )
-            e_scope = FETCHER_SCOPE_LOCAL;
-        free( psz_scope );
-        lua_pop( L, 1 );
-    }
-    lua_pop( L, 1 );
-
-    if ( p_context && p_context->pf_validator && !p_context->pf_validator( p_context, e_scope ) )
-    {
-        msg_Dbg( p_this, "skipping script (unmatched scope) %s", psz_filename );
         goto error;
     }
 
@@ -143,22 +131,16 @@ error:
  * Called through lua_scripts_batch_execute to call 'fetch_art' on the script
  * pointed by psz_filename.
  *****************************************************************************/
-static bool validate_scope( const luabatch_context_t *p_context, meta_fetcher_scope_t e_scope )
-{
-    if ( p_context->e_scope == FETCHER_SCOPE_ANY )
-        return true;
-    else
-        return ( p_context->e_scope == e_scope );
-}
-
 static int fetch_art( vlc_object_t *p_this, const char * psz_filename,
-                      const luabatch_context_t *p_context )
+                      void * user_data )
 {
-    lua_State *L = init( p_this, p_context->p_item, psz_filename );
+    input_item_t * p_item = user_data;
+
+    lua_State *L = init( p_this, p_item, psz_filename );
     if( !L )
         return VLC_EGENERIC;
 
-    int i_ret = run(p_this, psz_filename, L, "fetch_art", p_context);
+    int i_ret = run(p_this, psz_filename, L, "fetch_art");
     if(i_ret != VLC_SUCCESS)
     {
         lua_close( L );
@@ -175,7 +157,7 @@ static int fetch_art( vlc_object_t *p_this, const char * psz_filename,
             if( psz_value && *psz_value != 0 )
             {
                 lua_Dbg( p_this, "setting arturl: %s", psz_value );
-                input_item_SetArtURL ( p_context->p_item, psz_value );
+                input_item_SetArtURL ( p_item, psz_value );
                 lua_close( L );
                 return VLC_SUCCESS;
             }
@@ -200,17 +182,14 @@ static int fetch_art( vlc_object_t *p_this, const char * psz_filename,
  * pointed by psz_filename.
  *****************************************************************************/
 static int read_meta( vlc_object_t *p_this, const char * psz_filename,
-                      const luabatch_context_t *p_context )
+                      void * user_data )
 {
-    /* FIXME: merge with finder */
-    demux_meta_t *p_demux_meta = (demux_meta_t *)p_this;
-    VLC_UNUSED( p_context );
-
-    lua_State *L = init( p_this, p_demux_meta->p_item, psz_filename );
+    input_item_t * p_item = user_data;
+    lua_State *L = init( p_this, p_item, psz_filename );
     if( !L )
         return VLC_EGENERIC;
 
-    int i_ret = run(p_this, psz_filename, L, "read_meta", NULL);
+    int i_ret = run(p_this, psz_filename, L, "read_meta");
     lua_close( L );
 
     // Continue even if an error occurred: all "meta reader" are always run.
@@ -223,13 +202,14 @@ static int read_meta( vlc_object_t *p_this, const char * psz_filename,
  * pointed by psz_filename.
  *****************************************************************************/
 static int fetch_meta( vlc_object_t *p_this, const char * psz_filename,
-                       const luabatch_context_t *p_context )
+                       void * user_data )
 {
-    lua_State *L = init( p_this, p_context->p_item, psz_filename );
+    input_item_t * p_item = user_data;
+    lua_State *L = init( p_this, p_item, psz_filename );
     if( !L )
         return VLC_EGENERIC;
 
-    int ret = run(p_this, psz_filename, L, "fetch_meta", p_context);
+    int ret = run(p_this, psz_filename, L, "fetch_meta");
     lua_close( L );
 
     return ret;
@@ -239,10 +219,13 @@ static int fetch_meta( vlc_object_t *p_this, const char * psz_filename,
  * Read meta.
  *****************************************************************************/
 
-int ReadMeta( demux_meta_t *p_this )
+int ReadMeta( vlc_object_t *p_this )
 {
-    return vlclua_scripts_batch_execute( VLC_OBJECT(p_this), "meta"DIR_SEP"reader",
-                                         (void*) &read_meta, NULL );
+    demux_meta_t *p_demux_meta = (demux_meta_t *)p_this;
+    input_item_t *p_item = p_demux_meta->p_item;
+
+    return vlclua_scripts_batch_execute( p_this, "meta"DIR_SEP"reader",
+                                         &read_meta, p_item );
 }
 
 
@@ -250,23 +233,25 @@ int ReadMeta( demux_meta_t *p_this )
  * Read meta.
  *****************************************************************************/
 
-int FetchMeta( meta_fetcher_t *p_finder )
+int FetchMeta( vlc_object_t *p_this )
 {
-    luabatch_context_t context = { p_finder->p_item, p_finder->e_scope, validate_scope };
+    demux_meta_t *p_demux_meta = (demux_meta_t *)p_this;
+    input_item_t *p_item = p_demux_meta->p_item;
 
-    return vlclua_scripts_batch_execute( VLC_OBJECT(p_finder), "meta"DIR_SEP"fetcher",
-                                         &fetch_meta, (void*)&context );
+    return vlclua_scripts_batch_execute( p_this, "meta"DIR_SEP"fetcher",
+                                         &fetch_meta, p_item );
 }
 
 
 /*****************************************************************************
  * Module entry point for art.
  *****************************************************************************/
-int FindArt( meta_fetcher_t *p_finder )
+int FindArt( vlc_object_t *p_this )
 {
-    luabatch_context_t context = { p_finder->p_item, p_finder->e_scope, validate_scope };
+    art_finder_t *p_finder = (art_finder_t *)p_this;
+    input_item_t *p_item = p_finder->p_item;
 
-    return vlclua_scripts_batch_execute( VLC_OBJECT(p_finder), "meta"DIR_SEP"art",
-                                         &fetch_art, (void*)&context );
+    return vlclua_scripts_batch_execute( p_this, "meta"DIR_SEP"art",
+                                         &fetch_art, p_item );
 }
 

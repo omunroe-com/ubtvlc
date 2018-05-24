@@ -2,7 +2,7 @@
  * libavi.c : LibAVI
  *****************************************************************************
  * Copyright (C) 2001 VLC authors and VideoLAN
- * $Id: d0cfe714168642e90d09d6b72e1b0c986f051146 $
+ * $Id: 43db2e5b4598793dccbe213aaf4cdf9a68110046 $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -142,9 +142,10 @@ static int AVI_ChunkRead_list( stream_t *s, avi_chunk_t *p_container )
     {
         msg_Dbg( (vlc_object_t*)s, "skipping movi chunk" );
         if( b_seekable )
+        {
             return AVI_NextChunk( s, p_container );
-        else
-            return VLC_EGENERIC; /* point at begining of LIST-movi */
+        }
+        return VLC_SUCCESS; /* point at begining of LIST-movi */
     }
 
     if( stream_Read( s, NULL, 12 ) != 12 )
@@ -173,8 +174,7 @@ static int AVI_ChunkRead_list( stream_t *s, avi_chunk_t *p_container )
         }
         p_container->common.p_last = p_chk;
 
-        i_ret = AVI_ChunkRead( s, p_chk, p_container );
-        if( i_ret )
+        if( i_ret = AVI_ChunkRead( s, p_chk, p_container ) )
         {
             break;
         }
@@ -199,56 +199,6 @@ static int AVI_ChunkRead_list( stream_t *s, avi_chunk_t *p_container )
 
     if ( i_ret == AVI_ZERO_FOURCC ) return i_ret;
     return VLC_SUCCESS;
-}
-
-/* Allow to append indexes after starting playback */
-int AVI_ChunkFetchIndexes( stream_t *s, avi_chunk_t *p_riff )
-{
-    avi_chunk_t *p_movi = AVI_ChunkFind( p_riff, AVIFOURCC_movi, 0 );
-    if ( !p_movi )
-        return VLC_EGENERIC;
-
-    avi_chunk_t *p_chk;
-    uint64_t i_indexpos = 8 + p_movi->common.i_chunk_pos + p_movi->common.i_chunk_size;
-    bool b_seekable = false;
-    int i_ret = VLC_SUCCESS;
-
-    stream_Control( s, STREAM_CAN_SEEK, &b_seekable );
-    if ( !b_seekable || stream_Seek( s, i_indexpos ) )
-        return VLC_EGENERIC;
-
-    for( ; ; )
-    {
-        p_chk = xmalloc( sizeof( avi_chunk_t ) );
-        memset( p_chk, 0, sizeof( avi_chunk_t ) );
-        if (unlikely( !p_riff->common.p_first ))
-            p_riff->common.p_first = p_chk;
-        else
-            p_riff->common.p_last->common.p_next = p_chk;
-        p_riff->common.p_last = p_chk;
-
-        i_ret = AVI_ChunkRead( s, p_chk, p_riff );
-        if( i_ret )
-            break;
-
-        if( p_chk->common.p_father->common.i_chunk_size > 0 &&
-           ( stream_Tell( s ) >
-              (off_t)p_chk->common.p_father->common.i_chunk_pos +
-               (off_t)__EVEN( p_chk->common.p_father->common.i_chunk_size ) ) )
-        {
-            break;
-        }
-
-        /* If we can't seek then stop when we 've found any index */
-        if( p_chk->common.i_chunk_fourcc == AVIFOURCC_indx ||
-            p_chk->common.i_chunk_fourcc == AVIFOURCC_idx1 )
-        {
-            break;
-        }
-
-    }
-
-    return i_ret;
 }
 
 #define AVI_READCHUNK_ENTER \
@@ -387,10 +337,6 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
         case( AVIFOURCC_auds ):
             p_chk->strf.auds.i_cat = AUDIO_ES;
             p_chk->strf.auds.p_wf = xmalloc( __MAX( p_chk->common.i_chunk_size, sizeof( WAVEFORMATEX ) ) );
-            if ( !p_chk->strf.auds.p_wf )
-            {
-                AVI_READCHUNK_EXIT( VLC_ENOMEM );
-            }
             AVI_READ2BYTES( p_chk->strf.auds.p_wf->wFormatTag );
             AVI_READ2BYTES( p_chk->strf.auds.p_wf->nChannels );
             AVI_READ4BYTES( p_chk->strf.auds.p_wf->nSamplesPerSec );
@@ -441,10 +387,6 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
             p_chk->strf.vids.i_cat = VIDEO_ES;
             p_chk->strf.vids.p_bih = xmalloc( __MAX( p_chk->common.i_chunk_size,
                                          sizeof( *p_chk->strf.vids.p_bih ) ) );
-            if ( !p_chk->strf.vids.p_bih )
-            {
-                AVI_READCHUNK_EXIT( VLC_ENOMEM );
-            }
             AVI_READ4BYTES( p_chk->strf.vids.p_bih->biSize );
             AVI_READ4BYTES( p_chk->strf.vids.p_bih->biWidth );
             AVI_READ4BYTES( p_chk->strf.vids.p_bih->biHeight );
@@ -460,32 +402,12 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
             {
                 p_chk->strf.vids.p_bih->biSize = p_chk->common.i_chunk_size;
             }
-            if ( p_chk->common.i_chunk_size > sizeof(VLC_BITMAPINFOHEADER) )
+            if( p_chk->common.i_chunk_size > sizeof(VLC_BITMAPINFOHEADER) )
             {
-                uint64_t i_extrasize = p_chk->common.i_chunk_size - sizeof(VLC_BITMAPINFOHEADER);
-
-                /* There's a color palette appended, set up VLC_BITMAPINFO */
                 memcpy( &p_chk->strf.vids.p_bih[1],
                         p_buff + 8 + sizeof(VLC_BITMAPINFOHEADER), /* 8=fourrc+size */
-                        i_extrasize );
-
-                if ( !p_chk->strf.vids.p_bih->biClrUsed )
-                    p_chk->strf.vids.p_bih->biClrUsed = (1 << p_chk->strf.vids.p_bih->biBitCount);
-
-                if( i_extrasize / sizeof(uint32_t) > UINT32_MAX )
-                    p_chk->strf.vids.p_bih->biClrUsed = UINT32_MAX;
-                else
-                {
-                    p_chk->strf.vids.p_bih->biClrUsed =
-                            __MIN( i_extrasize / sizeof(uint32_t),
-                                   p_chk->strf.vids.p_bih->biClrUsed );
-                }
-
-                /* stay within VLC's limits */
-                p_chk->strf.vids.p_bih->biClrUsed =
-                    __MIN( VIDEO_PALETTE_COLORS_MAX, p_chk->strf.vids.p_bih->biClrUsed );
+                        p_chk->common.i_chunk_size -sizeof(VLC_BITMAPINFOHEADER) );
             }
-            else p_chk->strf.vids.p_bih->biClrUsed = 0;
 #ifdef AVI_DEBUG
             msg_Dbg( (vlc_object_t*)s,
                      "strf: video:%4.4s %"PRIu32"x%"PRIu32" planes:%d %dbpp",
@@ -763,19 +685,8 @@ static const struct
     { AVIFOURCC_ISTR, "Starring" },
     { AVIFOURCC_IFRM, "Total number of parts" },
     { AVIFOURCC_strn, "Stream name" },
-    { AVIFOURCC_IAS1, "First Language" },
-    { AVIFOURCC_IAS2, "Second Language" },
-    { AVIFOURCC_IAS3, "Third Language" },
-    { AVIFOURCC_IAS4, "Fourth Language" },
-    { AVIFOURCC_IAS5, "Fifth Language" },
-    { AVIFOURCC_IAS6, "Sixth Language" },
-    { AVIFOURCC_IAS7, "Seventh Language" },
-    { AVIFOURCC_IAS8, "Eighth Language" },
-    { AVIFOURCC_IAS9, "Ninth Language" },
-
     { 0,              "???" }
 };
-
 static int AVI_ChunkRead_strz( stream_t *s, avi_chunk_t *p_chk )
 {
     int i_index;
@@ -884,15 +795,6 @@ static const struct
     { AVIFOURCC_ICNT, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
     { AVIFOURCC_ISTR, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
     { AVIFOURCC_IFRM, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS1, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS2, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS3, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS4, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS5, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS6, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS7, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS8, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
-    { AVIFOURCC_IAS9, AVI_ChunkRead_strz, AVI_ChunkFree_strz },
 
 
     { AVIFOURCC_strn, AVI_ChunkRead_strz, AVI_ChunkFree_strz },

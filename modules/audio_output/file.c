@@ -2,7 +2,7 @@
  * file.c : audio output which writes the samples to a file
  *****************************************************************************
  * Copyright (C) 2002 VLC authors and VideoLAN
- * $Id: f34c4c7262f04b16fa9ed4e8c5f56d2281f039ed $
+ * $Id: 5773acc371f8f30a367b2647cd1a2ca59d86e6c0 $
  *
  * Authors: Christophe Massiot <massiot@via.ecp.fr>
  *          Gildas Bazin <gbazin@netcourrier.com>
@@ -29,9 +29,6 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
-
-#include <stdio.h>
-#include <errno.h>
 
 #include <vlc_common.h>
 #include <vlc_plugin.h>
@@ -257,7 +254,7 @@ static int Start( audio_output_t *p_aout, audio_sample_format_t *restrict fmt )
         if( fwrite( wh, sizeof(WAVEHEADER), 1,
                     p_aout->sys->p_file ) != 1 )
         {
-            msg_Err( p_aout, "write error: %s", vlc_strerror_c(errno) );
+            msg_Err( p_aout, "write error (%m)" );
         }
     }
 
@@ -280,7 +277,7 @@ static void Stop( audio_output_t *p_aout )
         /* Write Wave Header */
         if( fseek( p_aout->sys->p_file, 0, SEEK_SET ) )
         {
-            msg_Err( p_aout, "seek error: %s", vlc_strerror_c(errno) );
+            msg_Err( p_aout, "seek error (%m)" );
         }
 
         /* Header -> little endian format */
@@ -292,7 +289,7 @@ static void Stop( audio_output_t *p_aout )
         if( fwrite( &p_aout->sys->waveh, sizeof(WAVEHEADER), 1,
                     p_aout->sys->p_file ) != 1 )
         {
-            msg_Err( p_aout, "write error: %s", vlc_strerror_c(errno) );
+            msg_Err( p_aout, "write error (%m)" );
         }
     }
 
@@ -309,7 +306,7 @@ static void Play( audio_output_t * p_aout, block_t *p_buffer )
     if( fwrite( p_buffer->p_buffer, p_buffer->i_buffer, 1,
                 p_aout->sys->p_file ) != 1 )
     {
-        msg_Err( p_aout, "write error: %s", vlc_strerror_c(errno) );
+        msg_Err( p_aout, "write error (%m)" );
     }
 
     if( p_aout->sys->b_add_wav_header )
@@ -324,7 +321,7 @@ static void Play( audio_output_t * p_aout, block_t *p_buffer )
 static void Flush( audio_output_t *aout, bool wait )
 {
     if( fflush( aout->sys->p_file ) )
-        msg_Err( aout, "flush error: %s", vlc_strerror_c(errno) );
+        msg_Err( aout, "flush error (%m)" );
     (void) wait;
 }
 

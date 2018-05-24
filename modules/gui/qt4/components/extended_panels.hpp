@@ -2,7 +2,7 @@
  * extended_panels.hpp : Exentended Panels
  ****************************************************************************
  * Copyright (C) 2006 the VideoLAN team
- * $Id: b4c71eae980de945e3c882606a06a9433936939e $
+ * $Id: e43e74382452dddbbe64b3d73ae896a860d9164d $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Antoine Cellerier <dionoea at videolan dot org>
@@ -46,8 +46,7 @@ class ExtVideo: public QObject
     friend class ExtendedDialog;
 public:
     ExtVideo( struct intf_thread_t *, QTabWidget * );
-    static void setPostprocessing( struct intf_thread_t *, int q);
-    static int getPostprocessing( struct intf_thread_t *p_intf);
+    /*void gotoConf( QObject* );*/
 private:
     Ui::ExtVideoWidget ui;
     QSignalMapper* filterMapper;
@@ -55,8 +54,6 @@ private:
     void initComboBoxItems( QObject* );
     void setWidgetValue( QObject* );
     void clean();
-    static void setFilterOption( struct intf_thread_t *, const char *psz_module, const char *psz_option, int, double, QString );
-
 private slots:
     void updateFilters();
     void updateFilterOptions();

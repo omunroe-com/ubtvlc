@@ -1,8 +1,8 @@
 /*****************************************************************************
  * MainWindow.h: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2014 VLC authors and VideoLAN
- * $Id: 8c934187ef238b8d7bf7a494af331ad2555e00ab $
+ * Copyright (C) 2002-2013 VLC authors and VideoLAN
+ * $Id: 528efee66ad183736117b1ca670f7a57a5ae22cb $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *          Jon Lech Johansen <jon-vl@nanocrew.net>
@@ -26,6 +26,7 @@
  *****************************************************************************/
 
 #import <Cocoa/Cocoa.h>
+#import "CompatibilityFixes.h"
 #import "PXSourceList.h"
 #import "PXSourceListDataSource.h"
 
@@ -40,13 +41,6 @@
 @class VLCDetachedVideoWindow;
 @class VLCMainWindowControlsBar;
 @class VLCVoutView;
-
-typedef enum {
-    psUserEvent,
-    psUserMenuEvent,
-    psVideoStartedOrStoppedEvent,
-    psPlaylistItemChangedEvent
-} VLCPlaylistStateEvent;
 
 @interface VLCMainWindow : VLCVideoWindowCommon <PXSourceListDataSource, PXSourceListDelegate, NSWindowDelegate, NSAnimationDelegate, NSSplitViewDelegate> {
 
@@ -64,9 +58,8 @@ typedef enum {
     IBOutlet id o_dropzone_btn;
     IBOutlet id o_dropzone_lbl;
     IBOutlet id o_dropzone_box;
-    IBOutlet id o_dropzone_img;
 
-    VLCFSPanel *o_fspanel;
+    IBOutlet VLCFSPanel *o_fspanel;
 
     IBOutlet id o_podcast_view;
     IBOutlet id o_podcast_add_btn;
@@ -90,8 +83,8 @@ typedef enum {
     BOOL b_splitview_removed;
     BOOL b_minimized_view;
 
-    CGFloat f_lastSplitViewHeight;
-    CGFloat f_lastLeftSplitViewWidth;
+    NSUInteger i_lastSplitViewHeight;
+    NSUInteger i_lastLeftSplitViewWidth;
 
     NSMutableArray *o_sidebaritems;
 
@@ -112,7 +105,7 @@ typedef enum {
 
 - (VLCMainWindowControlsBar *)controlsBar;
 
-- (void)changePlaylistState:(VLCPlaylistStateEvent)event;
+- (IBAction)togglePlaylist:(id)sender;
 
 - (IBAction)dropzoneButtonAction:(id)sender;
 
@@ -122,8 +115,6 @@ typedef enum {
 - (IBAction)removePodcastWindowAction:(id)sender;
 
 - (void)windowResizedOrMoved:(NSNotification *)notification;
-
-- (void)reloadSidebar;
 
 - (void)toggleLeftSubSplitView;
 - (void)showDropZone;

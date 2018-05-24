@@ -69,11 +69,12 @@ struct vout_display_sys_t
     xcb_cursor_t cursor; /* blank cursor */
     xcb_window_t window; /* drawable X window */
     xcb_gcontext_t gc; /* context to put images */
-    xcb_shm_seg_t seg_base; /**< shared memory segment XID base */
+    bool shm; /* whether to use MIT-SHM */
     bool visible; /* whether to draw */
     uint8_t depth; /* useful bits per pixel */
 
     picture_pool_t *pool; /* picture pool */
+    picture_resource_t resource[MAX_PICTURES];
 };
 
 static picture_pool_t *Pool (vout_display_t *, unsigned);
@@ -128,7 +129,7 @@ static int Open (vlc_object_t *obj)
 
     /* Determine our pixel format */
     video_format_t fmt_pic;
-    xcb_visualid_t vid = 0;
+    xcb_visualid_t vid;
     sys->depth = 0;
 
     for (const xcb_format_t *fmt = xcb_setup_pixmap_formats (setup),
@@ -139,7 +140,7 @@ static int Open (vlc_object_t *obj)
         if (fmt->depth <= sys->depth)
             continue; /* no better than earlier format */
 
-        video_format_ApplyRotation(&fmt_pic, &vd->fmt);
+        fmt_pic = vd->fmt;
 
         /* Check that the pixmap format is supported by VLC. */
         switch (fmt->depth)
@@ -147,8 +148,13 @@ static int Open (vlc_object_t *obj)
           case 32:
             if (fmt->bits_per_pixel != 32)
                 continue;
-            fmt_pic.i_chroma = VLC_CODEC_ARGB;
+#ifdef FIXED_VLC_RGBA_MASK
+            fmt_pic.i_chroma = VLC_CODEC_RGBA;
             break;
+#else
+            msg_Dbg (vd, "X11 visual with alpha-channel not supported");
+            continue;
+#endif
           case 24:
             if (fmt->bits_per_pixel == 32)
                 fmt_pic.i_chroma = VLC_CODEC_RGB32;
@@ -290,14 +296,8 @@ found_format:;
 
     sys->cursor = XCB_cursor_Create (conn, scr);
     sys->visible = false;
-    if (XCB_shm_Check (obj, conn))
-    {
-        sys->seg_base = xcb_generate_id (conn);
-        for (unsigned i = 1; i < MAX_PICTURES; i++)
-             xcb_generate_id (conn);
-    }
-    else
-        sys->seg_base = 0;
+    sys->shm = XCB_shm_Check (obj, conn);
+
 
     /* Setup vout_display_t once everything is fine */
     vd->info.has_pictures_invalid = true;
@@ -373,43 +373,35 @@ static picture_pool_t *Pool (vout_display_t *vd, unsigned requested_count)
         return NULL;
 
     assert (pic->i_planes == 1);
-
-    picture_resource_t res = {
-       .p = {
-           [0] = {
-               .i_lines = pic->p->i_lines,
-               .i_pitch = pic->p->i_pitch,
-           },
-       },
-    };
-    picture_Release (pic);
+    memset (sys->resource, 0, sizeof(sys->resource));
 
     unsigned count;
     picture_t *pic_array[MAX_PICTURES];
-    const size_t size = res.p->i_pitch * res.p->i_lines;
     for (count = 0; count < MAX_PICTURES; count++)
     {
-        xcb_shm_seg_t seg = (sys->seg_base != 0) ? (sys->seg_base + count) : 0;
+        picture_resource_t *res = &sys->resource[count];
 
-        if (XCB_picture_Alloc (vd, &res, size, sys->conn, seg))
+        res->p->i_lines = pic->p->i_lines;
+        res->p->i_pitch = pic->p->i_pitch;
+        if (XCB_pictures_Alloc (vd, res, res->p->i_pitch * res->p->i_lines,
+                                sys->conn, sys->shm))
             break;
-        pic_array[count] = XCB_picture_NewFromResource (&vd->fmt, &res);
-        if (unlikely(pic_array[count] == NULL))
+        pic_array[count] = picture_NewFromResource (&vd->fmt, res);
+        if (!pic_array[count])
         {
-            if (seg != 0)
-                xcb_shm_detach (sys->conn, seg);
+            XCB_pictures_Free (res, sys->conn);
+            memset (res, 0, sizeof(*res));
             break;
         }
     }
-    xcb_flush (sys->conn);
+    picture_Release (pic);
 
     if (count == 0)
         return NULL;
 
     sys->pool = picture_pool_New (count, pic_array);
-    if (unlikely(sys->pool == NULL))
-        while (count > 0)
-            picture_Release(pic_array[--count]);
+    /* TODO release picture resources if NULL */
+    xcb_flush (sys->conn);
     return sys->pool;
 }
 
@@ -419,7 +411,7 @@ static picture_pool_t *Pool (vout_display_t *vd, unsigned requested_count)
 static void Display (vout_display_t *vd, picture_t *pic, subpicture_t *subpicture)
 {
     vout_display_sys_t *sys = vd->sys;
-    xcb_shm_seg_t segment = XCB_picture_GetSegment(pic);
+    xcb_shm_seg_t segment = pic->p_sys->segment;
     xcb_void_cookie_t ck;
 
     if (!sys->visible)
@@ -533,16 +525,13 @@ static int Control (vout_display_t *vd, int query, va_list ap)
         vout_display_place_t place;
         vout_display_PlacePicture (&place, &vd->source, vd->cfg, false);
 
-        video_format_t src;
-        video_format_ApplyRotation(&src, &vd->source);
-
-        vd->fmt.i_width  = src.i_width  * place.width / src.i_visible_width;
-        vd->fmt.i_height = src.i_height * place.height / src.i_visible_height;
+        vd->fmt.i_width  = vd->source.i_width  * place.width  / vd->source.i_visible_width;
+        vd->fmt.i_height = vd->source.i_height * place.height / vd->source.i_visible_height;
 
         vd->fmt.i_visible_width  = place.width;
         vd->fmt.i_visible_height = place.height;
-        vd->fmt.i_x_offset = src.i_x_offset * place.width / src.i_visible_width;
-        vd->fmt.i_y_offset = src.i_y_offset * place.height / src.i_visible_height;
+        vd->fmt.i_x_offset = vd->source.i_x_offset * place.width  / vd->source.i_visible_width;
+        vd->fmt.i_y_offset = vd->source.i_y_offset * place.height / vd->source.i_visible_height;
         return VLC_SUCCESS;
     }
 
@@ -574,10 +563,14 @@ static void ResetPictures (vout_display_t *vd)
     if (!sys->pool)
         return;
 
-    if (sys->seg_base != 0)
-        for (unsigned i = 0; i < MAX_PICTURES; i++)
-            xcb_shm_detach (sys->conn, sys->seg_base + i);
+    for (unsigned i = 0; i < MAX_PICTURES; i++)
+    {
+        picture_resource_t *res = &sys->resource[i];
 
+        if (!res->p->p_pixels)
+            break;
+        XCB_pictures_Free (res, sys->conn);
+    }
     picture_pool_Delete (sys->pool);
     sys->pool = NULL;
 }

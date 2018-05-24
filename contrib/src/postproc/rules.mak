@@ -75,8 +75,8 @@ else
 POSTPROCCONF += --enable-pthreads
 endif
 
-ifdef HAVE_SOLARIS
-POSTPROCCONF += --enable-pic
+ifdef HAVE_WINCE
+POSTPROCCONF += --target-os=mingw32ce --arch=armv4l --cpu=armv4t
 endif
 
 # Build

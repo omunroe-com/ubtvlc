@@ -2,7 +2,7 @@
  * es_out_timeshift.c: Es Out timeshift.
  *****************************************************************************
  * Copyright (C) 2008 Laurent Aimar
- * $Id: c12d73ad496dd7e8313fa4c7809ace09a64c02c2 $
+ * $Id: 0864efb97ad0d3c6fff4c4846542395e3003a6de $
  *
  * Authors: Laurent Aimar < fenrir _AT_ videolan _DOT_ org>
  *
@@ -35,7 +35,9 @@
 #  include <direct.h>
 #endif
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include <vlc_common.h>
 #include <vlc_fs.h>
@@ -1197,7 +1199,7 @@ static void TsStoragePopCmd( ts_storage_t *p_storage, ts_cmd_t *p_cmd, bool b_fl
         }
         else
         {
-            //perror( "TsStoragePopCmd" );
+            //fprintf( stderr, "TsStoragePopCmd: %m\n" );
             p_cmd->u.send.p_block = block_Alloc( 1 );
         }
     }
@@ -1594,7 +1596,7 @@ static FILE *GetTmpFile( char **ppsz_file, const char *psz_path )
 
     /* */
     *ppsz_file = NULL;
-    if( asprintf( &psz_name, "%s"DIR_SEP"vlc-timeshift.XXXXXX", psz_path ) < 0 )
+    if( asprintf( &psz_name, "%s/vlc-timeshift.XXXXXX", psz_path ) < 0 )
         return NULL;
 
     /* */

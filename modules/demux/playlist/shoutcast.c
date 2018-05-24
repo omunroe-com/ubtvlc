@@ -2,7 +2,7 @@
  * shoutcast.c: Winamp >=5.2 shoutcast demuxer
  *****************************************************************************
  * Copyright (C) 2006 VLC authors and VideoLAN
- * $Id: 499ba3d08fef71b616f488bd8d457013031018ff $
+ * $Id: 9348819bbdfd6b5716de061ad6cf19eaf0ad3a93 $
  *
  * Authors: Antoine Cellerier <dionoea -@t- videolan -Dot- org>
  *          based on b4s.c by Sigmund Augdal Helberg <dnumgis@videolan.org>
@@ -35,7 +35,6 @@
 
 #include "playlist.h"
 #include <vlc_xml.h>
-#include <vlc_strings.h>
 
 /* duplicate from modules/services_discovery/shout.c */
 #define SHOUTCAST_BASE_URL "http/shout-winamp://www.shoutcast.com/sbin/newxml.phtml"
@@ -170,7 +169,6 @@ static int DemuxGenre( demux_t *p_demux, xml_reader_t *p_xml_reader,
                                   psz_name ) != -1 )
                     {
                         input_item_t *p_input;
-                        resolve_xml_special_chars( psz_mrl );
                         p_input = input_item_New( psz_mrl, psz_name );
                         input_item_CopyOptions( p_input_node->p_item, p_input );
                         free( psz_mrl );
@@ -314,36 +312,27 @@ static int DemuxStation( demux_t *p_demux, xml_reader_t *p_xml_reader,
                     }
 
                     /* Create the item */
-                    input_item_t *p_input = NULL;
-
-                    if( likely(psz_mrl != NULL) )
-                    {
-                        resolve_xml_special_chars( psz_mrl );
-                        p_input = input_item_New( psz_mrl, psz_name );
-                        free( psz_mrl );
-                    }
-
-                    if( likely(p_input != NULL) )
-                    {
-                        input_item_CopyOptions( p_input_node->p_item, p_input );
+                    input_item_t *p_input;
+                    p_input = input_item_New( psz_mrl, psz_name );
+                    input_item_CopyOptions( p_input_node->p_item, p_input );
+                    free( psz_mrl );
 
 #define SADD_INFO( type, field ) \
                     if( field ) \
                         input_item_AddInfo( p_input, _("Shoutcast"), \
                                             vlc_gettext(type), "%s", field )
-                        SADD_INFO( N_("Mime"), psz_mt );
-                        SADD_INFO( N_("Bitrate"), psz_br );
-                        SADD_INFO( N_("Listeners"), psz_lc );
-                        SADD_INFO( N_("Load"), psz_load );
-                        if( psz_genre )
-                            input_item_SetGenre( p_input, psz_genre );
-                        if( psz_ct )
-                            input_item_SetNowPlaying( p_input, psz_ct );
-                        if( psz_rt )
-                            input_item_SetRating( p_input, psz_rt );
-                        input_item_node_AppendItem( p_input_node, p_input );
-                        vlc_gc_decref( p_input );
-                    }
+                    SADD_INFO( N_("Mime"), psz_mt );
+                    SADD_INFO( N_("Bitrate"), psz_br );
+                    SADD_INFO( N_("Listeners"), psz_lc );
+                    SADD_INFO( N_("Load"), psz_load );
+                    if( psz_genre )
+                        input_item_SetGenre( p_input, psz_genre );
+                    if( psz_ct )
+                        input_item_SetNowPlaying( p_input, psz_ct );
+                    if( psz_rt )
+                        input_item_SetRating( p_input, psz_rt );
+                    input_item_node_AppendItem( p_input_node, p_input );
+                    vlc_gc_decref( p_input );
                     FREENULL( psz_base );
                     FREENULL( psz_name );
                     FREENULL( psz_mt );

@@ -2,7 +2,7 @@
  * AudioEffects.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2004-2012 VLC authors and VideoLAN
- * $Id: 031050fd01fc88ac60020ffabc9ef9efff8b44bd $
+ * $Id: 143bb864b648a2502bd68b3be632de9ee8dee3aa $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *          Jérôme Decoodt <djc@videolan.org>
@@ -33,7 +33,6 @@
     BOOL b_genericAudioProfileInInteraction;
 
     /* Equalizer */
-    IBOutlet id o_eq_view;
     IBOutlet id o_eq_enable_ckb;
     IBOutlet id o_eq_twopass_ckb;
     IBOutlet id o_eq_preamp_lbl;
@@ -51,7 +50,6 @@
     IBOutlet id o_eq_preamp_sld;
 
     /* Compressor */
-    IBOutlet id o_comp_view;
     IBOutlet id o_comp_enable_ckb;
     IBOutlet id o_comp_reset_btn;
     IBOutlet id o_comp_band1_sld;
@@ -77,7 +75,6 @@
     IBOutlet id o_comp_band7_lbl;
 
     /* Spatializer */
-    IBOutlet id o_spat_view;
     IBOutlet id o_spat_enable_ckb;
     IBOutlet id o_spat_reset_btn;
     IBOutlet id o_spat_band1_sld;
@@ -119,6 +116,7 @@
 - (void)saveCurrentProfile;
 
 /* Equalizer */
+- (void)setupEqualizer;
 - (void)equalizerUpdated;
 - (void)setValue:(float)value forSlider:(int)index;
 - (IBAction)eq_bandSliderUpdated:(id)sender;

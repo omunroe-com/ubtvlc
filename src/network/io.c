@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2004-2005, 2007 VLC authors and VideoLAN
  * Copyright © 2005-2006 Rémi Denis-Courmont
- * $Id: d8832e21f0b503a7bada50e75978c0a6d04899ef $
+ * $Id: dc5ef1207f0938d5bd7ce7b0eb95406c91750fa1 $
  *
  * Authors: Laurent Aimar <fenrir@videolan.org>
  *          Rémi Denis-Courmont <rem # videolan.org>
@@ -42,7 +42,9 @@
 #include <assert.h>
 
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
 #ifdef HAVE_POLL
 #   include <poll.h>
 #endif
@@ -83,8 +85,7 @@ int net_Socket (vlc_object_t *p_this, int family, int socktype,
     if (fd == -1)
     {
         if (net_errno != EAFNOSUPPORT)
-            msg_Err (p_this, "cannot create socket: %s",
-                     vlc_strerror_c(net_errno));
+            msg_Err (p_this, "cannot create socket: %m");
         return -1;
     }
 
@@ -157,7 +158,7 @@ int *net_Listen (vlc_object_t *p_this, const char *psz_host,
                              ptr->ai_protocol);
         if (fd == -1)
         {
-            msg_Dbg (p_this, "socket error: %s", vlc_strerror_c(net_errno));
+            msg_Dbg (p_this, "socket error: %m");
             continue;
         }
 
@@ -197,8 +198,7 @@ int *net_Listen (vlc_object_t *p_this, const char *psz_host,
             else
 #endif
             {
-                msg_Err (p_this, "socket bind error: %s",
-                         vlc_strerror_c(net_errno));
+                msg_Err (p_this, "socket bind error (%m)");
                 continue;
             }
         }
@@ -223,8 +223,7 @@ int *net_Listen (vlc_object_t *p_this, const char *psz_host,
 #endif
                 if (listen (fd, INT_MAX))
                 {
-                    msg_Err (p_this, "socket listen error: %s",
-                             vlc_strerror_c(net_errno));
+                    msg_Err (p_this, "socket listen error (%m)");
                     net_Close (fd);
                     continue;
                 }
@@ -269,17 +268,6 @@ net_Read (vlc_object_t *restrict p_this, int fd, const v_socket_t *vs,
     ufd[1].events = POLLIN;
 
     size_t i_total = 0;
-#if VLC_WINSTORE_APP
-    /* With winrtsock winsocks emulation library, the first call to read()
-     * before poll() starts an asynchronous transfer and returns 0.
-     * Always call poll() first.
-     *
-     * However if we have a virtual socket handler, try to read() first.
-     * See bug #8972 for details.
-     */
-    if (vs == NULL)
-        goto do_poll;
-#endif
     do
     {
         ssize_t n;
@@ -337,9 +325,7 @@ net_Read (vlc_object_t *restrict p_this, int fd, const v_socket_t *vs,
             errno = EINTR;
             return -1;
         }
-#if VLC_WINSTORE_APP
-do_poll:
-#endif
+
         /* Wait for more data */
         if (poll (ufd, sizeof (ufd) / sizeof (ufd[0]), -1) < 0)
         {
@@ -361,7 +347,7 @@ do_poll:
 
     return i_total;
 error:
-    msg_Err (p_this, "read error: %s", vlc_strerror_c(errno));
+    msg_Err (p_this, "read error: %m");
     return -1;
 }
 
@@ -401,7 +387,7 @@ ssize_t net_Write( vlc_object_t *p_this, int fd, const v_socket_t *p_vs,
         {
             if (errno == EINTR)
                 continue;
-            msg_Err (p_this, "Polling error: %s", vlc_strerror_c(errno));
+            msg_Err (p_this, "Polling error: %m");
             return -1;
         }
 
@@ -436,7 +422,7 @@ ssize_t net_Write( vlc_object_t *p_this, int fd, const v_socket_t *p_vs,
         {
             if (errno == EINTR)
                 continue;
-            msg_Err (p_this, "Write error: %s", vlc_strerror_c(errno));
+            msg_Err (p_this, "Write error: %m");
             break;
         }
 

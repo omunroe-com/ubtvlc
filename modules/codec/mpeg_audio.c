@@ -2,7 +2,7 @@
  * mpeg_audio.c: parse MPEG audio sync info and packetize the stream
  *****************************************************************************
  * Copyright (C) 2001-2003 VLC authors and VideoLAN
- * $Id: f893dd257a9ec52728ab1b9ee4356cff89f4582d $
+ * $Id: 8c300cda131141c22d38f2ccea4609d0404665fb $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Eric Petit <titer@videolan.org>
@@ -124,8 +124,7 @@ static int Open( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys;
 
-    if(( p_dec->fmt_in.i_codec != VLC_CODEC_MPGA ) &&
-       ( p_dec->fmt_in.i_codec != VLC_CODEC_MP3 ) )
+    if( p_dec->fmt_in.i_codec != VLC_CODEC_MPGA )
     {
         return VLC_EGENERIC;
     }
@@ -191,33 +190,30 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
     uint8_t *p_buf;
     block_t *p_out_buffer;
 
-    block_t *p_block = pp_block ? *pp_block : NULL;
+    if( !pp_block || !*pp_block ) return NULL;
 
-    if (p_block) {
-        if( p_block->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
+    if( (*pp_block)->i_flags&(BLOCK_FLAG_DISCONTINUITY|BLOCK_FLAG_CORRUPTED) )
+    {
+        if( (*pp_block)->i_flags&BLOCK_FLAG_CORRUPTED )
         {
-            if( p_block->i_flags&BLOCK_FLAG_CORRUPTED )
-            {
-                p_sys->i_state = STATE_NOSYNC;
-                block_BytestreamEmpty( &p_sys->bytestream );
-            }
-            date_Set( &p_sys->end_date, 0 );
-            block_Release( p_block );
-            p_sys->b_discontinuity = true;
-            return NULL;
+            p_sys->i_state = STATE_NOSYNC;
+            block_BytestreamEmpty( &p_sys->bytestream );
         }
+        date_Set( &p_sys->end_date, 0 );
+        block_Release( *pp_block );
+        p_sys->b_discontinuity = true;
+        return NULL;
+    }
 
-        if( !date_Get( &p_sys->end_date ) && p_block->i_pts <= VLC_TS_INVALID )
-        {
-            /* We've just started the stream, wait for the first PTS. */
-            msg_Dbg( p_dec, "waiting for PTS" );
-            block_Release( p_block );
-            return NULL;
-        }
+    if( !date_Get( &p_sys->end_date ) && (*pp_block)->i_pts <= VLC_TS_INVALID )
+    {
+        /* We've just started the stream, wait for the first PTS. */
+        msg_Dbg( p_dec, "waiting for PTS" );
+        block_Release( *pp_block );
+        return NULL;
+    }
 
-        block_BytestreamPush( &p_sys->bytestream, p_block );
-    } else
-        p_sys->i_state = STATE_SEND_DATA; /* return all the data we have left */
+    block_BytestreamPush( &p_sys->bytestream, *pp_block );
 
     while( 1 )
     {
@@ -248,7 +244,7 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             /* New frame, set the Presentation Time Stamp */
             p_sys->i_pts = p_sys->bytestream.p_block->i_pts;
             if( p_sys->i_pts > VLC_TS_INVALID &&
-                p_sys->i_pts > date_Get( &p_sys->end_date ) )
+                p_sys->i_pts != date_Get( &p_sys->end_date ) )
             {
                 date_Set( &p_sys->end_date, p_sys->i_pts );
             }
@@ -264,7 +260,8 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
             }
 
             /* Build frame header */
-            i_header = GetDWBE(p_header);
+            i_header = (p_header[0]<<24)|(p_header[1]<<16)|(p_header[2]<<8)
+                       |p_header[3];
 
             /* Check if frame is valid and get frame info */
             p_sys->i_frame_size = SyncInfo( i_header,
@@ -323,7 +320,8 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 unsigned int i_next_layer;
 
                 /* Build frame header */
-                i_header = GetDWBE(p_header);
+                i_header = (p_header[0]<<24)|(p_header[1]<<16)|(p_header[2]<<8)
+                           |p_header[3];
 
                 i_next_frame_size = SyncInfo( i_header,
                                               &i_next_channels,
@@ -448,12 +446,10 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 p_sys->i_free_frame_size = p_sys->i_frame_size;
             }
 
-            /* Copy the whole frame into the buffer. */
-            if (block_GetBytes( &p_sys->bytestream,
-                            p_buf, __MIN( (unsigned)p_sys->i_frame_size, p_out_buffer->i_buffer ) )) {
-                block_Release(p_out_buffer);
-                return NULL;
-            }
+            /* Copy the whole frame into the buffer. When we reach this point
+             * we already know we have enough data available. */
+            block_GetBytes( &p_sys->bytestream,
+                            p_buf, __MIN( (unsigned)p_sys->i_frame_size, p_out_buffer->i_buffer ) );
 
             /* Get beginning of next frame for libmad */
             if( !p_sys->b_packetizer )
@@ -470,11 +466,7 @@ static block_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
                 p_sys->i_pts = p_sys->bytestream.p_block->i_pts = VLC_TS_INVALID;
 
             /* So p_block doesn't get re-added several times */
-            p_block = block_BytestreamPop( &p_sys->bytestream );
-            if (pp_block)
-                *pp_block = p_block;
-            else if (p_block)
-                block_Release(p_block);
+            *pp_block = block_BytestreamPop( &p_sys->bytestream );
 
             return p_out_buffer;
         }

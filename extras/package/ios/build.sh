@@ -3,25 +3,19 @@ set -e
 
 PLATFORM=OS
 VERBOSE=no
-DEBUG=no
 SDK_VERSION=7.0
-SDK_MIN=6.1
-SIXTYFOURBIT_SDK_MIN=7.0
+SDK_MIN=5.1
 ARCH=armv7
-SCARY=yes
 
 usage()
 {
 cat << EOF
-usage: $0 [-s] [-d] [-v] [-k sdk]
+usage: $0 [-s] [-k sdk]
 
 OPTIONS
    -k <sdk version>      Specify which sdk to use ('xcodebuild -showsdks', current: ${SDK_VERSION})
    -s            Build for simulator
    -a <arch>     Specify which arch to use (current: ${ARCH})
-   -d            Enable debug
-   -v            Enable verbose command-line output
-   -w            Build a limited stack of non-scary libraries only
 EOF
 }
 
@@ -42,7 +36,7 @@ info()
     echo "[${blue}info${normal}] $1"
 }
 
-while getopts "hvwdsk:a:" OPTION
+while getopts "hvsk:a:" OPTION
 do
      case $OPTION in
          h)
@@ -54,12 +48,6 @@ do
              ;;
          s)
              PLATFORM=Simulator
-             ;;
-         d)
-             DEBUG=yes
-             ;;
-         w)
-             SCARY=no
              ;;
          k)
              SDK_VERSION=$OPTARG
@@ -89,13 +77,9 @@ info "Building libvlc for iOS"
 
 if [ "$PLATFORM" = "Simulator" ]; then
     TARGET="${ARCH}-apple-darwin11"
+    OPTIM="-O3 -g"
 else
     TARGET="arm-apple-darwin11"
-fi
-
-if [ "$DEBUG" = "yes" ]; then
-    OPTIM="-O0 -g"
-else
     OPTIM="-O3 -g"
 fi
 
@@ -146,21 +130,17 @@ export STRIP="xcrun strip"
 export PLATFORM=$PLATFORM
 export SDK_VERSION=$SDK_VERSION
 
-export CFLAGS="-isysroot ${SDKROOT} -arch ${ARCH} ${OPTIM}"
-
 if [ "$PLATFORM" = "OS" ]; then
+export CFLAGS="-isysroot ${SDKROOT} -arch ${ARCH} -miphoneos-version-min=${SDK_MIN} ${OPTIM}"
 if [ "$ARCH" != "arm64" ]; then
-export CFLAGS="${CFLAGS} -mcpu=cortex-a8 -miphoneos-version-min=${SDK_MIN}"
-else
-export CFLAGS="${CFLAGS} -miphoneos-version-min=${SIXTYFOURBIT_SDK_MIN}"
+export CFLAGS="${CFLAGS} -mcpu=cortex-a8"
 fi
 else
-export CFLAGS="${CFLAGS} -miphoneos-version-min=${SIXTYFOURBIT_SDK_MIN}"
+export CFLAGS="-isysroot ${SDKROOT} -arch ${ARCH} -miphoneos-version-min=${SDK_MIN} ${OPTIM}"
 fi
-
-export CXXFLAGS="${CFLAGS} -stdlib=libstdc++"
-
 export CPPFLAGS="${CFLAGS}"
+export CXXFLAGS="${CFLAGS}"
+export OBJCFLAGS="${CFLAGS}"
 
 export CPP="xcrun cc -E"
 export CXXCPP="xcrun c++ -E"
@@ -172,28 +152,21 @@ if [ "$PLATFORM" = "Simulator" ]; then
     export OBJCFLAGS="-fobjc-abi-version=2 -fobjc-legacy-dispatch ${OBJCFLAGS}"
 fi
 
-export LDFLAGS="-L${SDKROOT}/usr/lib -arch ${ARCH} -isysroot ${SDKROOT}"
+export LDFLAGS="-L${SDKROOT}/usr/lib -arch ${ARCH} -isysroot ${SDKROOT} -miphoneos-version-min=${SDK_MIN}"
 
 if [ "$PLATFORM" = "OS" ]; then
     EXTRA_CFLAGS="-arch ${ARCH}"
-    EXTRA_LDFLAGS="-arch ${ARCH}"
 if [ "$ARCH" != "arm64" ]; then
     EXTRA_CFLAGS+=" -mcpu=cortex-a8"
-    EXTRA_CFLAGS+=" -miphoneos-version-min=${SDK_MIN}"
-    EXTRA_LDFLAGS+=" -Wl,-ios_version_min,${SDK_MIN}"
-    export LDFLAGS="${LDFLAGS} -Wl,-ios_version_min,${SDK_MIN}"
-else
-    EXTRA_CFLAGS+=" -miphoneos-version-min=${SIXTYFOURBIT_SDK_MIN}"
-    EXTRA_LDFLAGS+=" -Wl,-ios_version_min,${SIXTYFOURBIT_SDK_MIN}"
-    export LDFLAGS="${LDFLAGS} -Wl,-ios_version_min,${SIXTYFOURBIT_SDK_MIN}"
 fi
+    EXTRA_LDFLAGS="-arch ${ARCH}"
 else
     EXTRA_CFLAGS="-arch ${ARCH}"
-    EXTRA_CFLAGS+=" -miphoneos-version-min=${SIXTYFOURBIT_SDK_MIN}"
-    EXTRA_LDFLAGS=" -Wl,-ios_version_min,${SIXTYFOURBIT_SDK_MIN}"
-    export LDFLAGS="${LDFLAGS} -Wl-ios_version_min,${SIXTYFOURBIT_SDK_MIN}"
+    EXTRA_LDFLAGS="-arch ${ARCH}"
 fi
 
+EXTRA_CFLAGS+=" -miphoneos-version-min=${SDK_MIN}"
+EXTRA_LDFLAGS+=" -miphoneos-version-min=${SDK_MIN}"
 
 info "LD FLAGS SELECTED = '${LDFLAGS}'"
 
@@ -214,7 +187,7 @@ else
     export ASCPP="xcrun as"
 fi
 
-../bootstrap --build=x86_64-apple-darwin11 --host=${TARGET} --prefix=${VLCROOT}/contrib/${TARGET}-${ARCH} --arch=${ARCH} --disable-gpl \
+../bootstrap --host=x86_64-apple-darwin11 --build=${TARGET} --prefix=${VLCROOT}/contrib/${TARGET}-${ARCH} --disable-gpl \
     --disable-disc --disable-sout \
     --disable-sdl \
     --disable-SDL_image \
@@ -227,7 +200,7 @@ fi
     --disable-upnp \
     --disable-gme \
     --disable-tremor \
-    --enable-vorbis \
+    --disable-vorbis \
     --disable-sidplay2 \
     --disable-samplerate \
     --disable-goom \
@@ -244,7 +217,6 @@ fi
     --disable-fontconfig \
     --disable-gpg-error \
     --disable-lua \
-    --enable-vpx \
     --enable-taglib > ${out}
 
 echo "EXTRA_CFLAGS += ${EXTRA_CFLAGS}" >> config.mak
@@ -275,18 +247,6 @@ spushd ${BUILDDIR}
 
 info ">> --prefix=${PREFIX} --host=${TARGET}"
 
-if [ "$DEBUG" = "yes" ]; then
-    DEBUGFLAG="--enable-debug"
-else
-    DEBUGFLAG="--disable-debug"
-fi
-
-if [ "$SCARY" = "yes" ]; then
-	SCARYFLAG="--enable-dvbpsi --enable-avcodec"
-else
-	SCARYFLAG="--disable-dca --disable-dvbpsi --disable-avcodec --disable-avformat --disable-zvbi --enable-vpx"
-fi
-
 # Run configure only upon changes.
 if [ "${VLCROOT}/configure" -nt config.log -o \
      "${THIS_SCRIPT_PATH}" -nt config.log ]; then
@@ -294,18 +254,21 @@ ${VLCROOT}/configure \
     --prefix="${PREFIX}" \
     --host="${TARGET}" \
     --with-contrib="${VLCROOT}/contrib/${TARGET}-${ARCH}" \
+    --disable-debug \
     --enable-static \
-    ${DEBUGFLAG} \
-    ${SCARYFLAG} \
     --disable-macosx \
+    --disable-macosx-vout \
     --disable-macosx-dialog-provider \
     --disable-macosx-qtkit \
     --disable-macosx-eyetv \
     --disable-macosx-vlc-app \
     --disable-macosx-avfoundation \
-    --disable-audioqueue \
+    --enable-audioqueue \
+    --enable-ios-audio \
+    --enable-ios-vout2 \
     --disable-shared \
     --enable-macosx-quartztext \
+    --enable-avcodec \
     --enable-mkv \
     --enable-opus \
     --disable-sout \
@@ -313,6 +276,7 @@ ${VLCROOT}/configure \
     --disable-lua \
     --disable-a52 \
     --enable-fribidi \
+    --disable-macosx-audio \
     --disable-qt --disable-skins2 \
     --disable-vcd \
     --disable-vlc \
@@ -325,6 +289,7 @@ ${VLCROOT}/configure \
     --disable-notify \
     --enable-live555 \
     --enable-realrtsp \
+    --enable-dvbpsi \
     --enable-swscale \
     --disable-projectm \
     --enable-libass \
@@ -337,7 +302,7 @@ ${VLCROOT}/configure \
     --disable-libva \
     --disable-gme \
     --disable-tremor \
-    --enable-vorbis \
+    --disable-vorbis \
     --disable-fluidsynth \
     --disable-jack \
     --disable-pulse \
@@ -350,7 +315,6 @@ ${VLCROOT}/configure \
     --enable-freetype \
     --enable-taglib \
     --disable-mmx \
-    --disable-addonmanagermodules \
     --disable-mad > ${out} # MMX and SSE support requires llvm which is broken on Simulator
 fi
 
@@ -433,36 +397,7 @@ colorthres
 antiflicker
 anaglyph
 remap
-oldmovie
-vhs
-demuxdump
-fingerprinter
 "
-
-if [ "$SCARY" = "no" ]; then
-blacklist="${blacklist}
-dts
-dvbsub
-svcd
-hevc
-packetizer_mlp
-a52
-vc1
-uleaddvaudio
-librar
-libvoc
-avio
-chorus_flanger
-smooth
-cvdsub
-libmod
-libdash
-libmpgv
-dolby_surround
-mpeg_audio"
-fi
-
-echo ${blacklist}
 
 for i in ${blacklist}
 do

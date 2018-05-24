@@ -2,7 +2,7 @@
  * subtitles.c : subtitles detection
  *****************************************************************************
  * Copyright (C) 2003-2009 VLC authors and VideoLAN
- * $Id: 085187bf5576fe0513279a0c26c142af5cbe53da $
+ * $Id: 61378d52d92aa46c92fd3e167163ef933cf980e0 $
  *
  * Authors: Derk-Jan Hartman <hartman at videolan.org>
  * This is adapted code from the GPL'ed MPlayer (http://mplayerhq.hu)
@@ -32,7 +32,9 @@
 #endif
 
 #include <ctype.h> /* isalnum() */
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#endif
 #include <sys/stat.h>
 
 #include <vlc_common.h>
@@ -49,7 +51,7 @@
 /**
  * The possible extensions for subtitle files we support
  */
-static const char sub_exts[][6] = {
+static const char const sub_exts[][6] = {
     "idx", "sub",  "srt",
     "ssa", "ass",  "smi",
     "utf", "utf8", "utf-8",
@@ -57,7 +59,7 @@ static const char sub_exts[][6] = {
     "usf", "jss",  "cdg",
     "psb", "mpsub","mpl2",
     "pjs", "dks", "stl",
-    "vtt",""
+    ""
 };
 
 static void strcpy_trim( char *d, const char *s )
@@ -312,11 +314,14 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
 
         msg_Dbg( p_this, "looking for a subtitle file in %s", psz_dir );
 
-        const char *psz_name;
+        char *psz_name;
         while( (psz_name = vlc_readdir( dir )) && i_sub_count < MAX_SUBTITLE_FILES )
         {
             if( psz_name[0] == '.' || !subtitles_Filter( psz_name ) )
+            {
+                free( psz_name );
                 continue;
+            }
 
             char tmp_fname_noext[strlen( psz_name ) + 1];
             char tmp_fname_trim[strlen( psz_name ) + 1];
@@ -362,7 +367,10 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
 
                 sprintf( psz_path, "%s"DIR_SEP"%s", psz_dir, psz_name );
                 if( !strcmp( psz_path, psz_fname ) )
+                {
+                    free( psz_name );
                     continue;
+                }
 
                 if( !vlc_stat( psz_path, &st ) && S_ISREG( st.st_mode ) && result )
                 {
@@ -380,6 +388,7 @@ char **subtitles_Detect( input_thread_t *p_this, char *psz_path,
                              psz_path, i_prio );
                 }
             }
+            free( psz_name );
         }
         closedir( dir );
     }

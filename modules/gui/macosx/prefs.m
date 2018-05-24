@@ -2,7 +2,7 @@
  * prefs.m: MacOS X module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: ee31032f96594d7df92a044ffd421d9a0af4ea69 $
+ * $Id: 0b87421d65f4ce6ff76a468d9d24942dfd08816d $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -484,8 +484,9 @@ static VLCPrefs *_o_sharedMainInstance = nil;
 
 - (id)initWithConfigItem: (module_config_t *) configItem
 {
-    NSString *name = toNSStr(configItem->psz_name);
+    NSString * name = _NS(configItem->psz_name);
     self = [super initWithName:name];
+    [name release];
     if (self != nil)
         _configItem = configItem;
 

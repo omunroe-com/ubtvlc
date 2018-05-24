@@ -53,8 +53,7 @@ vlc_v4l2_vbi_t *OpenVBI (demux_t *demux, const char *psz_device)
     int rawfd = vlc_open (psz_device, O_RDWR);
     if (rawfd == -1)
     {
-        msg_Err (demux, "cannot open device '%s': %s", psz_device,
-                 vlc_strerror_c(errno));
+        msg_Err (demux, "cannot open device '%s': %m", psz_device);
         goto err;
     }
 
@@ -72,7 +71,6 @@ vlc_v4l2_vbi_t *OpenVBI (demux_t *demux, const char *psz_device)
     {
         msg_Err (demux, "cannot capture VBI data: %s", errstr);
         free (errstr);
-        close (rawfd);
         goto err;
     }
 
@@ -112,7 +110,7 @@ void GrabVBI (demux_t *p_demux, vlc_v4l2_vbi_t *vbi)
     int r = vbi_capture_pull_sliced (vbi->cap, &sliced_bytes, &timeout);
     switch (r) {
         case -1:
-            msg_Err (p_demux, "error reading VBI: %s", vlc_strerror_c(errno));
+            msg_Err (p_demux, "error reading VBI: %m");
         case  0: /* nothing avail */
             break;
         case  1: /* got data */

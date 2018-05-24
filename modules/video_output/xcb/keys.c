@@ -153,20 +153,14 @@ int XCB_keyHandler_Process (key_handler_t *ctx, xcb_generic_event_t *ev)
                      vk, sym);
             if (vk == KEY_UNSET)
                 break;
-            if (e->state & XCB_MOD_MASK_SHIFT) /* Shift */
+            if (e->state & XCB_MOD_MASK_SHIFT)
                 vk |= KEY_MODIFIER_SHIFT;
-            /* XCB_MOD_MASK_LOCK */ /* Caps Lock */
-            if (e->state & XCB_MOD_MASK_CONTROL) /* Control */
+            if (e->state & XCB_MOD_MASK_CONTROL)
                 vk |= KEY_MODIFIER_CTRL;
-            if (e->state & XCB_MOD_MASK_1) /* Alternate */
+            if (e->state & XCB_MOD_MASK_1)
                 vk |= KEY_MODIFIER_ALT;
-            /* XCB_MOD_MASK_2 */ /* Numeric Pad Lock */
-            if (e->state & XCB_MOD_MASK_3) /* Super */
+            if (e->state & XCB_MOD_MASK_4)
                 vk |= KEY_MODIFIER_META;
-            if (e->state & XCB_MOD_MASK_4) /* Meta */
-                vk |= KEY_MODIFIER_META;
-            if (e->state & XCB_MOD_MASK_5) /* Alternate Graphic */
-                vk |= KEY_MODIFIER_ALT;
             var_SetInteger (ctx->obj->p_libvlc, "key-pressed", vk);
             break;
         }

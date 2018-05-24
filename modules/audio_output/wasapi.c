@@ -32,8 +32,7 @@
 
 #include <vlc_common.h>
 #include <vlc_aout.h>
-#include <vlc_plugin.h>
-#include "audio_output/mmdevice.h"
+#include "mmdevice.h"
 
 static LARGE_INTEGER freq; /* performance counters frequency */
 
@@ -75,7 +74,7 @@ typedef struct aout_stream_sys
     vlc_fourcc_t format; /**< Sample format */
     unsigned rate; /**< Sample rate */
     unsigned bytes_per_frame;
-    UINT64 written; /**< Frames written to the buffer */
+    UINT32 written; /**< Frames written to the buffer */
     UINT32 frames; /**< Total buffer size (frames) */
 } aout_stream_sys_t;
 
@@ -85,38 +84,36 @@ static HRESULT TimeGet(aout_stream_t *s, mtime_t *restrict delay)
 {
     aout_stream_sys_t *sys = s->sys;
     void *pv;
-    UINT64 pos, qpcpos, freq;
+    UINT64 pos, qpcpos;
     HRESULT hr;
 
     hr = IAudioClient_GetService(sys->client, &IID_IAudioClock, &pv);
-    if (FAILED(hr))
-    {
-        msg_Err(s, "cannot get clock (error 0x%lx)", hr);
-        return hr;
-    }
-
-    IAudioClock *clock = pv;
-
-    hr = IAudioClock_GetPosition(clock, &pos, &qpcpos);
     if (SUCCEEDED(hr))
-        hr = IAudioClock_GetFrequency(clock, &freq);
-    IAudioClock_Release(clock);
-    if (FAILED(hr))
     {
-        msg_Err(s, "cannot get position (error 0x%lx)", hr);
-        return hr;
+        IAudioClock *clock = pv;
+
+        hr = IAudioClock_GetPosition(clock, &pos, &qpcpos);
+        if (FAILED(hr))
+            msg_Err(s, "cannot get position (error 0x%lx)", hr);
+        IAudioClock_Release(clock);
     }
+    else
+        msg_Err(s, "cannot get clock (error 0x%lx)", hr);
 
-    lldiv_t w = lldiv(sys->written, sys->rate);
-    lldiv_t r = lldiv(pos, freq);
-
-    static_assert((10000000 % CLOCK_FREQ) == 0, "Frequency conversion broken");
-
-    *delay = ((w.quot - r.quot) * CLOCK_FREQ)
-           + ((w.rem * CLOCK_FREQ) / sys->rate)
-           - ((r.rem * CLOCK_FREQ) / freq)
-           - ((GetQPC() - qpcpos) / (10000000 / CLOCK_FREQ));
-
+    if (SUCCEEDED(hr))
+    {
+        if (pos != 0)
+        {
+            *delay = ((GetQPC() - qpcpos) / (10000000 / CLOCK_FREQ));
+            static_assert((10000000 % CLOCK_FREQ) == 0,
+                          "Frequency conversion broken");
+        }
+        else
+        {
+            *delay = sys->written * CLOCK_FREQ / sys->rate;
+            msg_Dbg(s, "extrapolating position: still propagating buffers");
+        }
+    }
     return hr;
 }
 
@@ -180,7 +177,8 @@ static HRESULT Play(aout_stream_t *s, block_t *block)
             break; /* done */
 
         /* Out of buffer space, sleep */
-        msleep(sys->frames * (CLOCK_FREQ / 2) / sys->rate);
+        msleep(AOUT_MIN_PREPARE_TIME
+             + block->i_nb_samples * CLOCK_FREQ / sys->rate);
     }
     IAudioRenderClient_Release(render);
 out:
@@ -212,13 +210,10 @@ static HRESULT Flush(aout_stream_t *s)
     IAudioClient_Stop(sys->client);
 
     hr = IAudioClient_Reset(sys->client);
-    if (SUCCEEDED(hr))
-    {
-        msg_Dbg(s, "reset");
-        sys->written = 0;
-    }
-    else
+    if (FAILED(hr))
         msg_Warn(s, "cannot reset stream (error 0x%lx)", hr);
+    else
+        sys->written = 0;
     return hr;
 }
 
@@ -287,44 +282,10 @@ static int vlc_FromWave(const WAVEFORMATEX *restrict wf,
     {
         const WAVEFORMATEXTENSIBLE *wfe = (void *)wf;
 
-        if (IsEqualIID(&wfe->SubFormat, &KSDATAFORMAT_SUBTYPE_IEEE_FLOAT))
-        {
-            switch (wf->wBitsPerSample)
-            {
-                case 64:
-                    audio->i_format = VLC_CODEC_FL64;
-                    break;
-                case 32:
-                    audio->i_format = VLC_CODEC_FL32;
-                    break;
-                default:
-                    return -1;
-            }
-        }
-        else if (IsEqualIID(&wfe->SubFormat, &KSDATAFORMAT_SUBTYPE_PCM))
-        {
-            switch (wf->wBitsPerSample)
-            {
-                case 32:
-                    audio->i_format = VLC_CODEC_S32N;
-                    break;
-                case 16:
-                    audio->i_format = VLC_CODEC_S16N;
-                    break;
-                default:
-                    return -1;
-            }
-        }
-
-        if (wfe->Samples.wValidBitsPerSample != wf->wBitsPerSample)
-            return -1;
-
         for (unsigned i = 0; chans_in[i]; i++)
             if (wfe->dwChannelMask & chans_in[i])
                 audio->i_physical_channels |= pi_vlc_chan_order_wg4[i];
     }
-    else
-        return -1;
 
     audio->i_original_channels = audio->i_physical_channels;
     aout_FormatPrepare (audio);
@@ -351,10 +312,6 @@ static unsigned vlc_CheckWaveOrder (const WAVEFORMATEX *restrict wf,
 static HRESULT Start(aout_stream_t *s, audio_sample_format_t *restrict fmt,
                      const GUID *sid)
 {
-    if (!s->b_force && var_InheritBool(s, "spdif") && AOUT_FMT_SPDIF(fmt))
-        /* Fallback to other plugin until pass-through is implemented */
-        return E_NOTIMPL;
-
     aout_stream_sys_t *sys = malloc(sizeof (*sys));
     if (unlikely(sys == NULL))
         return E_OUTOFMEMORY;
@@ -417,16 +374,6 @@ static HRESULT Start(aout_stream_t *s, audio_sample_format_t *restrict fmt,
         msg_Err(s, "cannot get buffer size (error 0x%lx)", hr);
         goto error;
     }
-    msg_Dbg(s, "buffer size    : %"PRIu32" frames", sys->frames);
-
-    REFERENCE_TIME latT, defT, minT;
-    if (SUCCEEDED(IAudioClient_GetStreamLatency(sys->client, &latT))
-     && SUCCEEDED(IAudioClient_GetDevicePeriod(sys->client, &defT, &minT)))
-    {
-        msg_Dbg(s, "maximum latency: %"PRIu64"00 ns", latT);
-        msg_Dbg(s, "default period : %"PRIu64"00 ns", defT);
-        msg_Dbg(s, "minimum period : %"PRIu64"00 ns", minT);
-    }
 
     sys->rate = fmt->i_rate;
     sys->bytes_per_frame = fmt->i_bytes_per_frame;
@@ -450,15 +397,15 @@ static void Stop(aout_stream_t *s)
 
     IAudioClient_Stop(sys->client); /* should not be needed */
     IAudioClient_Release(sys->client);
-
-    free(sys);
 }
 
-vlc_module_begin()
-    set_shortname("WASAPI")
-    set_description(N_("Windows Audio Session API output"))
-    set_capability("aout stream", 50)
-    set_category(CAT_AUDIO)
-    set_subcategory(SUBCAT_AUDIO_AOUT)
-    set_callbacks(Start, Stop)
-vlc_module_end()
+HRESULT aout_stream_Start(aout_stream_t *s,
+                          audio_sample_format_t *restrict fmt, const GUID *sid)
+{
+    return Start(s, fmt, sid);
+}
+
+void aout_stream_Stop(aout_stream_t *s)
+{
+    Stop(s);
+}

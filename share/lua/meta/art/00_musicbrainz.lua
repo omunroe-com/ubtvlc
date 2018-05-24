@@ -19,10 +19,6 @@
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
 --]]
 
-function descriptor()
-    return { scope="network" }
-end
-
 function try_query(mbid)
     local relquery = "http://mb.videolan.org/ws/2/release/" .. mbid
     local s = vlc.stream( relquery )
@@ -67,8 +63,10 @@ function fetch_art()
 
     local releaseid = nil
 
-    if meta["MB_ALBUMID"] then
-        releaseid = meta["MB_ALBUMID"]
+    for _, k in ipairs({"MUSICBRAINZ_ALBUMID", "MusicBrainz Album Id"}) do
+        if meta[k] then
+            releaseid = meta[k]
+        end
     end
 
     if not releaseid and meta["artist"] and meta["album"] then

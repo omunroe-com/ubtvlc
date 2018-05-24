@@ -5,7 +5,7 @@
  * Copyright © 2007-2012 Mirsal Ennaime
  * Copyright © 2009-2012 The VideoLAN team
  * Copyright © 2013      Alex Merry
- * $Id: 87277cd1b43ea0bfd428e9da4e1fcdefe3e69ecc $
+ * $Id: 1b760c95a7c124962043221f8af83e947bc4d793 $
  *
  * Authors:    Rafaël Carré <funman at videolanorg>
  *             Mirsal Ennaime <mirsal at mirsal fr>
@@ -192,48 +192,43 @@ static int Open( vlc_object_t *p_this )
         msg_Err( p_this, "Failed to connect to the D-Bus session daemon: %s",
                 error.message );
         dbus_error_free( &error );
-        close( p_sys->p_pipe_fds[1] );
-        close( p_sys->p_pipe_fds[0] );
         free( p_sys );
         return VLC_EGENERIC;
     }
 
     dbus_connection_set_exit_on_disconnect( p_conn, FALSE );
 
+    /* register an instance-specific well known name of the form
+     * org.mpris.MediaPlayer2.vlc.instanceXXXX where XXXX is the
+     * current process's pid */
+    size_t i_length = sizeof( DBUS_MPRIS_BUS_NAME ) +
+        sizeof( DBUS_INSTANCE_ID_PREFIX ) + 10;
+
+    char unique_service[i_length];
+
+    snprintf( unique_service, sizeof (unique_service),
+            DBUS_MPRIS_BUS_NAME"."DBUS_INSTANCE_ID_PREFIX"%"PRIu32,
+            (uint32_t)getpid() );
+
+    dbus_bus_request_name( p_conn, unique_service, 0, &error );
+
+    if( dbus_error_is_set( &error ) )
+    {
+        msg_Err( p_this, "Error requesting service name %s: %s",
+                 unique_service, error.message );
+        dbus_error_free( &error );
+        free( p_sys );
+        return VLC_EGENERIC;
+    }
+    msg_Dbg( p_intf, "listening on dbus as: %s", unique_service );
+
+    /* Try to register org.mpris.MediaPlayer2.vlc as well in case we are
+     * the only VLC instance currently connected to the bus */
+    dbus_bus_request_name( p_conn, DBUS_MPRIS_BUS_NAME, 0, NULL );
+
     /* Register the entry point object path */
     dbus_connection_register_object_path( p_conn, DBUS_MPRIS_OBJECT_PATH,
             &dbus_mpris_vtable, p_this );
-
-    /* Try to register org.mpris.MediaPlayer2.vlc */
-    dbus_bus_request_name( p_conn, DBUS_MPRIS_BUS_NAME, 0, &error );
-    if( dbus_error_is_set( &error ) )
-    {
-        msg_Dbg( p_this, "Failed to get service name %s: %s",
-                 DBUS_MPRIS_BUS_NAME, error.message );
-        dbus_error_free( &error );
-
-        /* Register an instance-specific well known name of the form
-         * org.mpris.MediaPlayer2.vlc.instanceXXXX where XXXX is the
-         * current Process ID */
-        char unique_service[sizeof( DBUS_MPRIS_BUS_NAME ) +
-                            sizeof( DBUS_INSTANCE_ID_PREFIX ) + 10];
-
-        snprintf( unique_service, sizeof (unique_service),
-                  DBUS_MPRIS_BUS_NAME"."DBUS_INSTANCE_ID_PREFIX"%"PRIu32,
-                  (uint32_t)getpid() );
-
-        dbus_bus_request_name( p_conn, unique_service, 0, &error );
-        if( dbus_error_is_set( &error ) )
-        {
-            msg_Err( p_this, "Failed to get service name %s: %s",
-                     DBUS_MPRIS_BUS_NAME, error.message );
-            dbus_error_free( &error );
-        }
-        else
-            msg_Dbg( p_intf, "listening on dbus as: %s", unique_service );
-    }
-    else
-        msg_Dbg( p_intf, "listening on dbus as: %s", DBUS_MPRIS_BUS_NAME );
 
     dbus_connection_flush( p_conn );
 
@@ -290,8 +285,6 @@ error:
 
     vlc_mutex_destroy( &p_sys->lock );
 
-    close( p_sys->p_pipe_fds[1] );
-    close( p_sys->p_pipe_fds[0] );
     free( p_sys );
     return VLC_ENOMEM;
 }
@@ -343,8 +336,6 @@ static void Close   ( vlc_object_t *p_this )
     vlc_array_destroy( p_sys->p_events );
     vlc_array_destroy( p_sys->p_timeouts );
     vlc_array_destroy( p_sys->p_watches );
-    close( p_sys->p_pipe_fds[1] );
-    close( p_sys->p_pipe_fds[0] );
     free( p_sys );
 }
 
@@ -521,7 +512,8 @@ static int UpdateTimeouts( intf_thread_t *p_intf, mtime_t i_loop_interval )
 static void ProcessEvents( intf_thread_t *p_intf,
                            callback_info_t **p_events, int i_events )
 {
-    bool b_can_play = p_intf->p_sys->b_can_play;
+    playlist_t *p_playlist = p_intf->p_sys->p_playlist;
+    bool        b_can_play = p_intf->p_sys->b_can_play;
 
     vlc_dictionary_t player_properties, tracklist_properties, root_properties;
     vlc_dictionary_init( &player_properties,    0 );
@@ -536,7 +528,7 @@ static void ProcessEvents( intf_thread_t *p_intf,
             TrackChange( p_intf );
 
             // rate depends on current item
-            if( !vlc_dictionary_has_key( &player_properties, "Rate" ) )
+            if( !vlc_dictionary_has_key( &tracklist_properties, "Rate" ) )
                 vlc_dictionary_insert( &player_properties, "Rate", NULL );
 
             vlc_dictionary_insert( &player_properties, "Metadata", NULL );
@@ -544,8 +536,6 @@ static void ProcessEvents( intf_thread_t *p_intf,
         case SIGNAL_INTF_CHANGE:
         case SIGNAL_PLAYLIST_ITEM_APPEND:
         case SIGNAL_PLAYLIST_ITEM_DELETED:
-        {
-            playlist_t *p_playlist = p_intf->p_sys->p_playlist;
             PL_LOCK;
             b_can_play = playlist_CurrentSize( p_playlist ) > 0;
             PL_UNLOCK;
@@ -559,7 +549,6 @@ static void ProcessEvents( intf_thread_t *p_intf,
             if( !vlc_dictionary_has_key( &tracklist_properties, "Tracks" ) )
                 vlc_dictionary_insert( &tracklist_properties, "Tracks", NULL );
             break;
-        }
         case SIGNAL_VOLUME_MUTED:
         case SIGNAL_VOLUME_CHANGE:
             vlc_dictionary_insert( &player_properties, "Volume", NULL );
@@ -582,7 +571,7 @@ static void ProcessEvents( intf_thread_t *p_intf,
             break;
         case SIGNAL_INPUT_METADATA:
         {
-            input_thread_t *p_input = pl_CurrentInput( p_intf );
+            input_thread_t *p_input = playlist_CurrentInput( p_playlist );
             input_item_t   *p_item;
             if( p_input )
             {
@@ -605,7 +594,7 @@ static void ProcessEvents( intf_thread_t *p_intf,
         {
             input_thread_t *p_input;
             input_item_t *p_item;
-            p_input = pl_CurrentInput( p_intf );
+            p_input = playlist_CurrentInput( p_intf->p_sys->p_playlist );
             if( p_input )
             {
                 p_item = input_GetItem( p_input );
@@ -831,7 +820,7 @@ static void *Run( void *data )
 
         if( -1 == i_pollres )
         { /* XXX: What should we do when poll() fails ? */
-            msg_Err( p_intf, "poll() failed: %s", vlc_strerror_c(errno) );
+            msg_Err( p_intf, "poll() failed: %m" );
             vlc_restorecancel( canc );
             continue;
         }
@@ -856,7 +845,7 @@ static void *Run( void *data )
 
         /* Get the list of timeouts to process */
         unsigned int i_timeouts = vlc_array_count( p_sys->p_timeouts );
-        DBusTimeout *p_timeouts[i_timeouts ? i_timeouts : 1];
+        DBusTimeout *p_timeouts[i_timeouts];
         for( unsigned int i = 0; i < i_timeouts; i++ )
         {
             p_timeouts[i] = vlc_array_item_at_index( p_sys->p_timeouts, i );
@@ -872,7 +861,7 @@ static void *Run( void *data )
 
         /* Get the list of events to process */
         int i_events = vlc_array_count( p_intf->p_sys->p_events );
-        callback_info_t* p_info[i_events ? i_events : 1];
+        callback_info_t* p_info[i_events];
         for( int i = i_events - 1; i >= 0; i-- )
         {
             p_info[i] = vlc_array_item_at_index( p_intf->p_sys->p_events, i );
@@ -898,8 +887,7 @@ static void   wakeup_main_loop( void *p_data )
     intf_thread_t *p_intf = (intf_thread_t*) p_data;
 
     if( !write( p_intf->p_sys->p_pipe_fds[PIPE_IN], "\0", 1 ) )
-        msg_Err( p_intf, "Could not wake up the main loop: %s",
-                 vlc_strerror_c(errno) );
+        msg_Err( p_intf, "Could not wake up the main loop: %m" );
 }
 
 /* Flls a callback_info_t data structure in response
@@ -1074,6 +1062,7 @@ static int AllCallback( vlc_object_t *p_this, const char *psz_var,
 static int TrackChange( intf_thread_t *p_intf )
 {
     intf_sys_t          *p_sys      = p_intf->p_sys;
+    playlist_t          *p_playlist = p_sys->p_playlist;
     input_thread_t      *p_input    = NULL;
     input_item_t        *p_item     = NULL;
 
@@ -1091,7 +1080,7 @@ static int TrackChange( intf_thread_t *p_intf )
 
     p_sys->b_meta_read = false;
 
-    p_input = pl_CurrentInput( p_intf );
+    p_input = playlist_CurrentInput( p_playlist );
     if( !p_input )
     {
         return VLC_SUCCESS;

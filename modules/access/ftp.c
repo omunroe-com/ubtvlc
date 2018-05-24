@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2001-2006 VLC authors and VideoLAN
  * Copyright © 2006 Rémi Denis-Courmont
- * $Id: ce3cc795a3993b127cc9b2296fb8a6a3ab857109 $
+ * $Id: f1896f9fb926ef5f04003867c0d0d362b384eef4 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr> - original code
  *          Rémi Denis-Courmont <rem # videolan.org> - EPSV support
@@ -40,7 +40,6 @@
 
 #include <vlc_network.h>
 #include <vlc_url.h>
-#include <vlc_tls.h>
 #include <vlc_sout.h>
 #include <vlc_charset.h>
 
@@ -48,19 +47,13 @@
 # define IPPORT_FTP 21u
 #endif
 
-#ifndef IPPORT_FTPS
-# define IPPORT_FTPS 990u
-#endif
-
 /*****************************************************************************
  * Module descriptor
  *****************************************************************************/
 static int   InOpen ( vlc_object_t * );
 static void  InClose( vlc_object_t * );
-#ifdef ENABLE_SOUT
 static int  OutOpen ( vlc_object_t * );
 static void OutClose( vlc_object_t * );
-#endif
 
 #define USER_TEXT N_("FTP user name")
 #define USER_LONGTEXT N_("User name that will " \
@@ -84,65 +77,38 @@ vlc_module_begin ()
                 PASS_LONGTEXT, false )
     add_string( "ftp-account", "anonymous", ACCOUNT_TEXT,
                 ACCOUNT_LONGTEXT, false )
-    add_shortcut( "ftp", "ftps", "ftpes" )
+    add_shortcut( "ftp" )
     set_callbacks( InOpen, InClose )
 
-#ifdef ENABLE_SOUT
     add_submodule ()
         set_shortname( "FTP" )
         set_description( N_("FTP upload output") )
         set_capability( "sout access", 0 )
         set_category( CAT_SOUT )
         set_subcategory( SUBCAT_SOUT_ACO )
-        add_shortcut( "ftp", "ftps", "ftpes" )
+        add_shortcut( "ftp" )
         set_callbacks( OutOpen, OutClose )
-#endif
 vlc_module_end ()
 
 /*****************************************************************************
  * Local prototypes
  *****************************************************************************/
 static ssize_t Read( access_t *, uint8_t *, size_t );
-static int Seek( access_t *, uint64_t );
-static int Control( access_t *, int, va_list );
-#ifdef ENABLE_SOUT
-static int OutSeek( sout_access_out_t *, off_t );
 static ssize_t Write( sout_access_out_t *, block_t * );
-#endif
-
-static void FeaturesCheck( void *, const char * );
-
-typedef struct ftp_features_t
-{
-    bool b_unicode;
-    bool b_authtls;
-} ftp_features_t;
-
-enum tls_mode_e
-{
-    NONE = 0,
-    IMPLICIT,/* ftps */
-    EXPLICIT /* ftpes */
-};
+static int Seek( access_t *, uint64_t );
+static int OutSeek( sout_access_out_t *, off_t );
+static int Control( access_t *, int, va_list );
 
 struct access_sys_t
 {
     vlc_url_t  url;
 
-    ftp_features_t   features;
-    vlc_tls_creds_t *p_creds;
-    enum tls_mode_e  tlsmode;
-    struct
-    {
-        vlc_tls_t   *p_tls;
-        v_socket_t  *p_vs;
-        int          fd;
-    } cmd, data;
+    int        fd_cmd;
+    int        fd_data;
 
     char       sz_epsv_ip[NI_MAXNUMERICHOST];
     bool       out;
     bool       directory;
-    uint64_t   size;
 };
 #define GET_OUT_SYS( p_this ) \
     ((access_sys_t *)(((sout_access_out_t *)(p_this))->p_sys))
@@ -167,7 +133,7 @@ static int ftp_SendCommand( vlc_object_t *obj, access_sys_t *sys,
         return -1;
 
     msg_Dbg( obj, "sending request: \"%.*s\" (%d bytes)", val - 2, cmd, val );
-    if( net_Write( obj, sys->cmd.fd, sys->cmd.p_vs, cmd, val ) != val )
+    if( net_Write( obj, sys->fd_cmd, NULL, cmd, val ) != val )
     {
         msg_Err( obj, "request failure" );
         val = -1;
@@ -202,7 +168,7 @@ static int ftp_RecvAnswer( vlc_object_t *obj, access_sys_t *sys,
     if( strp != NULL )
         *strp = NULL;
 
-    char *resp = net_Gets( obj, sys->cmd.fd, sys->cmd.p_vs );
+    char *resp = net_Gets( obj, sys->fd_cmd, NULL );
     if( resp == NULL )
     {
         msg_Err( obj, "response failure" );
@@ -225,7 +191,7 @@ static int ftp_RecvAnswer( vlc_object_t *obj, access_sys_t *sys,
         *end = ' ';
         do
         {
-            char *line = net_Gets( obj, sys->cmd.fd, sys->cmd.p_vs );
+            char *line = net_Gets( obj, sys->fd_cmd, NULL );
             if( line == NULL )
             {
                 msg_Err( obj, "response failure" );
@@ -266,52 +232,13 @@ static int ftp_RecvCommand( vlc_object_t *obj, access_sys_t *sys,
 static int ftp_StartStream( vlc_object_t *, access_sys_t *, uint64_t );
 static int ftp_StopStream ( vlc_object_t *, access_sys_t * );
 
-static void readTLSMode( access_sys_t *p_sys, const char * psz_access )
-{
-    if ( !strncmp( psz_access, "ftps", 4 ) )
-        p_sys->tlsmode = IMPLICIT;
-    else
-    if ( !strncmp( psz_access, "ftpes", 5 ) )
-        p_sys->tlsmode = EXPLICIT;
-    else
-        p_sys->tlsmode = NONE;
-}
-
-static int createCmdTLS( vlc_object_t *p_access, access_sys_t *p_sys, int fd,
-                         const char *psz_session_name )
-{
-    p_sys->p_creds = vlc_tls_ClientCreate( p_access );
-    if( p_sys->p_creds == NULL ) return -1;
-
-    /* TLS/SSL handshake */
-    p_sys->cmd.p_tls = vlc_tls_ClientSessionCreate( p_sys->p_creds, fd,
-                                                    p_sys->url.psz_host,
-                                                    psz_session_name );
-    if( p_sys->cmd.p_tls == NULL )
-    {
-        msg_Err( p_access, "cannot establish FTP/TLS session on command channel" );
-        return -1;
-    }
-    p_sys->cmd.p_vs = &p_sys->cmd.p_tls->sock;
-
-    return 0;
-}
-
-static void clearCmdTLS( access_sys_t *p_sys )
-{
-    if ( p_sys->cmd.p_tls ) vlc_tls_SessionDelete( p_sys->cmd.p_tls );
-    if ( p_sys->p_creds ) vlc_tls_Delete( p_sys->p_creds );
-    p_sys->cmd.p_tls = NULL;
-    p_sys->cmd.p_vs = NULL;
-    p_sys->p_creds = NULL;
-}
-
 static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
 {
     int i_answer;
+    char *psz;
 
     /* *** Open a TCP connection with server *** */
-    int fd = p_sys->cmd.fd = net_ConnectTCP( p_access, p_sys->url.psz_host,
+    int fd = p_sys->fd_cmd = net_ConnectTCP( p_access, p_sys->url.psz_host,
                                              p_sys->url.i_port );
     if( fd == -1 )
     {
@@ -319,12 +246,6 @@ static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
         dialog_Fatal( p_access, _("Network interaction failed"), "%s",
                         _("VLC could not connect with the given server.") );
         return -1;
-    }
-
-    if ( p_sys->tlsmode == IMPLICIT ) /* FTPS Mode */
-    {
-        if ( createCmdTLS( p_access, p_sys, fd, "ftps") < 0 )
-            goto error;
     }
 
     while( ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) == 1 );
@@ -339,84 +260,25 @@ static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
 
     msg_Dbg( p_access, "connection accepted (%d)", i_answer );
 
-    /* Features check first */
-    if( ftp_SendCommand( p_access, p_sys, "FEAT" ) < 0
-     || ftp_RecvAnswer( p_access, p_sys, NULL, NULL,
-                        FeaturesCheck, &p_sys->features ) < 0 )
-    {
-         msg_Err( p_access, "cannot get server features" );
-         return -1;
-    }
-
-    /* Create TLS Session */
-    if( p_sys->tlsmode == EXPLICIT )
-    {
-        if ( ! p_sys->features.b_authtls )
-        {
-            msg_Err( p_access, "Server does not support TLS" );
-            return -1;
-        }
-
-        if( ftp_SendCommand( p_access, p_sys, "AUTH TLS" ) < 0
-         || ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) < 0
-         || i_answer != 234 )
-        {
-             msg_Err( p_access, "cannot switch to TLS: server replied with code %d",
-                      i_answer );
-             return -1;
-        }
-
-        if ( createCmdTLS( p_access, p_sys, fd, "ftpes") < 0 )
-        {
-            goto error;
-        }
-    }
-
-    if( p_sys->tlsmode != NONE )
-    {
-        if( ftp_SendCommand( p_access, p_sys, "PBSZ 0" ) < 0 ||
-            ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) < 0 ||
-            i_answer != 200 )
-        {
-            msg_Err( p_access, "Can't truncate Protection buffer size for TLS" );
-            goto error;
-        }
-
-        if( ftp_SendCommand( p_access, p_sys, "PROT P" ) < 0 ||
-            ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) < 0 ||
-            i_answer != 200 )
-        {
-            msg_Err( p_access, "Can't set Data channel protection" );
-            goto error;
-        }
-    }
-
-    /* Send credentials over channel */
-    char *psz;
-
     if( p_sys->url.psz_username && *p_sys->url.psz_username )
         psz = strdup( p_sys->url.psz_username );
     else
         psz = var_InheritString( p_access, "ftp-user" );
     if( !psz )
-        goto error;
+        return -1;
 
     if( ftp_SendCommand( p_access, p_sys, "USER %s", psz ) < 0 ||
         ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) < 0 )
     {
         free( psz );
-        goto error;
+        return -1;
     }
     free( psz );
 
     switch( i_answer / 100 )
     {
         case 2:
-            /* X.509 auth successful after AUTH TLS / RFC 2228 sec. 4 */
-            if ( i_answer == 232 )
-                msg_Dbg( p_access, "user accepted and authenticated" );
-            else
-                msg_Dbg( p_access, "user accepted" );
+            msg_Dbg( p_access, "user accepted" );
             break;
         case 3:
             msg_Dbg( p_access, "password needed" );
@@ -425,13 +287,13 @@ static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
             else
                 psz = var_InheritString( p_access, "ftp-pwd" );
             if( !psz )
-                goto error;
+                return -1;
 
             if( ftp_SendCommand( p_access, p_sys, "PASS %s", psz ) < 0 ||
                 ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) < 0 )
             {
                 free( psz );
-                goto error;
+                return -1;
             }
             free( psz );
 
@@ -448,7 +310,7 @@ static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
                         ftp_RecvCommand( p_access, p_sys, &i_answer, NULL ) < 0 )
                     {
                         free( psz );
-                        goto error;
+                        return -1;
                     }
                     free( psz );
 
@@ -458,7 +320,7 @@ static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
                         dialog_Fatal( p_access,
                                       _("Network interaction failed"),
                                       "%s", _("Your account was rejected.") );
-                        goto error;
+                        return -1;
                     }
                     msg_Dbg( p_access, "account accepted" );
                     break;
@@ -467,32 +329,25 @@ static int Login( vlc_object_t *p_access, access_sys_t *p_sys )
                     msg_Err( p_access, "password rejected" );
                     dialog_Fatal( p_access, _("Network interaction failed"),
                                   "%s",  _("Your password was rejected.") );
-                    goto error;
+                    return -1;
             }
             break;
         default:
             msg_Err( p_access, "user rejected" );
             dialog_Fatal( p_access, _("Network interaction failed"), "%s",
                         _("Your connection attempt to the server was rejected.") );
-            goto error;
+            return -1;
     }
 
     return 0;
-
-error:
-    clearCmdTLS( p_sys );
-    return -1;
 }
 
 static void FeaturesCheck( void *opaque, const char *feature )
 {
-    ftp_features_t *features = opaque;
+    bool *unicode = opaque;
 
     if( strcasestr( feature, "UTF8" ) != NULL )
-        features->b_unicode = true;
-    else
-    if( strcasestr( feature, "AUTH TLS" ) != NULL )
-        features->b_authtls = true;
+        *unicode = true;
 }
 
 static const char *IsASCII( const char *str )
@@ -518,7 +373,7 @@ static int Connect( vlc_object_t *p_access, access_sys_t *p_sys )
 
     if( ftp_RecvCommand( p_access, p_sys, NULL, NULL ) == 2 )
     {
-        if( net_GetPeerAddress( p_sys->cmd.fd, p_sys->sz_epsv_ip, NULL ) )
+        if( net_GetPeerAddress( p_sys->fd_cmd, p_sys->sz_epsv_ip, NULL ) )
             goto error;
     }
     else
@@ -529,14 +384,23 @@ static int Connect( vlc_object_t *p_access, access_sys_t *p_sys )
          * the initial connection.
          */
         msg_Info( p_access, "FTP Extended passive mode disabled" );
-        clearCmdTLS( p_sys );
-        net_Close( p_sys->cmd.fd );
+        net_Close( p_sys->fd_cmd );
 
         if( Login( p_access, p_sys ) )
             goto error;
     }
 
-    if( (p_sys->features.b_unicode ? IsUTF8 : IsASCII)(p_sys->url.psz_path) == NULL )
+    /* features check */
+    bool unicode = false;
+    if( ftp_SendCommand( p_access, p_sys, "FEAT" ) < 0
+     || ftp_RecvAnswer( p_access, p_sys, NULL, NULL,
+                        FeaturesCheck, &unicode ) < 0 )
+    {
+         msg_Err( p_access, "cannot get server features" );
+         goto error;
+    }
+
+    if( (unicode ? IsUTF8 : IsASCII)(p_sys->url.psz_path) == NULL )
     {
         msg_Err( p_access, "unsupported path: \"%s\"", p_sys->url.psz_path );
         goto error;
@@ -551,15 +415,13 @@ static int Connect( vlc_object_t *p_access, access_sys_t *p_sys )
     }
 
     return 0;
-
 error:
-    clearCmdTLS( p_sys );
-    net_Close( p_sys->cmd.fd );
+    net_Close( p_sys->fd_cmd );
     return -1;
 }
 
 
-static int parseURL( vlc_url_t *url, const char *path, enum tls_mode_e mode )
+static int parseURL( vlc_url_t *url, const char *path )
 {
     if( path == NULL )
         return VLC_EGENERIC;
@@ -574,12 +436,7 @@ static int parseURL( vlc_url_t *url, const char *path, enum tls_mode_e mode )
         return VLC_EGENERIC;
 
     if( url->i_port <= 0 )
-    {
-        if( mode == IMPLICIT )
-            url->i_port = IPPORT_FTPS;
-        else
-            url->i_port = IPPORT_FTP; /* default port */
-    }
+        url->i_port = IPPORT_FTP; /* default port */
 
     if( url->psz_path == NULL )
         return VLC_SUCCESS;
@@ -615,13 +472,11 @@ static int InOpen( vlc_object_t *p_this )
 
     /* Init p_access */
     STANDARD_READ_ACCESS_INIT
-    p_sys->data.fd = -1;
+    p_sys->fd_data = -1;
     p_sys->out = false;
     p_sys->directory = false;
-    p_sys->size = 0;
-    readTLSMode( p_sys, p_access->psz_access );
 
-    if( parseURL( &p_sys->url, p_access->psz_location, p_sys->tlsmode ) )
+    if( parseURL( &p_sys->url, p_access->psz_location ) )
         goto exit_error;
 
     if( Connect( p_this, p_sys ) )
@@ -636,9 +491,9 @@ static int InOpen( vlc_object_t *p_this )
     else
     if ( ftp_RecvCommand( p_this, p_sys, NULL, &psz_arg ) == 2 )
     {
-        p_sys->size = atoll( &psz_arg[4] );
+        p_access->info.i_size = atoll( &psz_arg[4] );
         free( psz_arg );
-        msg_Dbg( p_access, "file size: %"PRIu64, p_sys->size );
+        msg_Dbg( p_access, "file size: %"PRIu64, p_access->info.i_size );
     }
     else
     if( ftp_SendCommand( p_this, p_sys, "CWD %s", p_sys->url.psz_path ) < 0 )
@@ -646,7 +501,7 @@ static int InOpen( vlc_object_t *p_this )
     else
     if( ftp_RecvCommand( p_this, p_sys, NULL, NULL ) != 2 )
     {
-        msg_Err( p_this, "file or directory does not exist" );
+        msg_Err( p_access, "file or directory does not exist" );
         goto error;
     }
     else
@@ -655,25 +510,21 @@ static int InOpen( vlc_object_t *p_this )
     /* Start the 'stream' */
     if( ftp_StartStream( p_this, p_sys, 0 ) < 0 )
     {
-        msg_Err( p_this, "cannot retrieve file" );
-        clearCmdTLS( p_sys );
-        net_Close( p_sys->cmd.fd );
+        msg_Err( p_access, "cannot retrieve file" );
+        net_Close( p_sys->fd_cmd );
         goto exit_error;
     }
 
     return VLC_SUCCESS;
 
 error:
-    clearCmdTLS( p_sys );
-    net_Close( p_sys->cmd.fd );
-
+    net_Close( p_sys->fd_cmd );
 exit_error:
     vlc_UrlClean( &p_sys->url );
     free( p_sys );
     return VLC_EGENERIC;
 }
 
-#ifdef ENABLE_SOUT
 static int OutOpen( vlc_object_t *p_this )
 {
     sout_access_out_t *p_access = (sout_access_out_t *)p_this;
@@ -684,11 +535,10 @@ static int OutOpen( vlc_object_t *p_this )
         return VLC_ENOMEM;
 
     /* Init p_access */
-    p_sys->data.fd = -1;
+    p_sys->fd_data = -1;
     p_sys->out = true;
-    readTLSMode( p_sys, p_access->psz_access );
 
-    if( parseURL( &p_sys->url, p_access->psz_path, p_sys->tlsmode ) )
+    if( parseURL( &p_sys->url, p_access->psz_path ) )
         goto exit_error;
     if( p_sys->url.psz_path == NULL )
     {
@@ -703,8 +553,7 @@ static int OutOpen( vlc_object_t *p_this )
     if( ftp_StartStream( p_this, p_sys, 0 ) < 0 )
     {
         msg_Err( p_access, "cannot store file" );
-        clearCmdTLS( p_sys );
-        net_Close( p_sys->cmd.fd );
+        net_Close( p_sys->fd_cmd );
         goto exit_error;
     }
 
@@ -719,7 +568,6 @@ exit_error:
     free( p_sys );
     return VLC_EGENERIC;
 }
-#endif
 
 /*****************************************************************************
  * Close: free unused data structures
@@ -737,9 +585,7 @@ static void Close( vlc_object_t *p_access, access_sys_t *p_sys )
     {
         ftp_RecvCommand( p_access, p_sys, NULL, NULL );
     }
-
-    clearCmdTLS( p_sys );
-    net_Close( p_sys->cmd.fd );
+    net_Close( p_sys->fd_cmd );
 
     /* free memory */
     vlc_UrlClean( &p_sys->url );
@@ -751,12 +597,10 @@ static void InClose( vlc_object_t *p_this )
     Close( p_this, ((access_t *)p_this)->p_sys);
 }
 
-#ifdef ENABLE_SOUT
 static void OutClose( vlc_object_t *p_this )
 {
     Close( p_this, GET_OUT_SYS(p_this));
 }
-#endif
 
 
 /*****************************************************************************
@@ -785,12 +629,10 @@ static int Seek( access_t *p_access, uint64_t i_pos )
     return VLC_SUCCESS;
 }
 
-#ifdef ENABLE_SOUT
 static int OutSeek( sout_access_out_t *p_access, off_t i_pos )
 {
     return _Seek( (vlc_object_t *)p_access, GET_OUT_SYS( p_access ), i_pos);
 }
-#endif
 
 /*****************************************************************************
  * Read:
@@ -799,7 +641,7 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
 {
     access_sys_t *p_sys = p_access->p_sys;
 
-    assert( p_sys->data.fd != -1 );
+    assert( p_sys->fd_data != -1 );
     assert( !p_sys->out );
 
     if( p_access->info.b_eof )
@@ -807,7 +649,7 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
 
     if( p_sys->directory )
     {
-        char *psz_line = net_Gets( p_access, p_sys->data.fd, p_sys->data.p_vs );
+        char *psz_line = net_Gets( p_access, p_sys->fd_data, NULL );
         if( !psz_line )
         {
             p_access->info.b_eof = true;
@@ -815,9 +657,7 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
         }
         else
         {
-            snprintf( (char*)p_buffer, i_len, "%s://%s:%d/%s/%s\n",
-                      ( p_sys->tlsmode == NONE ) ? "ftp" :
-                      ( ( p_sys->tlsmode == IMPLICIT ) ? "ftps" : "ftpes" ),
+            snprintf( (char*)p_buffer, i_len, "ftp://%s:%d/%s/%s\n",
                       p_sys->url.psz_host, p_sys->url.i_port,
                       p_sys->url.psz_path, psz_line );
             free( psz_line );
@@ -826,7 +666,7 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
     }
     else
     {
-        int i_read = net_Read( p_access, p_sys->data.fd, p_sys->data.p_vs,
+        int i_read = net_Read( p_access, p_sys->fd_data, NULL,
                                p_buffer, i_len, false );
         if( i_read == 0 )
             p_access->info.b_eof = true;
@@ -840,19 +680,18 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
 /*****************************************************************************
  * Write:
  *****************************************************************************/
-#ifdef ENABLE_SOUT
 static ssize_t Write( sout_access_out_t *p_access, block_t *p_buffer )
 {
     access_sys_t *p_sys = GET_OUT_SYS(p_access);
     size_t i_write = 0;
 
-    assert( p_sys->data.fd != -1 );
+    assert( p_sys->fd_data != -1 );
 
     while( p_buffer != NULL )
     {
         block_t *p_next = p_buffer->p_next;;
 
-        i_write += net_Write( p_access, p_sys->data.fd, p_sys->data.p_vs,
+        i_write += net_Write( p_access, p_sys->fd_data, NULL,
                               p_buffer->p_buffer, p_buffer->i_buffer );
         block_Release( p_buffer );
 
@@ -861,7 +700,6 @@ static ssize_t Write( sout_access_out_t *p_access, block_t *p_buffer )
 
     return i_write;
 }
-#endif
 
 /*****************************************************************************
  * Control:
@@ -873,6 +711,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
 
     switch( i_query )
     {
+        /* */
         case ACCESS_CAN_SEEK:
             pb_bool = (bool*)va_arg( args, bool* );
             *pb_bool = !p_access->p_sys->directory;
@@ -889,23 +728,31 @@ static int Control( access_t *p_access, int i_query, va_list args )
             pb_bool = (bool*)va_arg( args, bool* );
             *pb_bool = true;    /* FIXME */
             break;
-        case ACCESS_GET_SIZE:
-            *va_arg( args, uint64_t * ) = p_access->p_sys->size;
-            break;
 
+        /* */
         case ACCESS_GET_PTS_DELAY:
             pi_64 = (int64_t*)va_arg( args, int64_t * );
             *pi_64 = INT64_C(1000)
                    * var_InheritInteger( p_access, "network-caching" );
             break;
 
+        /* */
         case ACCESS_SET_PAUSE_STATE:
             pb_bool = (bool*)va_arg( args, bool* );
             if ( !pb_bool )
               return Seek( p_access, p_access->info.i_pos );
             break;
 
+        case ACCESS_GET_TITLE_INFO:
+        case ACCESS_SET_TITLE:
+        case ACCESS_SET_SEEKPOINT:
+        case ACCESS_SET_PRIVATE_ID_STATE:
+        case ACCESS_GET_CONTENT_TYPE:
+        case ACCESS_GET_META:
+            return VLC_EGENERIC;
+
         default:
+            msg_Warn( p_access, "unimplemented query in control: %d", i_query);
             return VLC_EGENERIC;
 
     }
@@ -920,7 +767,7 @@ static int ftp_StartStream( vlc_object_t *p_access, access_sys_t *p_sys,
     char *psz_arg, *psz_parser;
     int  i_port;
 
-    assert( p_sys->data.fd == -1 );
+    assert( p_sys->fd_data == -1 );
 
     if( ( ftp_SendCommand( p_access, p_sys, *psz_ip ? "EPSV" : "PASV" ) < 0 )
      || ( ftp_RecvCommand( p_access, p_sys, &i_answer, &psz_arg ) != 2 ) )
@@ -988,8 +835,8 @@ static int ftp_StartStream( vlc_object_t *p_access, access_sys_t *p_sys,
     }
 
     msg_Dbg( p_access, "waiting for data connection..." );
-    p_sys->data.fd = net_ConnectTCP( p_access, psz_ip, i_port );
-    if( p_sys->data.fd < 0 )
+    p_sys->fd_data = net_ConnectTCP( p_access, psz_ip, i_port );
+    if( p_sys->fd_data < 0 )
     {
         msg_Err( p_access, "failed to connect with server" );
         return VLC_EGENERIC;
@@ -1020,24 +867,7 @@ static int ftp_StartStream( vlc_object_t *p_access, access_sys_t *p_sys,
         }
     }
 
-    if( p_sys->tlsmode != NONE )
-    {
-        /* FIXME: Do Reuse TLS Session */
-        /* TLS/SSL handshake */
-        p_sys->data.p_tls = vlc_tls_ClientSessionCreate( p_sys->p_creds,
-                            p_sys->data.fd, p_sys->url.psz_host,
-                            ( p_sys->tlsmode == EXPLICIT ) ? "ftpes-data"
-                                                           : "ftps-data" );
-        if( p_sys->data.p_tls == NULL )
-        {
-            msg_Err( p_access, "cannot establish FTP/TLS session for data" \
-                             ": server not allowing new session ?" );
-            return VLC_EGENERIC;
-        }
-        p_sys->data.p_vs = &p_sys->data.p_tls->sock;
-    }
-    else
-        shutdown( p_sys->data.fd, p_sys->out ? SHUT_RD : SHUT_WR );
+    shutdown( p_sys->fd_data, p_sys->out ? SHUT_RD : SHUT_WR );
 
     return VLC_SUCCESS;
 }
@@ -1047,24 +877,16 @@ static int ftp_StopStream ( vlc_object_t *p_access, access_sys_t *p_sys )
     if( ftp_SendCommand( p_access, p_sys, "ABOR" ) < 0 )
     {
         msg_Warn( p_access, "cannot abort file" );
-        if( p_sys->data.fd > 0 )
-        {
-            if ( p_sys->data.p_tls ) vlc_tls_SessionDelete( p_sys->data.p_tls );
-            net_Close( p_sys->data.fd );
-        }
-        p_sys->data.fd = -1;
-        p_sys->data.p_tls = NULL;
-        p_sys->data.p_vs = NULL;
+        if(  p_sys->fd_data > 0 )
+            net_Close( p_sys->fd_data );
+        p_sys->fd_data = -1;
         return VLC_EGENERIC;
     }
 
-    if( p_sys->data.fd != -1 )
+    if( p_sys->fd_data != -1 )
     {
-        if ( p_sys->data.p_tls ) vlc_tls_SessionDelete( p_sys->data.p_tls );
-        net_Close( p_sys->data.fd );
-        p_sys->data.fd = -1;
-        p_sys->data.p_tls = NULL;
-        p_sys->data.p_vs = NULL;
+        net_Close( p_sys->fd_data );
+        p_sys->fd_data = -1;
         /* Read the final response from RETR/STOR, i.e. 426 or 226 */
         ftp_RecvCommand( p_access, p_sys, NULL, NULL );
     }

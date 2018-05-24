@@ -2,7 +2,7 @@
  * convert.cpp : Convertion dialogs
  ****************************************************************************
  * Copyright (C) 2009 the VideoLAN team
- * $Id: 267492844dc88bb6d478e545388f8a16d8e60a2e $
+ * $Id: e371d20ec64e5e4ffbca166fd9c2627d4df57eb2 $
  *
  * Authors: Jean-Baptiste Kempf <jb (at) videolan.org>
  *
@@ -105,7 +105,7 @@ ConvertDialog::ConvertDialog( QWidget *parent, intf_thread_t *_p_intf,
     mainLayout->addWidget( settingBox, 1, 0, 1, -1  );
 
     /* Buttons */
-    okButton = new QPushButton( qtr( "&Start" ) );
+    QPushButton *okButton = new QPushButton( qtr( "&Start" ) );
     QPushButton *cancelButton = new QPushButton( qtr( "&Cancel" ) );
     QDialogButtonBox *buttonBox = new QDialogButtonBox;
 
@@ -121,9 +121,6 @@ ConvertDialog::ConvertDialog( QWidget *parent, intf_thread_t *_p_intf,
     CONNECT( convertRadio, toggled(bool), convertPanel, setEnabled(bool) );
     CONNECT(profile, optionsChanged(), this, setDestinationFileExtension());
     CONNECT(fileLine, editingFinished(), this, setDestinationFileExtension());
-    CONNECT(fileLine, textChanged(const QString&), this, validate());
-
-    validate();
 }
 
 void ConvertDialog::fileBrowse()
@@ -131,7 +128,7 @@ void ConvertDialog::fileBrowse()
     QString fileExtension = ( ! profile->isEnabled() ) ? ".*" : "." + profile->getMux();
 
     QString fileName = QFileDialog::getSaveFileName( this, qtr( "Save file..." ),
-        p_intf->p_sys->filepath,
+        "",
         QString( "%1 (*%2);;%3 (*.*)" ).arg( qtr( "Containers" ) )
             .arg( fileExtension ).arg( qtr("All") ) );
     fileLine->setText( toNativeSeparators( fileName ) );
@@ -184,9 +181,4 @@ void ConvertDialog::setDestinationFileExtension()
             fileLine->setText( toNativeSeparators( newFileName ) );
         }
     }
-}
-
-void ConvertDialog::validate()
-{
-    okButton->setEnabled( !fileLine->text().isEmpty() );
 }

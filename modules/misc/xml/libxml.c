@@ -2,7 +2,7 @@
  * libxml.c: XML parser using libxml2
  *****************************************************************************
  * Copyright (C) 2004 VLC authors and VideoLAN
- * $Id: b7cf654322083cd06aab3cb9f6ca83f327bfcd80 $
+ * $Id: b9834a7577fa048f6579f3a1d44b164456c0a0f1 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -221,7 +221,7 @@ skip:
     switch( xmlTextReaderRead( p_sys->xml ) )
     {
         case 0: /* EOF */
-            return XML_READER_NONE;
+            return 0;
         case -1: /* error */
             return -1;
     }

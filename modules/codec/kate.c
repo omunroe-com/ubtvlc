@@ -2,7 +2,7 @@
  * kate.c : a decoder for the kate bitstream format
  *****************************************************************************
  * Copyright (C) 2000-2008 VLC authors and VideoLAN
- * $Id: 93cbb3d48f372909d1ce88f3ee5da4eadb447b93 $
+ * $Id: 0953c4f2be9bdc5d5e5fa3f9c88c0adf84484f88 $
  *
  * Authors: Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>
  *
@@ -515,18 +515,21 @@ static int ProcessHeaders( decoder_t *p_dec )
     if( xiph_SplitHeaders( pi_size, pp_data, &i_count,
                            p_dec->fmt_in.i_extra, p_dec->fmt_in.p_extra) )
         return VLC_EGENERIC;
-
+    int i_ret = VLC_SUCCESS;
     if( i_count < 1 )
-        return VLC_EGENERIC;
+    {
+        i_ret = VLC_EGENERIC;
+        goto end;
+    }
 
     /* Take care of the initial Kate header */
     kp.nbytes = pi_size[0];
     kp.data   = pp_data[0];
-    int i_ret = kate_decode_headerin( &p_sys->ki, &p_sys->kc, &kp );
+    i_ret = kate_decode_headerin( &p_sys->ki, &p_sys->kc, &kp );
     if( i_ret < 0 )
     {
         msg_Err( p_dec, "this bitstream does not contain Kate data (%d)", i_ret );
-        return VLC_EGENERIC;
+        goto end;
     }
 
     msg_Dbg( p_dec, "%s %s text, granule rate %f, granule shift %d",
@@ -543,7 +546,7 @@ static int ProcessHeaders( decoder_t *p_dec )
         if( i_ret < 0 )
         {
             msg_Err( p_dec, "Kate header %d is corrupted: %d", i_headeridx, i_ret );
-            return VLC_EGENERIC;
+            goto end;
         }
 
         /* header 1 is comments */
@@ -578,7 +581,10 @@ static int ProcessHeaders( decoder_t *p_dec )
     }
 #endif
 
-    return VLC_SUCCESS;
+end:
+    for( unsigned i = 0; i < i_count; i++ )
+        free( pp_data[i] );
+    return i_ret < 0 ? VLC_EGENERIC : VLC_SUCCESS;
 }
 
 /*****************************************************************************
@@ -1170,8 +1176,7 @@ static subpicture_t *DecodePacket( decoder_t *p_dec, kate_packet *p_kp, block_t 
     }
 
     p_spu->i_start = p_block->i_pts;
-    p_spu->i_stop = p_block->i_pts + CLOCK_FREQ *
-        ev->duration * p_sys->ki.gps_denominator / p_sys->ki.gps_numerator;
+    p_spu->i_stop = p_block->i_pts + INT64_C(1000000)*ev->duration*p_sys->ki.gps_denominator/p_sys->ki.gps_numerator;
     p_spu->b_ephemer = false;
     p_spu->b_absolute = false;
 
@@ -1281,8 +1286,6 @@ static subpicture_t *SetupSimpleKateSPU( decoder_t *p_dec, subpicture_t *p_spu,
     if( !p_spu->p_region )
     {
         msg_Err( p_dec, "cannot allocate SPU region" );
-        if( p_bitmap_region )
-            subpicture_region_Delete( p_bitmap_region );
         decoder_DeleteSubpicture( p_dec, p_spu );
         return NULL;
     }

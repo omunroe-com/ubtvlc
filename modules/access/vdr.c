@@ -48,7 +48,11 @@ See http://www.vdr-wiki.de/ and http://www.tvdr.de/ for more information.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+#   include <unistd.h>
+#elif defined( _WIN32 )
+#   include <io.h>
+#endif
 
 #include <ctype.h>
 #include <time.h>
@@ -110,7 +114,6 @@ struct access_sys_t
 {
     /* file sizes of all parts */
     size_array_t file_sizes;
-    uint64_t size; /* total size */
 
     /* index and fd of current open file */
     unsigned i_current_file;
@@ -121,7 +124,6 @@ struct access_sys_t
 
     /* cut marks */
     input_title_t *p_marks;
-    unsigned cur_seekpoint;
     float fps;
 
     /* file format: true=TS, false=PES */
@@ -189,7 +191,6 @@ static int Open( vlc_object_t *p_this )
     access_sys_t *p_sys;
     STANDARD_READ_ACCESS_INIT;
     p_sys->fd = -1;
-    p_sys->cur_seekpoint = 0;
     p_sys->fps = var_InheritFloat( p_access, "vdr-fps" );
     ARRAY_INIT( p_sys->file_sizes );
 
@@ -272,10 +273,6 @@ static int Control( access_t *p_access, int i_query, va_list args )
             *va_arg( args, bool* ) = true;
             break;
 
-        case ACCESS_GET_SIZE:
-            *va_arg( args, uint64_t* ) = p_sys->size;
-            break;
-
         case ACCESS_GET_PTS_DELAY:
             pi64 = va_arg( args, int64_t * );
             *pi64 = INT64_C(1000)
@@ -298,20 +295,13 @@ static int Control( access_t *p_access, int i_query, va_list args )
             **ppp_title = vlc_input_title_Duplicate( p_sys->p_marks );
             break;
 
-        case ACCESS_GET_TITLE:
-            *va_arg( args, unsigned * ) = 0;
-            break;
-
-        case ACCESS_GET_SEEKPOINT:
-            *va_arg( args, unsigned * ) = p_sys->cur_seekpoint;
-            break;
-
         case ACCESS_SET_TITLE:
             /* ignore - only one title */
             break;
 
         case ACCESS_SET_SEEKPOINT:
             i = va_arg( args, int );
+            /* Seek updates p_access->info */
             return Seek( p_access, p_sys->p_marks->seekpoint[i]->i_byte_offset );
 
         case ACCESS_GET_META:
@@ -321,7 +311,12 @@ static int Control( access_t *p_access, int i_query, va_list args )
             vlc_meta_Merge( p_meta, p_sys->p_meta );
             break;
 
+        case ACCESS_SET_PRIVATE_ID_STATE:
+        case ACCESS_GET_CONTENT_TYPE:
+            return VLC_EGENERIC;
+
         default:
+            msg_Warn( p_access, "unimplemented query in control" );
             return VLC_EGENERIC;
     }
     return VLC_SUCCESS;
@@ -368,10 +363,9 @@ static ssize_t Read( access_t *p_access, uint8_t *p_buffer, size_t i_len )
     else
     {
         /* abort on read error */
-        msg_Err( p_access, "failed to read (%s)", vlc_strerror_c(errno) );
-        dialog_Fatal( p_access, _("File reading failed"),
-                      _("VLC could not read the file (%s)."),
-                      vlc_strerror(errno) );
+        msg_Err( p_access, "failed to read (%m)" );
+        dialog_Fatal( p_access, _("File reading failed"), "%s (%m)",
+                      _("VLC could not read the file.") );
         SwitchFile( p_access, -1 );
         return 0;
     }
@@ -385,7 +379,7 @@ static int Seek( access_t *p_access, uint64_t i_pos )
     access_sys_t *p_sys = p_access->p_sys;
 
     /* might happen if called by ACCESS_SET_SEEKPOINT */
-    i_pos = __MIN( i_pos, p_sys->size );
+    i_pos = __MIN( i_pos, p_access->info.i_size );
 
     p_access->info.i_pos = i_pos;
     p_access->info.b_eof = false;
@@ -418,23 +412,28 @@ static void FindSeekpoint( access_t *p_access )
     if( !p_sys->p_marks )
         return;
 
-    int new_seekpoint = p_sys->cur_seekpoint;
+    int i_new_seekpoint = p_access->info.i_seekpoint;
     if( p_access->info.i_pos < (uint64_t)p_sys->p_marks->
-        seekpoint[p_sys->cur_seekpoint]->i_byte_offset )
+        seekpoint[ p_access->info.i_seekpoint ]->i_byte_offset )
     {
         /* i_pos moved backwards, start fresh */
-        new_seekpoint = 0;
+        i_new_seekpoint = 0;
     }
 
     /* only need to check the following seekpoints */
-    while( new_seekpoint + 1 < p_sys->p_marks->i_seekpoint &&
+    while( i_new_seekpoint + 1 < p_sys->p_marks->i_seekpoint &&
         p_access->info.i_pos >= (uint64_t)p_sys->p_marks->
-        seekpoint[new_seekpoint + 1]->i_byte_offset )
+        seekpoint[ i_new_seekpoint + 1 ]->i_byte_offset )
     {
-        new_seekpoint++;
+        i_new_seekpoint++;
     }
 
-    p_sys->cur_seekpoint = new_seekpoint;
+    /* avoid unnecessary events */
+    if( p_access->info.i_seekpoint != i_new_seekpoint )
+    {
+        p_access->info.i_seekpoint = i_new_seekpoint;
+        p_access->info.i_update |= INPUT_UPDATE_SEEKPOINT;
+    }
 }
 
 /*****************************************************************************
@@ -465,8 +464,7 @@ static bool ImportNextFile( access_t *p_access )
     struct stat st;
     if( vlc_stat( psz_path, &st ) )
     {
-        msg_Dbg( p_access, "could not stat %s: %s", psz_path,
-                 vlc_strerror_c(errno) );
+        msg_Dbg( p_access, "could not stat %s: %m", psz_path );
         free( psz_path );
         return false;
     }
@@ -480,7 +478,7 @@ static bool ImportNextFile( access_t *p_access )
     free( psz_path );
 
     ARRAY_APPEND( p_sys->file_sizes, st.st_size );
-    p_sys->size += st.st_size;
+    p_access->info.i_size += st.st_size;
 
     return true;
 }
@@ -516,8 +514,7 @@ static bool SwitchFile( access_t *p_access, unsigned i_file )
 
     if( p_sys->fd == -1 )
     {
-        msg_Err( p_access, "Failed to open %s: %s", psz_path,
-                 vlc_strerror_c(errno) );
+        msg_Err( p_access, "Failed to open %s: %m", psz_path );
         goto error;
     }
 
@@ -537,7 +534,7 @@ static bool SwitchFile( access_t *p_access, unsigned i_file )
 
 error:
     dialog_Fatal (p_access, _("File reading failed"), _("VLC could not"
-        " open the file \"%s\" (%s)."), psz_path, vlc_strerror(errno) );
+        " open the file \"%s\". (%m)"), psz_path);
     if( p_sys->fd != -1 )
     {
         close( p_sys->fd );
@@ -574,7 +571,7 @@ static void UpdateFileSize( access_t *p_access )
     access_sys_t *p_sys = p_access->p_sys;
     struct stat st;
 
-    if( p_sys->size >= p_access->info.i_pos )
+    if( p_access->info.i_size >= p_access->info.i_pos )
         return;
 
     /* TODO: not sure if this can happen or what to do in this case */
@@ -583,9 +580,9 @@ static void UpdateFileSize( access_t *p_access )
     if( (uint64_t)st.st_size <= CURRENT_FILE_SIZE )
         return;
 
-    p_sys->size -= CURRENT_FILE_SIZE;
+    p_access->info.i_size -= CURRENT_FILE_SIZE;
     CURRENT_FILE_SIZE = st.st_size;
-    p_sys->size += CURRENT_FILE_SIZE;
+    p_access->info.i_size += CURRENT_FILE_SIZE;
 }
 
 /*****************************************************************************
@@ -602,8 +599,7 @@ static FILE *OpenRelativeFile( access_t *p_access, const char *psz_file )
 
     FILE *file = vlc_fopen( psz_path, "rb" );
     if( !file )
-        msg_Warn( p_access, "Failed to open %s: %s", psz_path,
-                  vlc_strerror_c(errno) );
+        msg_Warn( p_access, "Failed to open %s: %m", psz_path );
     free( psz_path );
 
     return file;
@@ -812,7 +808,7 @@ static void ImportMarks( access_t *p_access )
     }
     p_marks->psz_name = strdup( _("VDR Cut Marks") );
     p_marks->i_length = i_frame_count * (int64_t)( CLOCK_FREQ / p_sys->fps );
-    p_marks->i_size = p_sys->size;
+    p_marks->i_size = p_access->info.i_size;
 
     /* offset for chapter positions */
     int i_chapter_offset = p_sys->fps / 1000 *
