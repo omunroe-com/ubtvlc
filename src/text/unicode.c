@@ -2,7 +2,7 @@
  * unicode.c: Unicode <-> locale functions
  *****************************************************************************
  * Copyright (C) 2005-2006 the VideoLAN team
- * Copyright © 2005-2008 Rémi Denis-Courmont
+ * Copyright © 2005-2010 Rémi Denis-Courmont
  *
  * Authors: Rémi Denis-Courmont <rem # videolan.org>
  *
@@ -40,11 +40,7 @@
 #ifdef UNDER_CE
 #  include <tchar.h>
 #endif
-
-#ifdef __APPLE__
-/* Define this if the OS always use UTF-8 internally */
-# define ASSUME_UTF8 1
-#endif
+#include <errno.h>
 
 #if defined (ASSUME_UTF8)
 /* Cool */
@@ -56,38 +52,14 @@
 # error No UTF8 charset conversion implemented on this platform!
 #endif
 
-#if defined (USE_ICONV)
-# include <langinfo.h>
-static char charset[sizeof ("CSISO11SWEDISHFORNAMES")] = "";
-
-static void find_charset_once (void)
-{
-    strlcpy (charset, nl_langinfo (CODESET), sizeof (charset));
-    if (!strcasecmp (charset, "ASCII")
-     || !strcasecmp (charset, "ANSI_X3.4-1968"))
-        strcpy (charset, "UTF-8"); /* superset... */
-}
-
-static int find_charset (void)
-{
-    static pthread_once_t once = PTHREAD_ONCE_INIT;
-    pthread_once (&once, find_charset_once);
-    return !strcasecmp (charset, "UTF-8");
-}
-#endif
-
-
 static char *locale_fast (const char *string, bool from)
 {
     if( string == NULL )
         return NULL;
 
 #if defined (USE_ICONV)
-    if (find_charset ())
-        return (char *)string;
-
-    vlc_iconv_t hd = vlc_iconv_open (from ? "UTF-8" : charset,
-                                     from ? charset : "UTF-8");
+    vlc_iconv_t hd = vlc_iconv_open (from ? "UTF-8" : "",
+                                     from ? "" : "UTF-8");
     if (hd == (vlc_iconv_t)(-1))
         return NULL; /* Uho! */
 
@@ -143,8 +115,6 @@ static inline char *locale_dup (const char *string, bool from)
     assert( string );
 
 #if defined (USE_ICONV)
-    if (find_charset ())
-        return strdup (string);
     return locale_fast (string, from);
 #elif defined (USE_MB2MB)
     return locale_fast (string, from);
@@ -161,8 +131,7 @@ static inline char *locale_dup (const char *string, bool from)
 void LocaleFree (const char *str)
 {
 #if defined (USE_ICONV)
-    if (!find_charset ())
-        free ((char *)str);
+    free ((char *)str);
 #elif defined (USE_MB2MB)
     free ((char *)str);
 #else
@@ -252,8 +221,45 @@ static int utf8_vasprintf( char **str, const char *fmt, va_list ap )
 int utf8_vfprintf( FILE *stream, const char *fmt, va_list ap )
 {
     char *str;
-    int res = utf8_vasprintf( &str, fmt, ap );
-    if( res == -1 )
+    int res;
+
+#if defined( WIN32 ) && !defined( UNDER_CE )
+    /* Writing to the console is a lot of fun on Microsoft Windows.
+     * If you use the standard I/O functions, you must use the OEM code page,
+     * which is different from the usual ANSI code page. Or maybe not, if the
+     * user called "chcp". Anyway, we prefer Unicode. */
+    int fd = _fileno (stream);
+    if (likely(fd != -1) && _isatty (fd))
+    {
+        res = vasprintf (&str, fmt, ap);
+        if (unlikely(res == -1))
+            return -1;
+
+        size_t wlen = 2 * (res + 1);
+        wchar_t *wide = malloc (wlen);
+        if (likely(wide != NULL))
+        {
+            wlen = MultiByteToWideChar (CP_UTF8, 0, str, res + 1, wide, wlen);
+            if (wlen > 0)
+            {
+                HANDLE h = (HANDLE)(intptr_t)_get_osfhandle (fd);
+                DWORD out;
+
+                WriteConsoleW (h, wide, wlen - 1, &out, NULL);
+            }
+            else
+                res = -1;
+            free (wide);
+        }
+        else
+            res = -1;
+        free (str);
+        return res;
+    }
+#endif
+
+    res = utf8_vasprintf (&str, fmt, ap);
+    if (unlikely(res == -1))
         return -1;
 
     fputs( str, stream );
@@ -277,69 +283,88 @@ int utf8_fprintf( FILE *stream, const char *fmt, ... )
 }
 
 
-static char *CheckUTF8( char *str, char rep )
+/**
+ * Converts the first character from a UTF-8 sequence into a code point.
+ *
+ * @param str an UTF-8 bytes sequence
+ * @return 0 if str points to an empty string, i.e. the first character is NUL;
+ * number of bytes that the first character occupies (from 1 to 4) otherwise;
+ * -1 if the byte sequence was not a valid UTF-8 sequence.
+ */
+size_t vlc_towc (const char *str, uint32_t *restrict pwc)
 {
-    uint8_t *ptr = (uint8_t *)str;
+    uint8_t *ptr = (uint8_t *)str, c;
+    uint32_t cp;
+
     assert (str != NULL);
 
-    for (;;)
-    {
-        uint8_t c = ptr[0];
-        int charlen = -1;
+    c = *ptr;
+    if (unlikely(c > 0xF4))
+        return -1;
 
-        if (c == '\0')
+    int charlen = clz8 (c ^ 0xFF);
+    switch (charlen)
+    {
+        case 0: // 7-bit ASCII character -> short cut
+            *pwc = c;
+            return c != '\0';
+
+        case 1: // continuation byte -> error
+            return -1;
+
+        case 2:
+            if (unlikely(c < 0xC2)) // ASCII overlong
+                return -1;
+            cp = (c & 0x1F) << 6;
             break;
 
-        for (int i = 0; i < 7; i++)
-            if ((c >> (7 - i)) == ((0xff >> (7 - i)) ^ 1))
-            {
-                charlen = i;
-                break;
-            }
+        case 3:
+            cp = (c & 0x0F) << 12;
+            break;
 
-        switch (charlen)
-        {
-            case 0: // 7-bit ASCII character -> OK
-                ptr++;
-                continue;
+        case 4:
+            cp = (c & 0x07) << 16;
+            break;
 
-            case -1: // 1111111x -> error
-            case 1: // continuation byte -> error
-                goto error;
-        }
-
-        assert (charlen >= 2);
-
-        uint32_t cp = c & ~((0xff >> (7 - charlen)) << (7 - charlen));
-        for (int i = 1; i < charlen; i++)
-        {
-            assert (cp < (1 << 26));
-            c = ptr[i];
-
-            if ((c == '\0') // unexpected end of string
-             || ((c >> 6) != 2)) // not a continuation byte
-                goto error;
-
-            cp = (cp << 6) | (ptr[i] & 0x3f);
-        }
-
-        if (cp < 128) // overlong (special case for ASCII)
-            goto error;
-        if (cp < (1u << (5 * charlen - 3))) // overlong
-            goto error;
-
-        ptr += charlen;
-        continue;
-
-    error:
-        if (rep == 0)
-            return NULL;
-        *ptr++ = rep;
-        str = NULL;
+        default:
+            assert (0);
     }
 
-    return str;
+    /* Unrolled continuation bytes decoding */
+    switch (charlen)
+    {
+        case 4:
+            c = *++ptr;
+            if (unlikely((c >> 6) != 2)) // not a continuation byte
+                return -1;
+            cp |= (c & 0x3f) << 12;
+
+            if (unlikely(cp >= 0x110000)) // beyond Unicode range
+                return -1;
+            /* fall through */
+        case 3:
+            c = *++ptr;
+            if (unlikely((c >> 6) != 2)) // not a continuation byte
+                return -1;
+            cp |= (c & 0x3f) << 6;
+
+            if (unlikely(cp >= 0xD800 && cp < 0xC000)) // UTF-16 surrogate
+                return -1;
+            if (unlikely(cp < (1u << (5 * charlen - 4)))) // non-ASCII overlong
+                return -1;
+            /* fall through */
+        case 2:
+            c = *++ptr;
+            if (unlikely((c >> 6) != 2)) // not a continuation byte
+                return -1;
+            cp |= (c & 0x3f);
+            break;
+    }
+
+    *pwc = cp;
+    return charlen;
 }
+
 
 /**
  * Replaces invalid/overlong UTF-8 sequences with question marks.
@@ -350,7 +375,19 @@ static char *CheckUTF8( char *str, char rep )
  */
 char *EnsureUTF8( char *str )
 {
-    return CheckUTF8( str, '?' );
+    char *ret = str;
+    size_t n;
+    uint32_t cp;
+
+    while ((n = vlc_towc (str, &cp)) != 0)
+        if (likely(n != (size_t)-1))
+            str += n;
+        else
+        {
+            *str++ = '?';
+            ret = NULL;
+        }
+    return ret;
 }
 
 
@@ -363,5 +400,50 @@ char *EnsureUTF8( char *str )
  */
 const char *IsUTF8( const char *str )
 {
-    return CheckUTF8( (char *)str, 0 );
+    size_t n;
+    uint32_t cp;
+
+    while ((n = vlc_towc (str, &cp)) != 0)
+        if (likely(n != (size_t)-1))
+            str += n;
+        else
+            return NULL;
+    return str;
 }
+
+/**
+ * Converts a string from the given character encoding to utf-8.
+ *
+ * @return a nul-terminated utf-8 string, or null in case of error.
+ * The result must be freed using free().
+ */
+char *FromCharset(const char *charset, const void *data, size_t data_size)
+{
+    vlc_iconv_t handle = vlc_iconv_open ("UTF-8", charset);
+    if (handle == (vlc_iconv_t)(-1))
+        return NULL;
+
+    char *out = NULL;
+    for(unsigned mul = 4; mul < 8; mul++ )
+    {
+        size_t in_size = data_size;
+        const char *in = data;
+        size_t out_max = mul * data_size;
+        char *tmp = out = malloc (1 + out_max);
+        if (!out)
+            break;
+
+        if (vlc_iconv (handle, &in, &in_size, &tmp, &out_max) != (size_t)(-1)) {
+            *tmp = '\0';
+            break;
+        }
+        free(out);
+        out = NULL;
+
+        if (errno != E2BIG)
+            break;
+    }
+    vlc_iconv_close(handle);
+    return out;
+}
+

@@ -2,7 +2,7 @@
  * ts.c: Transport Stream input module for VLC.
  *****************************************************************************
  * Copyright (C) 2004-2005 the VideoLAN team
- * $Id: b36dc4f95c879180c1d0893655b12ff7590b9f81 $
+ * $Id: a6698efb7e545898be2b38ccf5d9186e80fe669c $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Jean-Paul Saman <jpsaman #_at_# m2x.nl>
@@ -33,7 +33,6 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 
-#include <ctype.h>
 #include <assert.h>
 
 #include <vlc_access.h> /* DVB-specific things */
@@ -44,6 +43,7 @@
 #include <vlc_iso_lang.h>
 #include <vlc_network.h>
 #include <vlc_charset.h>
+#include <vlc_fs.h>
 
 #include "../mux/mpeg/csa.h"
 
@@ -77,7 +77,19 @@
 #       include "tables/eit.h"
 #   endif
 #endif
-#include <time.h>
+
+/* TDT support */
+#ifdef _DVBPSI_DR_58_H_
+#   define TS_USE_TDT 1
+#   ifdef HAVE_DVBPSI_DR_H
+#       include <dvbpsi/tot.h>
+#   else
+#       include "tables/tot.h"
+#   endif
+#else
+#   include <time.h>
+#endif
+
 #undef TS_DEBUG
 
 /*****************************************************************************
@@ -143,6 +155,11 @@ static void Close ( vlc_object_t * );
     "Tweak the buffer size for reading and writing an integer number of packets." \
     "Specify the size of the buffer here and not the number of packets." )
 
+#define SPLIT_ES_TEXT N_("Separate sub-streams")
+#define SPLIT_ES_LONGTEXT N_( \
+    "Separate teletex/dvbs pages into independent ES. " \
+    "It can be useful to turn off this option when using stream output." )
+
 vlc_module_begin ()
     set_description( N_("MPEG Transport Stream demuxer") )
     set_shortname ( "MPEG-TS" )
@@ -150,19 +167,21 @@ vlc_module_begin ()
     set_subcategory( SUBCAT_INPUT_DEMUX )
 
     add_string( "ts-extra-pmt", NULL, NULL, PMT_TEXT, PMT_LONGTEXT, true )
-    add_bool( "ts-es-id-pid", 1, NULL, PID_TEXT, PID_LONGTEXT, true )
+    add_bool( "ts-es-id-pid", true, NULL, PID_TEXT, PID_LONGTEXT, true )
+        change_safe()
     add_string( "ts-out", NULL, NULL, TSOUT_TEXT, TSOUT_LONGTEXT, true )
     add_integer( "ts-out-mtu", 1400, NULL, MTUOUT_TEXT,
                  MTUOUT_LONGTEXT, true )
     add_string( "ts-csa-ck", NULL, NULL, CSA_TEXT, CSA_LONGTEXT, true )
     add_string( "ts-csa2-ck", NULL, NULL, CSA_TEXT, CSA_LONGTEXT, true )
     add_integer( "ts-csa-pkt", 188, NULL, CPKT_TEXT, CPKT_LONGTEXT, true )
-    add_bool( "ts-silent", 0, NULL, SILENT_TEXT, SILENT_LONGTEXT, true )
+    add_bool( "ts-silent", false, NULL, SILENT_TEXT, SILENT_LONGTEXT, true )
 
     add_file( "ts-dump-file", NULL, NULL, TSDUMP_TEXT, TSDUMP_LONGTEXT, false )
-    add_bool( "ts-dump-append", 0, NULL, APPEND_TEXT, APPEND_LONGTEXT, false )
+    add_bool( "ts-dump-append", false, NULL, APPEND_TEXT, APPEND_LONGTEXT, false )
     add_integer( "ts-dump-size", 16384, NULL, DUMPSIZE_TEXT,
                  DUMPSIZE_LONGTEXT, true )
+    add_bool( "ts-split-es", true, NULL, SPLIT_ES_TEXT, SPLIT_ES_LONGTEXT, false )
 
     set_capability( "demux", 10 )
     set_callbacks( Open, Close )
@@ -341,12 +360,14 @@ struct demux_sys_t
     bool        b_user_pmt;
     int         i_pmt;
     ts_pid_t    **pmt;
+    int         i_pmt_es;
 
     /* */
     bool        b_es_id_pid;
     csa_t       *csa;
     int         i_csa_pkt_size;
     bool        b_silent;
+    bool        b_split_es;
 
     bool        b_udp_out;
     int         fd; /* udp socket */
@@ -357,12 +378,14 @@ struct demux_sys_t
 
     /* */
     bool        b_dvb_meta;
+    int64_t     i_tdt_delta;
     int64_t     i_dvb_start;
     int64_t     i_dvb_length;
+    bool        b_broken_charset; /* True if broken encoding is used in EPG/SDT */
 
     /* */
     int         i_current_program;
-    vlc_list_t  *p_programs_list;
+    vlc_list_t  programs_list;
 
     /* TS dump */
     char        *psz_file;  /* file to dump data in */
@@ -374,14 +397,12 @@ struct demux_sys_t
     bool        b_start_record;
 };
 
-static int i_broken_epg;
-
 static int Demux    ( demux_t *p_demux );
 static int DemuxFile( demux_t *p_demux );
 static int Control( demux_t *p_demux, int i_query, va_list args );
 
 static void PIDInit ( ts_pid_t *pid, bool b_psi, ts_psi_t *p_owner );
-static void PIDClean( es_out_t *out, ts_pid_t *pid );
+static void PIDClean( demux_t *, ts_pid_t *pid );
 static int  PIDFillFormat( ts_pid_t *pid, int i_stream_type );
 
 static void PATCallBack( demux_t *, dvbpsi_pat_t * );
@@ -406,6 +427,9 @@ static void              IODFree( iod_descriptor_t * );
 
 #define TS_USER_PMT_NUMBER (0)
 static int UserPmt( demux_t *p_demux, const char * );
+
+static int  SetPIDFilter( demux_t *, int i_pid, bool b_selected );
+static void SetPrgFilter( demux_t *, int i_prg, bool b_selected );
 
 #define TS_PACKET_SIZE_188 188
 #define TS_PACKET_SIZE_192 192
@@ -497,10 +521,10 @@ static int Open( vlc_object_t *p_this )
          * http://www.i-topfield.com/data/product/firmware/Structure%20of%20Recorded%20File%20in%20TF5000PVR%20(Feb%2021%202004).doc
          * but after the filename the offsets seem to be incorrect.  - DJ */
         int i_duration, i_name;
-        char *psz_name = malloc(25);
+        char *psz_name = xmalloc(25);
         char *psz_event_name;
-        char *psz_event_text = malloc(130);
-        char *psz_ext_text = malloc(1025);
+        char *psz_event_text = xmalloc(130);
+        char *psz_ext_text = xmalloc(1025);
 
         // 2 bytes version Uimsbf (4,5)
         // 2 bytes reserved (6,7)
@@ -535,7 +559,7 @@ static int Open( vlc_object_t *p_this )
         // 1 byte event name length Uimsbf (89)
         i_name = (int)(p_peek[89]&~0x81);
         msg_Dbg( p_demux, "event name length = %d", i_name);
-        psz_event_name = malloc( i_name+1 );
+        psz_event_name = xmalloc( i_name+1 );
         // 1 byte parental rating (90)
         // 129 bytes of event text
         memcpy( psz_event_name, &p_peek[91], i_name );
@@ -590,7 +614,7 @@ static int Open( vlc_object_t *p_this )
             msg_Info( p_demux, "dumping raw stream to standard output" );
             p_sys->p_file = stdout;
         }
-        else if( ( p_sys->p_file = utf8_fopen( p_sys->psz_file, psz_mode ) ) == NULL )
+        else if( ( p_sys->p_file = vlc_fopen( p_sys->psz_file, psz_mode ) ) == NULL )
         {
             msg_Err( p_demux, "cannot create `%s' for writing", p_sys->psz_file );
             p_sys->b_file_out = false;
@@ -605,7 +629,7 @@ static int Open( vlc_object_t *p_this )
             {
                 p_sys->i_ts_read = 1500 / p_sys->i_packet_size;
             }
-            p_sys->buffer = malloc( p_sys->i_packet_size * p_sys->i_ts_read );
+            p_sys->buffer = xmalloc( p_sys->i_packet_size * p_sys->i_ts_read );
             msg_Info( p_demux, "%s raw stream to file `%s' reading packets %d",
                       b_append ? "appending" : "dumping", p_sys->psz_file,
                       p_sys->i_ts_read );
@@ -623,8 +647,13 @@ static int Open( vlc_object_t *p_this )
     p_sys->b_dvb_meta = true;
     p_sys->b_access_control = true;
     p_sys->i_current_program = 0;
+    p_sys->programs_list.i_count = 0;
+    p_sys->programs_list.p_values = NULL;
+    p_sys->i_tdt_delta = 0;
     p_sys->i_dvb_start = 0;
     p_sys->i_dvb_length = 0;
+
+    p_sys->b_broken_charset = false;
 
     for( i = 0; i < 8192; i++ )
     {
@@ -662,12 +691,20 @@ static int Open( vlc_object_t *p_this )
         eit->psi->handle =
             dvbpsi_AttachDemux( (dvbpsi_demux_new_cb_t)PSINewTableCallBack,
                                 p_demux );
+#ifdef TS_USE_TDT
+        ts_pid_t *tdt = &p_sys->pid[0x14];
+        PIDInit( tdt, true, NULL );
+        tdt->psi->handle =
+            dvbpsi_AttachDemux( (dvbpsi_demux_new_cb_t)PSINewTableCallBack,
+                                p_demux );
+#endif
         if( p_sys->b_access_control )
         {
-            if( stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                ACCESS_SET_PRIVATE_ID_STATE, 0x11, true ) ||
-                stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                ACCESS_SET_PRIVATE_ID_STATE, 0x12, true ) )
+            if( SetPIDFilter( p_demux, 0x11, true ) ||
+#ifdef TS_USE_TDT
+                SetPIDFilter( p_demux, 0x14, true ) ||
+#endif
+                SetPIDFilter( p_demux, 0x12, true ) )
                 p_sys->b_access_control = false;
         }
     }
@@ -675,6 +712,7 @@ static int Open( vlc_object_t *p_this )
 
     /* Init PMT array */
     TAB_INIT( p_sys->i_pmt, p_sys->pmt );
+    p_sys->i_pmt_es = 0;
 
     /* Read config */
     p_sys->b_es_id_pid = var_CreateGetBool( p_demux, "ts-es-id-pid" );
@@ -709,7 +747,7 @@ static int Open( vlc_object_t *p_this )
             {
                 p_sys->i_ts_read = 1500 / p_sys->i_packet_size;
             }
-            p_sys->buffer = malloc( p_sys->i_packet_size * p_sys->i_ts_read );
+            p_sys->buffer = xmalloc( p_sys->i_packet_size * p_sys->i_ts_read );
         }
     }
     free( psz_string );
@@ -769,6 +807,15 @@ static int Open( vlc_object_t *p_this )
     free( psz_string );
 
     p_sys->b_silent = var_CreateGetBool( p_demux, "ts-silent" );
+    p_sys->b_split_es = var_InheritBool( p_demux, "ts-split-es" );
+
+    while( !p_sys->b_file_out && p_sys->i_pmt_es <= 0 &&
+           vlc_object_alive( p_demux ) )
+    {
+        if( p_demux->pf_demux( p_demux ) != 1 )
+            break;
+    }
+
 
     return VLC_SUCCESS;
 }
@@ -798,22 +845,22 @@ static void Close( vlc_object_t *p_this )
                 free( pid->psi );
                 break;
             default:
-                if( p_sys->b_dvb_meta && ( pid->i_pid == 0x11 || pid->i_pid == 0x12 ) )
+                if( p_sys->b_dvb_meta && ( pid->i_pid == 0x11 || pid->i_pid == 0x12 || pid->i_pid == 0x14 ) )
                 {
-                    /* SDT or EIT */
+                    /* SDT or EIT or TDT */
                     dvbpsi_DetachDemux( pid->psi->handle );
                     free( pid->psi );
                 }
                 else
                 {
-                    PIDClean( p_demux->out, pid );
+                    PIDClean( p_demux, pid );
                 }
                 break;
             }
         }
         else if( pid->b_valid && pid->es )
         {
-            PIDClean( p_demux->out, pid );
+            PIDClean( p_demux, pid );
         }
 
         if( pid->b_seen )
@@ -821,13 +868,9 @@ static void Close( vlc_object_t *p_this )
             msg_Dbg( p_demux, "  - pid[%d] seen", pid->i_pid );
         }
 
-        if( p_sys->b_access_control && pid->i_pid > 0 )
-        {
-            /* too much */
-            stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                            ACCESS_SET_PRIVATE_ID_STATE, pid->i_pid,
-                            false );
-        }
+        /* too much */
+        if( pid->i_pid > 0 )
+            SetPIDFilter( p_demux, pid->i_pid, false );
     }
 
     vlc_mutex_lock( &p_sys->csa_lock );
@@ -841,17 +884,12 @@ static void Close( vlc_object_t *p_this )
 
     TAB_CLEAN( p_sys->i_pmt, p_sys->pmt );
 
-    if( p_sys->p_programs_list )
-    {
-        vlc_value_t val;
-        val.p_list = p_sys->p_programs_list;
-        var_Change( p_demux, "programs", VLC_VAR_FREELIST, &val, NULL );
-    }
+    free( p_sys->programs_list.p_values );
 
     /* If in dump mode, then close the file */
     if( p_sys->b_file_out )
     {
-        msg_Info( p_demux ,"closing %s (%"PRId64" Kbytes dumped)",
+        msg_Info( p_demux ,"closing %s (%"PRId64" KiB dumped)",
                   p_sys->psz_file, p_sys->i_write / 1024 );
 
         if( p_sys->p_file != stdout )
@@ -1002,6 +1040,7 @@ static int DemuxFile( demux_t *p_demux )
 static int Demux( demux_t *p_demux )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
+    bool b_wait_es = p_sys->i_pmt_es <= 0;
 
     /* We read at most 100 TS packet or until a frame is completed */
     for( int i_pkt = 0; i_pkt < p_sys->i_ts_read; i_pkt++ )
@@ -1081,7 +1120,7 @@ static int Demux( demux_t *p_demux )
         {
             if( p_pid->psi )
             {
-                if( p_pid->i_pid == 0 || ( p_sys->b_dvb_meta && ( p_pid->i_pid == 0x11 || p_pid->i_pid == 0x12 ) ) )
+                if( p_pid->i_pid == 0 || ( p_sys->b_dvb_meta && ( p_pid->i_pid == 0x11 || p_pid->i_pid == 0x12 || p_pid->i_pid == 0x14 ) ) )
                 {
                     dvbpsi_PushPacket( p_pid->psi->handle, p_pkt->p_buffer );
                 }
@@ -1117,7 +1156,7 @@ static int Demux( demux_t *p_demux )
         }
         p_pid->b_seen = true;
 
-        if( b_frame )
+        if( b_frame || ( b_wait_es && p_sys->i_pmt_es > 0 ) )
             break;
     }
 
@@ -1142,16 +1181,20 @@ static int DVBEventInformation( demux_t *p_demux, int64_t *pi_time, int64_t *pi_
     if( pi_time )
         *pi_time = 0;
 
-    if( p_sys->b_access_control && p_sys->i_dvb_length > 0 )
+    if( p_sys->i_dvb_length > 0 )
     {
-        /* FIXME we should not use time() but read the date from the tdt */
-        const time_t t = time( NULL );
+#ifdef TS_USE_TDT
+        const int64_t t = mdate() + p_sys->i_tdt_delta;
+#else
+        const int64_t t = CLOCK_FREQ * time ( NULL );
+#endif
+
         if( p_sys->i_dvb_start <= t && t < p_sys->i_dvb_start + p_sys->i_dvb_length )
         {
             if( pi_length )
-                *pi_length = p_sys->i_dvb_length * INT64_C(1000000);
+                *pi_length = p_sys->i_dvb_length;
             if( pi_time )
-                *pi_time   = (t - p_sys->i_dvb_start) * INT64_C(1000000);
+                *pi_time   = t - p_sys->i_dvb_start;
             return VLC_SUCCESS;
         }
     }
@@ -1177,7 +1220,8 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
         i64 = stream_Size( p_demux->s );
         if( i64 > 0 )
         {
-            *pf = (double)stream_Tell( p_demux->s ) / (double)i64;
+            double f_current = stream_Tell( p_demux->s );
+            *pf = f_current / (double)i64;
         }
         else
         {
@@ -1233,124 +1277,52 @@ static int Control( demux_t *p_demux, int i_query, va_list args )
 #endif
     case DEMUX_SET_GROUP:
     {
-        uint16_t i_vpid = 0, i_apid1 = 0, i_apid2 = 0, i_apid3 = 0;
-        ts_prg_psi_t *p_prg = NULL;
         vlc_list_t *p_list;
 
         i_int = (int)va_arg( args, int );
         p_list = (vlc_list_t *)va_arg( args, vlc_list_t * );
         msg_Dbg( p_demux, "DEMUX_SET_GROUP %d %p", i_int, p_list );
 
-        if( p_sys->b_access_control && i_int > 0 && i_int != p_sys->i_current_program )
+        if( i_int == 0 && p_sys->i_current_program > 0 )
+            i_int = p_sys->i_current_program;
+
+        if( p_sys->i_current_program > 0 )
         {
-            int i_pmt_pid = -1;
-
-            /* Search pmt to be unselected */
-            for( int i = 0; i < p_sys->i_pmt; i++ )
-            {
-                ts_pid_t *pmt = p_sys->pmt[i];
-
-                for( int i_prg = 0; i_prg < pmt->psi->i_prg; i_prg++ )
-                {
-                    if( pmt->psi->prg[i_prg]->i_number == p_sys->i_current_program )
-                    {
-                        i_pmt_pid = p_sys->pmt[i]->i_pid;
-                        break;
-                    }
-                }
-                if( i_pmt_pid > 0 ) break;
-            }
-
-            if( i_pmt_pid > 0 )
-            {
-                stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                ACCESS_SET_PRIVATE_ID_STATE, i_pmt_pid,
-                                false );
-                /* All ES */
-                for( int i = 2; i < 8192; i++ )
-                {
-                    ts_pid_t *pid = &p_sys->pid[i];
-
-                    if( !pid->b_valid || pid->psi )
-                        continue;
-
-                    for( int i_prg = 0; i_prg < pid->p_owner->i_prg; i_prg++ )
-                    {
-                        if( pid->p_owner->prg[i_prg]->i_pid_pmt == i_pmt_pid && pid->es->id )
-                        {
-                            /* We only remove es that aren't defined by extra pmt */
-                            stream_Control( p_demux->s,
-                                            STREAM_CONTROL_ACCESS,
-                                            ACCESS_SET_PRIVATE_ID_STATE,
-                                            i, false );
-                            break;
-                        }
-                    }
-                }
-            }
-
-            /* select new program */
-            p_sys->i_current_program = i_int;
-            i_pmt_pid = -1;
-            for( int i = 0; i < p_sys->i_pmt; i++ )
-            {
-                ts_pid_t *pmt = p_sys->pmt[i];
-
-                for( int i_prg = 0; i_prg < pmt->psi->i_prg; i_prg++ )
-                {
-                    if( pmt->psi->prg[i_prg]->i_number == i_int )
-                    {
-                        i_pmt_pid = p_sys->pmt[i]->i_pid;
-                        p_prg = p_sys->pmt[i]->psi->prg[i_prg];
-                        break;
-                    }
-                }
-                if( i_pmt_pid > 0 )
-                    break;
-            }
-            if( i_pmt_pid > 0 )
-            {
-                stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                ACCESS_SET_PRIVATE_ID_STATE, i_pmt_pid,
-                                true );
-                stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                ACCESS_SET_PRIVATE_ID_STATE, p_prg->i_pid_pcr,
-                                true );
-
-                for( int i = 2; i < 8192; i++ )
-                {
-                    ts_pid_t *pid = &p_sys->pid[i];
-
-                    if( !pid->b_valid || pid->psi )
-                        continue;
-
-                    for( int i_prg = 0; i_prg < pid->p_owner->i_prg; i_prg++ )
-                    {
-                        if( pid->p_owner->prg[i_prg]->i_pid_pmt == i_pmt_pid && pid->es->id )
-                        {
-                            if ( pid->es->fmt.i_cat == VIDEO_ES && !i_vpid )
-                                i_vpid = i;
-                            if ( pid->es->fmt.i_cat == AUDIO_ES && !i_apid1 )
-                                i_apid1 = i;
-                            else if ( pid->es->fmt.i_cat == AUDIO_ES && !i_apid2 )
-                                i_apid2 = i;
-                            else if ( pid->es->fmt.i_cat == AUDIO_ES && !i_apid3 )
-                                i_apid3 = i;
-
-                            stream_Control( p_demux->s,
-                                            STREAM_CONTROL_ACCESS,
-                                            ACCESS_SET_PRIVATE_ID_STATE,
-                                            i, true );
-                            break;
-                        }
-                    }
-                }
-            }
+            if( p_sys->i_current_program != i_int )
+                SetPrgFilter( p_demux, p_sys->i_current_program, false );
         }
-        else
+        else if( p_sys->i_current_program < 0 )
+        {
+            for( int i = 0; i < p_sys->programs_list.i_count; i++ )
+                SetPrgFilter( p_demux, p_sys->programs_list.p_values[i].i_int, false );
+        }
+
+        if( i_int > 0 )
+        {
+            p_sys->i_current_program = i_int;
+            SetPrgFilter( p_demux, p_sys->i_current_program, true );
+        }
+        else if( i_int < 0 )
         {
             p_sys->i_current_program = -1;
-            p_sys->p_programs_list = p_list;
+            p_sys->programs_list.i_count = 0;
+            if( p_list )
+            {
+                vlc_list_t *p_dst = &p_sys->programs_list;
+                free( p_dst->p_values );
+
+                p_dst->p_values = calloc( p_list->i_count,
+                                          sizeof(*p_dst->p_values) );
+                if( p_dst->p_values )
+                {
+                    p_dst->i_count = p_list->i_count;
+                    for( int i = 0; i < p_list->i_count; i++ )
+                    {
+                        p_dst->p_values[i] = p_list->p_values[i];
+                        SetPrgFilter( p_demux, p_dst->p_values[i].i_int, true );
+                    }
+                }
+            }
         }
         return VLC_SUCCESS;
     }
@@ -1483,6 +1455,7 @@ static int UserPmt( demux_t *p_demux, const char *psz_fmt )
                          (char*)&pid->es->fmt.i_codec );
                 pid->es->id = es_out_Add( p_demux->out,
                                           &pid->es->fmt );
+                p_sys->i_pmt_es++;
             }
         }
 
@@ -1498,6 +1471,68 @@ static int UserPmt( demux_t *p_demux, const char *psz_fmt )
 error:
     free( psz_dup );
     return VLC_EGENERIC;
+}
+
+static int SetPIDFilter( demux_t *p_demux, int i_pid, bool b_selected )
+{
+    demux_sys_t *p_sys = p_demux->p_sys;
+
+    if( !p_sys->b_access_control )
+        return VLC_EGENERIC;
+
+    return stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
+                           ACCESS_SET_PRIVATE_ID_STATE, i_pid, b_selected );
+}
+
+static void SetPrgFilter( demux_t *p_demux, int i_prg_id, bool b_selected )
+{
+    demux_sys_t *p_sys = p_demux->p_sys;
+    ts_prg_psi_t *p_prg = NULL;
+    int i_pmt_pid = -1;
+
+    /* Search pmt to be unselected */
+    for( int i = 0; i < p_sys->i_pmt; i++ )
+    {
+        ts_pid_t *pmt = p_sys->pmt[i];
+
+        for( int i_prg = 0; i_prg < pmt->psi->i_prg; i_prg++ )
+        {
+            if( pmt->psi->prg[i_prg]->i_number == i_prg_id )
+            {
+                i_pmt_pid = p_sys->pmt[i]->i_pid;
+                p_prg = p_sys->pmt[i]->psi->prg[i_prg];
+                break;
+            }
+        }
+        if( i_pmt_pid > 0 )
+            break;
+    }
+    if( i_pmt_pid <= 0 )
+        return;
+    assert( p_prg );
+
+    SetPIDFilter( p_demux, i_pmt_pid, b_selected );
+    if( p_prg->i_pid_pcr > 0 )
+        SetPIDFilter( p_demux, p_prg->i_pid_pcr, b_selected );
+
+    /* All ES */
+    for( int i = 2; i < 8192; i++ )
+    {
+        ts_pid_t *pid = &p_sys->pid[i];
+
+        if( !pid->b_valid || pid->psi )
+            continue;
+
+        for( int i_prg = 0; i_prg < pid->p_owner->i_prg; i_prg++ )
+        {
+            if( pid->p_owner->prg[i_prg]->i_pid_pmt == i_pmt_pid && pid->es->id )
+            {
+                /* We only remove/select es that aren't defined by extra pmt */
+                SetPIDFilter( p_demux, i, b_selected );
+                break;
+            }
+        }
+    }
 }
 
 static void PIDInit( ts_pid_t *pid, bool b_psi, ts_psi_t *p_owner )
@@ -1518,7 +1553,7 @@ static void PIDInit( ts_pid_t *pid, bool b_psi, ts_psi_t *p_owner )
 
         if( !b_old_valid )
         {
-            pid->psi = malloc( sizeof( ts_psi_t ) );
+            pid->psi = xmalloc( sizeof( ts_psi_t ) );
             if( pid->psi )
             {
                 pid->psi->handle = NULL;
@@ -1564,8 +1599,11 @@ static void PIDInit( ts_pid_t *pid, bool b_psi, ts_psi_t *p_owner )
     }
 }
 
-static void PIDClean( es_out_t *out, ts_pid_t *pid )
+static void PIDClean( demux_t *p_demux, ts_pid_t *pid )
 {
+    demux_sys_t *p_sys = p_demux->p_sys;
+    es_out_t *out = p_demux->out;
+
     if( pid->psi )
     {
         if( pid->psi->handle )
@@ -1584,7 +1622,10 @@ static void PIDClean( es_out_t *out, ts_pid_t *pid )
     else
     {
         if( pid->es->id )
+        {
             es_out_Del( out, pid->es->id );
+            p_sys->i_pmt_es--;
+        }
 
         if( pid->es->p_pes )
             block_ChainRelease( pid->es->p_pes );
@@ -1596,7 +1637,10 @@ static void PIDClean( es_out_t *out, ts_pid_t *pid )
         for( int i = 0; i < pid->i_extra_es; i++ )
         {
             if( pid->extra_es[i]->id )
+            {
                 es_out_Del( out, pid->extra_es[i]->id );
+                p_sys->i_pmt_es--;
+            }
 
             if( pid->extra_es[i]->p_pes )
                 block_ChainRelease( pid->extra_es[i]->p_pes );
@@ -1619,8 +1663,8 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
 {
     block_t *p_pes = pid->es->p_pes;
     uint8_t header[34];
-    int     i_pes_size = 0;
-    int     i_skip = 0;
+    unsigned i_pes_size = 0;
+    unsigned i_skip = 0;
     mtime_t i_dts = -1;
     mtime_t i_pts = -1;
     mtime_t i_length = 0;
@@ -1632,8 +1676,8 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
     pid->es->pp_last = &pid->es->p_pes;
 
     /* FIXME find real max size */
-    const int i_max = block_ChainExtract( p_pes, header, 34 );
-
+    /* const int i_max = */ block_ChainExtract( p_pes, header, 34 );
+    
     if( header[0] != 0 || header[1] != 0 || header[2] != 1 )
     {
         if( !p_demux->p_sys->b_silent )
@@ -1739,7 +1783,7 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
     {
         i_skip += 1;
     }
-    else if( pid->es->fmt.i_codec == VLC_FOURCC( 's', 'u', 'b', 't' ) &&
+    else if( pid->es->fmt.i_codec == VLC_CODEC_SUBT &&
              pid->es->p_mpeg4desc )
     {
         decoder_config_descriptor_t *dcd = &pid->es->p_mpeg4desc->dec_descr;
@@ -1750,21 +1794,17 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
         {
             /* display length */
             if( p_pes->i_buffer + 2 <= i_skip )
-            {
                 i_length = GetWBE( &p_pes->p_buffer[i_skip] );
-            }
 
             i_skip += 2;
         }
         if( p_pes->i_buffer + 2 <= i_skip )
-        {
             i_pes_size = GetWBE( &p_pes->p_buffer[i_skip] );
-        }
         /* */
         i_skip += 2;
     }
 #ifdef ZVBI_COMPILED
-    else if( pid->es->fmt.i_codec == VLC_FOURCC( 't', 'e', 'l', 'x' ) )
+    else if( pid->es->fmt.i_codec == VLC_CODEC_TELETEXT )
         i_skip = 0; /*hack for zvbi support */
 #endif
     /* skip header */
@@ -1796,17 +1836,15 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
         int i;
 
         if( i_dts >= 0 )
-        {
-            p_pes->i_dts = i_dts * 100 / 9;
-        }
+            p_pes->i_dts = VLC_TS_0 + i_dts * 100 / 9;
+
         if( i_pts >= 0 )
-        {
-            p_pes->i_pts = i_pts * 100 / 9;
-        }
+            p_pes->i_pts = VLC_TS_0 + i_pts * 100 / 9;
+
         p_pes->i_length = i_length * 100 / 9;
 
         p_block = block_ChainGather( p_pes );
-        if( pid->es->fmt.i_codec == VLC_FOURCC( 's', 'u', 'b', 't' ) )
+        if( pid->es->fmt.i_codec == VLC_CODEC_SUBT )
         {
             if( i_pes_size > 0 && p_block->i_buffer > i_pes_size )
             {
@@ -1814,6 +1852,8 @@ static void ParsePES( demux_t *p_demux, ts_pid_t *pid )
             }
             /* Append a \0 */
             p_block = block_Realloc( p_block, 0, p_block->i_buffer + 1 );
+            if( !p_block )
+                abort();
             p_block->p_buffer[p_block->i_buffer -1] = '\0';
         }
 
@@ -1836,6 +1876,9 @@ static void PCRHandle( demux_t *p_demux, ts_pid_t *pid, block_t *p_bk )
     demux_sys_t   *p_sys = p_demux->p_sys;
     const uint8_t *p = p_bk->p_buffer;
 
+    if( p_sys->i_pmt_es <= 0 )
+        return;
+
     if( ( p[3]&0x20 ) && /* adaptation */
         ( p[5]&0x10 ) &&
         ( p[4] >= 7 ) )
@@ -1856,7 +1899,7 @@ static void PCRHandle( demux_t *p_demux, ts_pid_t *pid, block_t *p_bk )
                 {
                     es_out_Control( p_demux->out, ES_OUT_SET_GROUP_PCR,
                                     (int)p_sys->pmt[i]->psi->prg[i_prg]->i_number,
-                                    (int64_t)(i_pcr * 100 / 9) );
+                                    (int64_t)(VLC_TS_0 + i_pcr * 100 / 9) );
                 }
             }
         }
@@ -1957,7 +2000,7 @@ static bool GatherPES( demux_t *p_demux, ts_pid_t *pid, block_t *p_bk )
             pid->i_cc = i_cc;
             if( pid->es->p_pes && pid->es->fmt.i_cat != VIDEO_ES )
             {
-                /* Small video artifacts are usually better then
+                /* Small video artifacts are usually better than
                  * dropping full frames */
                 pid->es->p_pes->i_flags |= BLOCK_FLAG_CORRUPTED;
             }
@@ -2050,41 +2093,41 @@ static int PIDFillFormat( ts_pid_t *pid, int i_stream_type )
     case 0x01:  /* MPEG-1 video */
     case 0x02:  /* MPEG-2 video */
     case 0x80:  /* MPEG-2 MOTO video */
-        es_format_Init( fmt, VIDEO_ES, VLC_FOURCC( 'm', 'p', 'g', 'v' ) );
+        es_format_Init( fmt, VIDEO_ES, VLC_CODEC_MPGV );
         break;
     case 0x03:  /* MPEG-1 audio */
     case 0x04:  /* MPEG-2 audio */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'm', 'p', 'g', 'a' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_MPGA );
         break;
-    case 0x11:  /* MPEG4 (audio) */
+    case 0x11:  /* MPEG4 (audio) LATM */
     case 0x0f:  /* ISO/IEC 13818-7 Audio with ADTS transport syntax */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'm', 'p', '4', 'a' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_MP4A );
         break;
     case 0x10:  /* MPEG4 (video) */
-        es_format_Init( fmt, VIDEO_ES, VLC_FOURCC( 'm', 'p', '4', 'v' ) );
+        es_format_Init( fmt, VIDEO_ES, VLC_CODEC_MP4V );
         pid->es->b_gather = true;
         break;
     case 0x1B:  /* H264 <- check transport syntax/needed descriptor */
-        es_format_Init( fmt, VIDEO_ES, VLC_FOURCC( 'h', '2', '6', '4' ) );
+        es_format_Init( fmt, VIDEO_ES, VLC_CODEC_H264 );
         break;
 
     case 0x81:  /* A52 (audio) */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'a', '5', '2', ' ' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_A52 );
         break;
     case 0x82:  /* DVD_SPU (sub) */
-        es_format_Init( fmt, SPU_ES, VLC_FOURCC( 's', 'p', 'u', ' ' ) );
+        es_format_Init( fmt, SPU_ES, VLC_CODEC_SPU );
         break;
     case 0x83:  /* LPCM (audio) */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'l', 'p', 'c', 'm' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_DVD_LPCM );
         break;
     case 0x84:  /* SDDS (audio) */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 's', 'd', 'd', 's' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_SDDS );
         break;
     case 0x85:  /* DTS (audio) */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'd', 't', 's', ' ' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_DTS );
         break;
     case 0x87: /* E-AC3 */
-        es_format_Init( fmt, AUDIO_ES, VLC_FOURCC( 'e', 'a', 'c', '3' ) );
+        es_format_Init( fmt, AUDIO_ES, VLC_CODEC_EAC3 );
         break;
 
     case 0x91:  /* A52 vls (audio) */
@@ -2387,7 +2430,7 @@ static iod_descriptor_t *IODNew( int i_data, uint8_t *p_data )
                     if( dec_descr.i_decoder_specific_info_len > 0 )
                     {
                         dec_descr.p_decoder_specific_info =
-                            malloc( dec_descr.i_decoder_specific_info_len );
+                            xmalloc( dec_descr.i_decoder_specific_info_len );
                     }
                     for( i = 0; i < dec_descr.i_decoder_specific_info_len; i++ )
                     {
@@ -2528,19 +2571,17 @@ static bool ProgramIsSelected( demux_t *p_demux, uint16_t i_pgrm )
 {
     demux_sys_t          *p_sys = p_demux->p_sys;
 
-    if( !p_sys->b_access_control )
-        return false;
-    if( ( p_sys->i_current_program == -1 && p_sys->p_programs_list == NULL ) ||
+    if( ( p_sys->i_current_program == -1 && p_sys->programs_list.i_count == 0 ) ||
         p_sys->i_current_program == 0 )
         return true;
     if( p_sys->i_current_program == i_pgrm )
         return true;
 
-    if( p_sys->p_programs_list != NULL )
+    if( p_sys->programs_list.i_count != 0 )
     {
-        for( int i = 0; i < p_sys->p_programs_list->i_count; i++ )
+        for( int i = 0; i < p_sys->programs_list.i_count; i++ )
         {
-            if( i_pgrm == p_sys->p_programs_list->p_values[i].i_int )
+            if( i_pgrm == p_sys->programs_list.p_values[i].i_int )
                 return true;
         }
     }
@@ -2551,16 +2592,17 @@ static void ValidateDVBMeta( demux_t *p_demux, int i_pid )
 {
     demux_sys_t *p_sys = p_demux->p_sys;
 
-    if( !p_sys->b_dvb_meta || ( i_pid != 0x11 && i_pid != 0x12 ) )
+    if( !p_sys->b_dvb_meta || ( i_pid != 0x11 && i_pid != 0x12 && i_pid != 0x14 ) )
         return;
 
     msg_Warn( p_demux, "Switching to non DVB mode" );
 
     /* This doesn't look like a DVB stream so don't try
-     * parsing the SDT/EDT */
+     * parsing the SDT/EDT/TDT */
 
-    for( int i = 0x11; i <= 0x12; i++ )
+    for( int i = 0x11; i <= 0x14; i++ )
     {
+        if( i == 0x13 ) continue;
         ts_pid_t *p_pid = &p_sys->pid[i];
         if( p_pid->psi )
         {
@@ -2569,10 +2611,7 @@ static void ValidateDVBMeta( demux_t *p_demux, int i_pid )
             p_pid->psi = NULL;
             p_pid->b_valid = false;
         }
-        if( p_sys->b_access_control )
-            stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                            ACCESS_SET_PRIVATE_ID_STATE, i, false );
-
+        SetPIDFilter( p_demux, i, false );
     }
     p_sys->b_dvb_meta = false;
 }
@@ -2581,7 +2620,8 @@ static void ValidateDVBMeta( demux_t *p_demux, int i_pid )
 #ifdef TS_USE_DVB_SI
 /* FIXME same than dvbsi_to_utf8 from dvb access */
 static char *EITConvertToUTF8( const unsigned char *psz_instring,
-                               size_t i_length )
+                               size_t i_length,
+                               bool b_broken )
 {
     const char *psz_encoding;
     char *psz_outstring;
@@ -2594,14 +2634,10 @@ static char *EITConvertToUTF8( const unsigned char *psz_instring,
     {
         /* According to ETSI EN 300 468 Annex A, this should be ISO6937,
          * but some broadcasters use different charset... */
-        if ( i_broken_epg == 1 )
-        {
+        if( b_broken )
            psz_encoding = "ISO_8859-1";
-        }
         else
-        {
            psz_encoding = "ISO_6937";
-        }
 
         offset = 0;
     }
@@ -2711,6 +2747,19 @@ static char *EITConvertToUTF8( const unsigned char *psz_instring,
         vlc_iconv_close( iconv_handle );
 
         *psz_out = '\0';
+
+        /* Convert EIT-coded CR/LFs */
+        unsigned char *pbuf = (unsigned char *)psz_outstring;
+        for( ; pbuf < (unsigned char *)psz_out ; pbuf++)
+        {
+            if( pbuf[0] == 0xc2 && pbuf[1] == 0x8a )
+            {
+                pbuf[0] = ' ';
+                pbuf[1] = '\n';
+            }
+        }
+
+
     }
     return psz_outstring;
 }
@@ -2736,7 +2785,7 @@ static void SDTCallBack( demux_t *p_demux, dvbpsi_sdt_t *p_sdt )
              p_sdt->i_ts_id, p_sdt->i_version, p_sdt->b_current_next,
              p_sdt->i_network_id );
 
-    i_broken_epg = 0;
+    p_sys->b_broken_charset = false;
 
     for( p_srv = p_sdt->p_first_service; p_srv; p_srv = p_srv->p_next )
     {
@@ -2751,9 +2800,6 @@ static void SDTCallBack( demux_t *p_demux, dvbpsi_sdt_t *p_sdt )
                  p_srv->i_service_id, p_srv->b_eit_schedule,
                  p_srv->b_eit_present, p_srv->i_running_status,
                  p_srv->b_free_ca );
-
-        if( p_sys->i_current_program != -1 && p_sys->i_current_program != p_srv->i_service_id )
-            continue;
 
         p_meta = vlc_meta_New();
         for( p_dr = p_srv->p_first_descriptor; p_dr; p_dr = p_dr->p_next )
@@ -2785,19 +2831,33 @@ static void SDTCallBack( demux_t *p_demux, dvbpsi_sdt_t *p_sdt )
 
                 /* Workarounds for broadcasters with broken EPG */
 
-                if ( p_sdt->i_network_id == 133 )
-                   i_broken_epg = 1;  /* SKY DE & BetaDigital use ISO8859-1 */
+                if( p_sdt->i_network_id == 133 )
+                    p_sys->b_broken_charset = true;  /* SKY DE & BetaDigital use ISO8859-1 */
 
-                if ( (pD->i_service_provider_name_length == 4) &&
-                     !strncmp(pD->i_service_provider_name, "CSAT", 4) )
-                   i_broken_epg = 1;  /* CanalSat FR uses ISO8859-1 */
+                /* List of providers using ISO8859-1 */
+                static const char ppsz_broken_providers[][8] = {
+                    "CSAT",     /* CanalSat FR */
+                    "GR1",      /* France televisions */
+                    "MULTI4",   /* NT1 */
+                    "MR5",      /* France 2/M6 HD */
+                    ""
+                };
+                for( int i = 0; *ppsz_broken_providers[i]; i++ )
+                {
+                    const size_t i_length = strlen(ppsz_broken_providers[i]);
+                    if( pD->i_service_provider_name_length == i_length &&
+                        !strncmp( pD->i_service_provider_name, ppsz_broken_providers[i], i_length ) )
+                        p_sys->b_broken_charset = true;
+                }
 
                 /* FIXME: Digital+ ES also uses ISO8859-1 */
 
                 str1 = EITConvertToUTF8(pD->i_service_provider_name,
-                                        pD->i_service_provider_name_length);
+                                        pD->i_service_provider_name_length,
+                                        p_sys->b_broken_charset );
                 str2 = EITConvertToUTF8(pD->i_service_name,
-                                        pD->i_service_name_length);
+                                        pD->i_service_name_length,
+                                        p_sys->b_broken_charset );
 
                 msg_Dbg( p_demux, "    - type=%d provider=%s name=%s",
                          pD->i_service_type, str1, str2 );
@@ -2897,6 +2957,17 @@ static int EITConvertDuration( uint32_t i_duration )
 }
 #undef CVT_FROM_BCD
 
+#ifdef TS_USE_TDT
+static void TDTCallBack( demux_t *p_demux, dvbpsi_tot_t *p_tdt )
+{
+    demux_sys_t        *p_sys = p_demux->p_sys;
+
+    p_sys->i_tdt_delta = CLOCK_FREQ * EITConvertStartTime( p_tdt->i_utc_time )
+                         - mdate();
+    dvbpsi_DeleteTOT(p_tdt);
+}
+#endif
+
 
 static void EITCallBack( demux_t *p_demux,
                          dvbpsi_eit_t *p_eit, bool b_current_following )
@@ -2906,7 +2977,7 @@ static void EITCallBack( demux_t *p_demux,
     vlc_epg_t *p_epg;
 
     msg_Dbg( p_demux, "EITCallBack called" );
-    if( !p_eit->b_current_next || ( p_sys->i_current_program != -1 && p_sys->i_current_program != p_eit->i_service_id ) )
+    if( !p_eit->b_current_next )
     {
         dvbpsi_DeleteEIT( p_eit );
         return;
@@ -2943,10 +3014,14 @@ static void EITCallBack( demux_t *p_demux,
             {
                 dvbpsi_short_event_dr_t *pE = dvbpsi_DecodeShortEventDr( p_dr );
 
-                if( pE )
+                /* Only take first description, as we don't handle language-info
+                   for epg atm*/
+                if( pE && psz_name == NULL)
                 {
-                    psz_name = EITConvertToUTF8( pE->i_event_name, pE->i_event_name_length);
-                    psz_text = EITConvertToUTF8( pE->i_text, pE->i_text_length );
+                    psz_name = EITConvertToUTF8( pE->i_event_name, pE->i_event_name_length,
+                                                 p_sys->b_broken_charset );
+                    psz_text = EITConvertToUTF8( pE->i_text, pE->i_text_length,
+                                                 p_sys->b_broken_charset );
                     msg_Dbg( p_demux, "    - short event lang=%3.3s '%s' : '%s'",
                              pE->i_iso_639_code, psz_name, psz_text );
                 }
@@ -2962,12 +3037,14 @@ static void EITCallBack( demux_t *p_demux,
 
                     if( pE->i_text_length > 0 )
                     {
-                        char *psz_text = EITConvertToUTF8( pE->i_text, pE->i_text_length );
+                        char *psz_text = EITConvertToUTF8( pE->i_text, pE->i_text_length,
+                                                           p_sys->b_broken_charset );
                         if( psz_text )
                         {
                             msg_Dbg( p_demux, "       - text='%s'", psz_text );
 
-                            psz_extra = realloc( psz_extra, strlen(psz_extra) + strlen(psz_text) + 1 );
+                            psz_extra = xrealloc( psz_extra,
+                                   strlen(psz_extra) + strlen(psz_text) + 1 );
                             strcat( psz_extra, psz_text );
                             free( psz_text );
                         }
@@ -2976,14 +3053,18 @@ static void EITCallBack( demux_t *p_demux,
                     for( int i = 0; i < pE->i_entry_count; i++ )
                     {
                         char *psz_dsc = EITConvertToUTF8( pE->i_item_description[i],
-                                                          pE->i_item_description_length[i] );
-                        char *psz_itm = EITConvertToUTF8( pE->i_item[i], pE->i_item_length[i] );
+                                                          pE->i_item_description_length[i],
+                                                          p_sys->b_broken_charset );
+                        char *psz_itm = EITConvertToUTF8( pE->i_item[i], pE->i_item_length[i],
+                                                          p_sys->b_broken_charset );
 
                         if( psz_dsc && psz_itm )
                         {
                             msg_Dbg( p_demux, "       - desc='%s' item='%s'", psz_dsc, psz_itm );
 #if 0
-                            psz_extra = realloc( psz_extra, strlen(psz_extra) + strlen(psz_dsc) + strlen(psz_itm) + 3 + 1 );
+                            psz_extra = xrealloc( psz_extra,
+                                         strlen(psz_extra) + strlen(psz_dsc) +
+                                         strlen(psz_itm) + 3 + 1 );
                             strcat( psz_extra, "(" );
                             strcat( psz_extra, psz_dsc );
                             strcat( psz_extra, " " );
@@ -3018,15 +3099,17 @@ static void EITCallBack( demux_t *p_demux,
     }
     if( p_epg->i_event > 0 )
     {
-        if( p_eit->i_service_id == p_sys->i_current_program && b_current_following )
+        if( b_current_following &&
+            (  p_sys->i_current_program == -1 ||
+               p_sys->i_current_program == p_eit->i_service_id ) )
         {
             p_sys->i_dvb_length = 0;
             p_sys->i_dvb_start = 0;
 
             if( p_epg->p_current )
             {
-                p_sys->i_dvb_start = p_epg->p_current->i_start;
-                p_sys->i_dvb_length = p_epg->p_current->i_duration;
+                p_sys->i_dvb_start = CLOCK_FREQ * p_epg->p_current->i_start;
+                p_sys->i_dvb_length = CLOCK_FREQ * p_epg->p_current->i_duration;
             }
         }
         es_out_Control( p_demux->out, ES_OUT_SET_GROUP_EPG, p_eit->i_service_id, p_epg );
@@ -3071,6 +3154,17 @@ static void PSINewTableCallBack( demux_t *p_demux, dvbpsi_handle h,
                                     (dvbpsi_eit_callback)EITCallBackSchedule;
         dvbpsi_AttachEIT( h, i_table_id, i_extension, cb, p_demux );
     }
+#ifdef TS_USE_TDT
+    else if( p_demux->p_sys->pid[0x11].psi->i_sdt_version != -1 &&
+              i_table_id == 0x70 )  /* TDT */
+    {
+         msg_Dbg( p_demux, "PSINewTableCallBack: table 0x%x(%d) ext=0x%x(%d)",
+                 i_table_id, i_table_id, i_extension, i_extension );
+         dvbpsi_AttachTOT( h, i_table_id, i_extension,
+                           (dvbpsi_tot_callback)TDTCallBack, p_demux);
+    }
+#endif
+
 }
 #endif
 
@@ -3144,14 +3238,14 @@ static void PMTSetupEsISO14496( demux_t *p_demux, ts_pid_t *pid,
         {
         case 0x0B: /* mpeg4 sub */
             p_fmt->i_cat = SPU_ES;
-            p_fmt->i_codec = VLC_FOURCC('s','u','b','t');
+            p_fmt->i_codec = VLC_CODEC_SUBT;
             break;
 
         case 0x20: /* mpeg4 */
-            p_fmt->i_codec = VLC_FOURCC('m','p','4','v');
+            p_fmt->i_codec = VLC_CODEC_MP4V;
             break;
         case 0x21: /* h264 */
-            p_fmt->i_codec = VLC_FOURCC('h','2','6','4');
+            p_fmt->i_codec = VLC_CODEC_H264;
             break;
         case 0x60:
         case 0x61:
@@ -3159,13 +3253,13 @@ static void PMTSetupEsISO14496( demux_t *p_demux, ts_pid_t *pid,
         case 0x63:
         case 0x64:
         case 0x65: /* mpeg2 */
-            p_fmt->i_codec = VLC_FOURCC( 'm','p','g','v' );
+            p_fmt->i_codec = VLC_CODEC_MPGV;
             break;
         case 0x6a: /* mpeg1 */
-            p_fmt->i_codec = VLC_FOURCC( 'm','p','g','v' );
+            p_fmt->i_codec = VLC_CODEC_MPGV;
             break;
         case 0x6c: /* mpeg1 */
-            p_fmt->i_codec = VLC_FOURCC( 'j','p','e','g' );
+            p_fmt->i_codec = VLC_CODEC_JPEG;
             break;
         default:
             p_fmt->i_cat = UNKNOWN_ES;
@@ -3178,18 +3272,18 @@ static void PMTSetupEsISO14496( demux_t *p_demux, ts_pid_t *pid,
         switch( dcd->i_objectTypeIndication )
         {
         case 0x40: /* mpeg4 */
-            p_fmt->i_codec = VLC_FOURCC('m','p','4','a');
+            p_fmt->i_codec = VLC_CODEC_MP4A;
             break;
         case 0x66:
         case 0x67:
         case 0x68: /* mpeg2 aac */
-            p_fmt->i_codec = VLC_FOURCC('m','p','4','a');
+            p_fmt->i_codec = VLC_CODEC_MP4A;
             break;
         case 0x69: /* mpeg2 */
-            p_fmt->i_codec = VLC_FOURCC('m','p','g','a');
+            p_fmt->i_codec = VLC_CODEC_MPGA;
             break;
         case 0x6b: /* mpeg1 */
-            p_fmt->i_codec = VLC_FOURCC('m','p','g','a');
+            p_fmt->i_codec = VLC_CODEC_MPGA;
             break;
         default:
             p_fmt->i_cat = UNKNOWN_ES;
@@ -3231,12 +3325,12 @@ static void PMTSetupEsTeletext( demux_t *p_demux, ts_pid_t *pid,
     es_format_t *p_fmt = &pid->es->fmt;
 
     ts_teletext_page_t p_page[2 * 64 + 20];
-    int i_page = 0;
+    unsigned i_page = 0;
 
     /* Gather pages informations */
 #if defined _DVBPSI_DR_56_H_ && \
     defined DVBPSI_VERSION && DVBPSI_VERSION_INT > ((0<<16)+(1<<8)+5)
-    for( int i_tag_idx = 0; i_tag_idx < 2; i_tag_idx++ )
+    for( unsigned i_tag_idx = 0; i_tag_idx < 2; i_tag_idx++ )
     {
         dvbpsi_descriptor_t *p_dr = PMTEsFindDescriptor( p_es, i_tag_idx == 0 ? 0x46 : 0x56 );
         if( !p_dr )
@@ -3250,7 +3344,7 @@ static void PMTSetupEsTeletext( demux_t *p_demux, ts_pid_t *pid,
         {
             const dvbpsi_teletextpage_t *p_src = &p_sub->p_pages[i];
 
-            if( p_src->i_teletext_type < 0 || p_src->i_teletext_type >= 0x06 )
+            if( p_src->i_teletext_type >= 0x06 )
                 continue;
 
             assert( i_page < sizeof(p_page)/sizeof(*p_page) );
@@ -3301,10 +3395,9 @@ static void PMTSetupEsTeletext( demux_t *p_demux, ts_pid_t *pid,
 #endif
 
     /* */
-    es_format_Init( p_fmt, SPU_ES, VLC_FOURCC( 't', 'e', 'l', 'x' ) );
+    es_format_Init( p_fmt, SPU_ES, VLC_CODEC_TELETEXT );
 
-    /* In stream output mode, do not separate the stream by page */
-    if( p_demux->out->b_sout || i_page <= 0 )
+    if( !p_demux->p_sys->b_split_es || i_page <= 0 )
     {
         p_fmt->subs.teletext.i_magazine = -1;
         p_fmt->subs.teletext.i_page = 0;
@@ -3315,9 +3408,9 @@ static void PMTSetupEsTeletext( demux_t *p_demux, ts_pid_t *pid,
         if( !p_dr )
             p_dr = PMTEsFindDescriptor( p_es, 0x56 );
 
-        if( p_demux->out->b_sout && p_dr && p_dr->i_length > 0 )
+        if( !p_demux->p_sys->b_split_es && p_dr && p_dr->i_length > 0 )
         {
-            /* Descriptor pass-through for sout */
+            /* Descriptor pass-through */
             p_fmt->p_extra = malloc( p_dr->i_length );
             if( p_fmt->p_extra )
             {
@@ -3328,7 +3421,7 @@ static void PMTSetupEsTeletext( demux_t *p_demux, ts_pid_t *pid,
     }
     else
     {
-        for( int i = 0; i < i_page; i++ )
+        for( unsigned i = 0; i < i_page; i++ )
         {
             ts_es_t *p_es;
 
@@ -3362,6 +3455,7 @@ static void PMTSetupEsTeletext( demux_t *p_demux, ts_pid_t *pid,
 
             /* */
             const ts_teletext_page_t *p = &p_page[i];
+            p_es->fmt.i_priority = (p->i_type == 0x02 || p->i_type == 0x05) ? 0 : -1;
             p_es->fmt.psz_language = strndup( p->p_iso639, 3 );
             p_es->fmt.psz_description = strdup(vlc_gettext(ppsz_teletext_type[p->i_type]));
             p_es->fmt.subs.teletext.i_magazine = p->i_magazine;
@@ -3380,7 +3474,7 @@ static void PMTSetupEsDvbSubtitle( demux_t *p_demux, ts_pid_t *pid,
 {
     es_format_t *p_fmt = &pid->es->fmt;
 
-    es_format_Init( p_fmt, SPU_ES, VLC_FOURCC( 'd', 'v', 'b', 's' ) );
+    es_format_Init( p_fmt, SPU_ES, VLC_CODEC_DVBS );
 
     dvbpsi_descriptor_t *p_dr = PMTEsFindDescriptor( p_es, 0x59 );
     int i_page = 0;
@@ -3389,21 +3483,20 @@ static void PMTSetupEsDvbSubtitle( demux_t *p_demux, ts_pid_t *pid,
     for( int i = 0; p_sub && i < p_sub->i_subtitles_number; i++ )
     {
         const int i_type = p_sub->p_subtitle[i].i_subtitling_type;
-        if( ( i_type >= 0x10 && i_type <= 0x13 ) ||
-            ( i_type >= 0x20 && i_type <= 0x23 ) )
+        if( ( i_type >= 0x10 && i_type <= 0x14 ) ||
+            ( i_type >= 0x20 && i_type <= 0x24 ) )
             i_page++;
     }
 #endif
 
-    /* In stream output mode, do not separate the stream by page */
-    if( p_demux->out->b_sout  || i_page <= 0 )
+    if( !p_demux->p_sys->b_split_es  || i_page <= 0 )
     {
         p_fmt->subs.dvb.i_id = -1;
         p_fmt->psz_description = strdup( _("DVB subtitles") );
 
-        if( p_demux->out->b_sout && p_dr && p_dr->i_length > 0 )
+        if( !p_demux->p_sys->b_split_es && p_dr && p_dr->i_length > 0 )
         {
-            /* Descriptor pass-through for sout */
+            /* Descriptor pass-through */
             p_fmt->p_extra = malloc( p_dr->i_length );
             if( p_fmt->p_extra )
             {
@@ -3456,12 +3549,14 @@ static void PMTSetupEsDvbSubtitle( demux_t *p_demux, ts_pid_t *pid,
             case 0x11: /* 4:3 */
             case 0x12: /* 16:9 */
             case 0x13: /* 2.21:1 */
+            case 0x14: /* HD monitor */
                 p_es->fmt.psz_description = strdup( _("DVB subtitles") );
                 break;
             case 0x20: /* Hearing impaired unspec. */
             case 0x21: /* h.i. 4:3 */
             case 0x22: /* h.i. 16:9 */
             case 0x23: /* h.i. 2.21:1 */
+            case 0x24: /* h.i. HD monitor */
                 p_es->fmt.psz_description = strdup( _("DVB subtitles: hearing impaired") );
                 break;
             default:
@@ -3485,13 +3580,13 @@ static void PMTSetupEs0x06( demux_t *p_demux, ts_pid_t *pid,
         PMTEsFindDescriptor( p_es, 0x81 ) )
     {
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC('a','5','2',' ');
+        p_fmt->i_codec = VLC_CODEC_A52;
     }
     else if( PMTEsFindDescriptor( p_es, 0x7a ) )
     {
         /* DVB with stream_type 0x06 (ETS EN 300 468) */
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC( 'e', 'a', 'c', '3' );
+        p_fmt->i_codec = VLC_CODEC_EAC3;
     }
     else if( PMTEsHasRegistration( p_demux, p_es, "DTS1" ) ||
              PMTEsHasRegistration( p_demux, p_es, "DTS2" ) ||
@@ -3500,13 +3595,13 @@ static void PMTSetupEs0x06( demux_t *p_demux, ts_pid_t *pid,
     {
         /*registration descriptor(ETSI TS 101 154 Annex F)*/
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC('d','t','s',' ');
+        p_fmt->i_codec = VLC_CODEC_DTS;
     }
     else if( PMTEsHasRegistration( p_demux, p_es, "BSSD" ) )
     {
         p_fmt->i_cat = AUDIO_ES;
         p_fmt->b_packetized = true;
-        p_fmt->i_codec = VLC_FOURCC('a','e','s','3');
+        p_fmt->i_codec = VLC_CODEC_302M;
     }
     else
     {
@@ -3542,7 +3637,8 @@ static void PMTSetupEs0x06( demux_t *p_demux, ts_pid_t *pid,
                     PMTSetupEsDvbSubtitle( p_demux, pid, p_es );
                     break;
                 default:
-                    msg_Err( p_demux, "Unrecognized DVB subtitle type" );
+                    msg_Err( p_demux, "Unrecognized DVB subtitle type (0x%x)",
+                             p_sub->p_subtitle[i].i_subtitling_type );
                     break;
                 }
             }
@@ -3562,7 +3658,7 @@ static void PMTSetupEs0x06( demux_t *p_demux, ts_pid_t *pid,
     }
 
 #ifdef _DVBPSI_DR_52_H_
-    /* FIXME is it usefull ? */
+    /* FIXME is it useful ? */
     if( PMTEsFindDescriptor( p_es, 0x52 ) )
     {
         dvbpsi_descriptor_t *p_dr = PMTEsFindDescriptor( p_es, 0x52 );
@@ -3587,7 +3683,7 @@ static void PMTSetupEs0xEA( demux_t *p_demux, ts_pid_t *pid,
 
     /* registration descriptor for VC-1 (SMPTE rp227) */
     p_fmt->i_cat = VIDEO_ES;
-    p_fmt->i_codec = VLC_FOURCC('W','V','C','1');
+    p_fmt->i_codec = VLC_CODEC_VC1;
 
     /* XXX With Simple and Main profile the SEQUENCE
      * header is modified: video width and height are
@@ -3610,7 +3706,7 @@ static void PMTSetupEs0xD1( demux_t *p_demux, ts_pid_t *pid,
     /* registration descriptor for Dirac
      * (backwards compatable with VC-2 (SMPTE Sxxxx:2008)) */
     p_fmt->i_cat = VIDEO_ES;
-    p_fmt->i_codec = VLC_FOURCC('d','r','a','c');
+    p_fmt->i_codec = VLC_CODEC_DIRAC;
 }
 
 static void PMTSetupEs0xA0( demux_t *p_demux, ts_pid_t *pid,
@@ -3651,6 +3747,7 @@ static void PMTSetupEs0xA0( demux_t *p_demux, ts_pid_t *pid,
 static void PMTSetupEsHDMV( demux_t *p_demux, ts_pid_t *pid,
                            const dvbpsi_pmt_es_t *p_es )
 {
+    VLC_UNUSED(p_demux);
     es_format_t *p_fmt = &pid->es->fmt;
 
     /* Blu-Ray mapping */
@@ -3658,33 +3755,68 @@ static void PMTSetupEsHDMV( demux_t *p_demux, ts_pid_t *pid,
     {
     case 0x80:
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC( 'b', 'p', 'c', 'm' );
+        p_fmt->i_codec = VLC_CODEC_BD_LPCM;
         break;
     case 0x82:
     case 0x85: /* DTS-HD High resolution audio */
     case 0x86: /* DTS-HD Master audio */
     case 0xA2: /* Secondary DTS audio */
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC( 'd', 't', 's', ' ' );
+        p_fmt->i_codec = VLC_CODEC_DTS;
         break;
 
     case 0x83: /* TrueHD AC3 */
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC( 't', 'r', 'h', 'd' );
+        p_fmt->i_codec = VLC_CODEC_TRUEHD;
         break;
 
     case 0x84: /* E-AC3 */
     case 0xA1: /* Secondary E-AC3 */
         p_fmt->i_cat = AUDIO_ES;
-        p_fmt->i_codec = VLC_FOURCC( 'e', 'a', 'c', '3' );
+        p_fmt->i_codec = VLC_CODEC_EAC3;
         break;
     case 0x90: /* Presentation graphics */
+        p_fmt->i_cat = SPU_ES;
+        p_fmt->i_codec = VLC_CODEC_BD_PG;
+        break;
     case 0x91: /* Interactive graphics */
     case 0x92: /* Subtitle */
     default:
         break;
     }
 }
+
+static void PMTSetupEsRegistration( demux_t *p_demux, ts_pid_t *pid,
+                                    const dvbpsi_pmt_es_t *p_es )
+{
+    static const struct
+    {
+        char         psz_tag[5];
+        int          i_cat;
+        vlc_fourcc_t i_codec;
+    } p_regs[] = {
+        { "AC-3", AUDIO_ES, VLC_CODEC_A52   },
+        { "DTS1", AUDIO_ES, VLC_CODEC_DTS   },
+        { "DTS2", AUDIO_ES, VLC_CODEC_DTS   },
+        { "DTS3", AUDIO_ES, VLC_CODEC_DTS   },
+        { "BSSD", AUDIO_ES, VLC_CODEC_302M  },
+        { "VC-1", VIDEO_ES, VLC_CODEC_VC1   },
+        { "drac", VIDEO_ES, VLC_CODEC_DIRAC },
+        { "", UNKNOWN_ES, 0 }
+    };
+    es_format_t *p_fmt = &pid->es->fmt;
+
+    for( int i = 0; p_regs[i].i_cat != UNKNOWN_ES; i++ )
+    {
+        if( PMTEsHasRegistration( p_demux, p_es, p_regs[i].psz_tag ) )
+        {
+            p_fmt->i_cat   = p_regs[i].i_cat;
+            p_fmt->i_codec = p_regs[i].i_codec;
+            break;
+        }
+    }
+}
+
 static void PMTParseEsIso639( demux_t *p_demux, ts_pid_t *pid,
                               const dvbpsi_pmt_es_t *p_es )
 {
@@ -3862,15 +3994,7 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
     if( ProgramIsSelected( p_demux, prg->i_number ) )
     {
         /* Set demux filter */
-        stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                        ACCESS_SET_PRIVATE_ID_STATE, prg->i_pid_pcr,
-                        true );
-    }
-    else if ( p_sys->b_access_control )
-    {
-        msg_Warn( p_demux, "skipping program (not selected)" );
-        dvbpsi_DeletePMT(p_pmt);
-        return;
+        SetPIDFilter( p_demux, prg->i_pid_pcr, true );
     }
 
     /* Parse descriptor */
@@ -3891,21 +4015,18 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
         }
         else if( p_dr->i_tag == 0x05 )
         {
-            if( p_dr->i_tag == 0x05 )
+            /* Registration Descriptor */
+            if( p_dr->i_length != 4 )
             {
-                /* Registration Descriptor */
-                if( p_dr->i_length != 4 )
+                msg_Warn( p_demux, "invalid Registration Descriptor" );
+            }
+            else
+            {
+                msg_Dbg( p_demux, " * descriptor : registration %4.4s", p_dr->p_data );
+                if( !memcmp( p_dr->p_data, "HDMV", 4 ) )
                 {
-                    msg_Warn( p_demux, "invalid Registration Descriptor" );
-                }
-                else
-                {
-                    msg_Dbg( p_demux, " * descriptor : registration %4.4s", p_dr->p_data );
-                    if( !memcmp( p_dr->p_data, "HDMV", 4 ) )
-                    {
-                        /* Blu-Ray */
-                        b_hdmv = true;
-                    }
+                    /* Blu-Ray */
+                    b_hdmv = true;
                 }
             }
         }
@@ -3975,11 +4096,15 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
         {
             PMTSetupEsHDMV( p_demux, pid, p_es );
         }
+        else if( p_es->i_type >= 0x80 )
+        {
+            PMTSetupEsRegistration( p_demux, pid, p_es );
+        }
 
         if( pid->es->fmt.i_cat == AUDIO_ES ||
             ( pid->es->fmt.i_cat == SPU_ES &&
-              pid->es->fmt.i_codec != VLC_FOURCC('d','v','b','s') &&
-              pid->es->fmt.i_codec != VLC_FOURCC('t','e','l','x') ) )
+              pid->es->fmt.i_codec != VLC_CODEC_DVBS &&
+              pid->es->fmt.i_codec != VLC_CODEC_TELETEXT ) )
         {
             PMTParseEsIso639( p_demux, pid, p_es );
         }
@@ -4025,7 +4150,7 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
             {
                 if( old_pid )
                 {
-                    PIDClean( p_demux->out, old_pid );
+                    PIDClean( p_demux, old_pid );
                     TAB_REMOVE( i_clean, pp_clean, old_pid );
                     old_pid = 0;
                 }
@@ -4036,13 +4161,14 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
                     pid->extra_es[i]->id =
                         es_out_Add( p_demux->out, &pid->extra_es[i]->fmt );
                 }
+                p_sys->i_pmt_es += 1 + pid->i_extra_es;
             }
         }
 
         /* Add ES to the list */
         if( old_pid )
         {
-            PIDClean( p_demux->out, old_pid );
+            PIDClean( p_demux, old_pid );
             TAB_REMOVE( i_clean, pp_clean, old_pid );
         }
         p_sys->pid[p_es->i_pid] = *pid;
@@ -4059,33 +4185,24 @@ static void PMTCallBack( demux_t *p_demux, dvbpsi_pmt_t *p_pmt )
             ( pid->es->id != NULL || p_sys->b_udp_out ) )
         {
             /* Set demux filter */
-            stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                            ACCESS_SET_PRIVATE_ID_STATE, p_es->i_pid,
-                            true );
+            SetPIDFilter( p_demux, p_es->i_pid, true );
         }
     }
 
-    if( ProgramIsSelected( p_demux, prg->i_number ) )
-    {
-        /* Set CAM descrambling */
-        stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                        ACCESS_SET_PRIVATE_ID_CA, p_pmt );
-    }
-    else
-    {
+    /* Set CAM descrambling */
+    if( !ProgramIsSelected( p_demux, prg->i_number )
+     || stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
+                        ACCESS_SET_PRIVATE_ID_CA, p_pmt ) != VLC_SUCCESS )
         dvbpsi_DeletePMT( p_pmt );
-    }
 
     for( int i = 0; i < i_clean; i++ )
     {
         if( ProgramIsSelected( p_demux, prg->i_number ) )
         {
-            stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                            ACCESS_SET_PRIVATE_ID_STATE, pp_clean[i]->i_pid,
-                            false );
+            SetPIDFilter( p_demux, pp_clean[i]->i_pid, false );
         }
 
-        PIDClean( p_demux->out, pp_clean[i] );
+        PIDClean( p_demux, pp_clean[i] );
     }
     if( i_clean )
         free( pp_clean );
@@ -4164,15 +4281,10 @@ static void PATCallBack( demux_t *p_demux, dvbpsi_pat_t *p_pat )
                     if( pid->p_owner->prg[i_prg]->i_pid_pmt != pmt_rm[j]->i_pid )
                         continue;
 
-                    if( p_sys->b_access_control && pid->es->id )
-                    {
-                        if( stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                            ACCESS_SET_PRIVATE_ID_STATE, i,
-                                            false ) )
-                            p_sys->b_access_control = false;
-                    }
+                    if( pid->es->id )
+                        SetPIDFilter( p_demux, i, false );
 
-                    PIDClean( p_demux->out, pid );
+                    PIDClean( p_demux, pid );
                     break;
                 }
             }
@@ -4181,13 +4293,7 @@ static void PATCallBack( demux_t *p_demux, dvbpsi_pat_t *p_pat )
         /* Delete PMT pid */
         for( int i = 0; i < i_pmt_rm; i++ )
         {
-            if( p_sys->b_access_control )
-            {
-                if( stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                    ACCESS_SET_PRIVATE_ID_STATE,
-                                    pmt_rm[i]->i_pid, false ) )
-                    p_sys->b_access_control = false;
-            }
+            SetPIDFilter( p_demux, pmt_rm[i]->i_pid, false );
 
             for( int i_prg = 0; i_prg < pmt_rm[i]->psi->i_prg; i_prg++ )
             {
@@ -4195,7 +4301,7 @@ static void PATCallBack( demux_t *p_demux, dvbpsi_pat_t *p_pat )
                 es_out_Control( p_demux->out, ES_OUT_DEL_GROUP, i_number );
             }
 
-            PIDClean( p_demux->out, &p_sys->pid[pmt_rm[i]->i_pid] );
+            PIDClean( p_demux, &p_sys->pid[pmt_rm[i]->i_pid] );
             TAB_REMOVE( p_sys->i_pmt, p_sys->pmt, pmt_rm[i] );
         }
 
@@ -4245,18 +4351,13 @@ static void PATCallBack( demux_t *p_demux, dvbpsi_pat_t *p_pat )
                     p_program->i_pid;
 
                 /* Now select PID at access level */
-                if( p_sys->b_access_control )
+                if( ProgramIsSelected( p_demux, p_program->i_number ) )
                 {
-                    if( ProgramIsSelected( p_demux, p_program->i_number ) )
-                    {
-                        if( p_sys->i_current_program == 0 )
-                            p_sys->i_current_program = p_program->i_number;
+                    if( p_sys->i_current_program == 0 )
+                        p_sys->i_current_program = p_program->i_number;
 
-                        if( stream_Control( p_demux->s, STREAM_CONTROL_ACCESS,
-                                            ACCESS_SET_PRIVATE_ID_STATE,
-                                            p_program->i_pid, true ) )
-                            p_sys->b_access_control = false;
-                    }
+                    if( SetPIDFilter( p_demux, p_program->i_pid, true ) )
+                        p_sys->b_access_control = false;
                 }
             }
         }

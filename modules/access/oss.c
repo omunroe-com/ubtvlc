@@ -2,7 +2,7 @@
  * oss.c : OSS input module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2009 the VideoLAN team
- * $Id: eb0d6246d296a97e01508e02f073579ee2244e02 $
+ * $Id: d32c6e6dfd81cc2c93bdf429e821ac5334b62c7d $
  *
  * Authors: Benjamin Pracht <bigben at videolan dot org>
  *          Richard Hosking <richard at hovis dot net>
@@ -36,10 +36,9 @@
 #include <vlc_plugin.h>
 #include <vlc_access.h>
 #include <vlc_demux.h>
-#include <vlc_input.h>
-#include <vlc_vout.h>
+#include <vlc_fs.h>
 
-#include <ctype.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -222,7 +221,6 @@ static int DemuxControl( demux_t *p_demux, int i_query, va_list args )
         /* Special for access_demux */
         case DEMUX_CAN_PAUSE:
         case DEMUX_CAN_SEEK:
-        case DEMUX_SET_PAUSE_STATE:
         case DEMUX_CAN_CONTROL_PACE:
             pb = (bool*)va_arg( args, bool * );
             *pb = false;
@@ -275,6 +273,8 @@ static int Demux( demux_t *p_demux )
         /* Wait for data */
         if( poll( &fd, 1, 10 ) ) /* Timeout after 0.01 seconds. Bigger delays are an issue when used with/as an input-slave since all the inputs run in the same thread. */
         {
+            if( errno == EINTR )
+                continue;
             if( fd.revents & (POLLIN|POLLPRI) )
             {
                 p_block = GrabAudio( p_demux );
@@ -343,7 +343,7 @@ static int OpenAudioDevOss( demux_t *p_demux )
     int i_fd;
     int i_format;
 
-    i_fd = open( p_demux->p_sys->psz_device, O_RDONLY | O_NONBLOCK );
+    i_fd = vlc_open( p_demux->p_sys->psz_device, O_RDONLY | O_NONBLOCK );
 
     if( i_fd < 0 )
     {
@@ -397,7 +397,7 @@ static int OpenAudioDev( demux_t *p_demux )
              p_sys->i_sample_rate );
 
     es_format_t fmt;
-    es_format_Init( &fmt, AUDIO_ES, VLC_FOURCC('a','r','a','w') );
+    es_format_Init( &fmt, AUDIO_ES, VLC_CODEC_S16L );
 
     fmt.audio.i_channels = p_sys->b_stereo ? 2 : 1;
     fmt.audio.i_rate = p_sys->i_sample_rate;
@@ -419,7 +419,7 @@ static int OpenAudioDev( demux_t *p_demux )
 static bool ProbeAudioDevOss( demux_t *p_demux, const char *psz_device )
 {
     int i_caps;
-    int i_fd = open( psz_device, O_RDONLY | O_NONBLOCK );
+    int i_fd = vlc_open( psz_device, O_RDONLY | O_NONBLOCK );
 
     if( i_fd < 0 )
     {

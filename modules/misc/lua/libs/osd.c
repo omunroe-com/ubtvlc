@@ -2,7 +2,7 @@
  * intf.c: Generic lua interface functions
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: 05c1aae0cbf9b4fcbc9cb2634e7e11684a1fefe6 $
+ * $Id: e66c0af7d100c45df29137a04594e9c674a3784b $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *
@@ -134,10 +134,8 @@ static int vlclua_spu_channel_register( lua_State *L )
     if( !p_vout )
         return luaL_error( L, "Unable to find vout." );
 
-    spu_Control( p_vout->p_spu, SPU_CHANNEL_REGISTER, &i_chan );
     vlc_object_release( p_vout );
-    lua_pushinteger( L, i_chan );
-    return 1;
+    return luaL_error( L, "Not implemented." );
 }
 
 static int vlclua_spu_channel_clear( lua_State *L )
@@ -149,8 +147,56 @@ static int vlclua_spu_channel_clear( lua_State *L )
     if( !p_vout )
         return luaL_error( L, "Unable to find vout." );
 
-    spu_Control( p_vout->p_spu, SPU_CHANNEL_CLEAR, i_chan );
     vlc_object_release( p_vout );
+    return luaL_error( L, "Not implemented." );
+}
+
+static int vlclua_menu_show( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuShow( p_this );
+    return 0;
+}
+
+static int vlclua_menu_hide( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuHide( p_this );
+    return 0;
+}
+
+static int vlclua_menu_prev( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuPrev( p_this );
+    return 0;
+}
+
+static int vlclua_menu_next( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuNext( p_this );
+    return 0;
+}
+
+static int vlclua_menu_up( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuUp( p_this );
+    return 0;
+}
+
+static int vlclua_menu_down( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuDown( p_this );
+    return 0;
+}
+
+static int vlclua_menu_activate( lua_State *L )
+{
+    vlc_object_t *p_this = vlclua_get_this( L );
+    osd_MenuActivate( p_this );
     return 0;
 }
 
@@ -166,9 +212,23 @@ static const luaL_Reg vlclua_osd_reg[] = {
     { NULL, NULL }
 };
 
+static const luaL_Reg vlclua_menu_reg[] = {
+    { "show", vlclua_menu_show },
+    { "hide", vlclua_menu_hide },
+    { "prev", vlclua_menu_prev },
+    { "next", vlclua_menu_next },
+    { "up", vlclua_menu_up },
+    { "down", vlclua_menu_down },
+    { "activate", vlclua_menu_activate },
+    { NULL, NULL }
+};
+
 void luaopen_osd( lua_State *L )
 {
     lua_newtable( L );
     luaL_register( L, NULL, vlclua_osd_reg );
+    lua_newtable( L );
+    luaL_register( L, NULL, vlclua_menu_reg );
+    lua_setfield( L, -2, "menu" );
     lua_setfield( L, -2, "osd" );
 }

@@ -2,7 +2,7 @@
  * preferences.cpp : Preferences
  *****************************************************************************
  * Copyright (C) 2006-2007 the VideoLAN team
- * $Id: 89864d7a1649fe137020fff8a4592b07039ae227 $
+ * $Id: 57d612d2d734b644a7aa44f9882e51ee90da415a $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -28,6 +28,7 @@
 
 #include "dialogs/preferences.hpp"
 #include "util/qvlcframe.hpp"
+#include "dialogs/errors.hpp"
 
 #include "components/complete_preferences.hpp"
 #include "components/simple_preferences.hpp"
@@ -44,6 +45,8 @@ PrefsDialog::PrefsDialog( QWidget *parent, intf_thread_t *_p_intf )
 {
     QGridLayout *main_layout = new QGridLayout( this );
     setWindowTitle( qtr( "Preferences" ) );
+    setWindowRole( "vlc-preferences" );
+    setWindowModality( Qt::WindowModal );
 
     /* Whether we want it or not, we need to destroy on close to get
        consistency when reset */
@@ -106,14 +109,15 @@ PrefsDialog::PrefsDialog( QWidget *parent, intf_thread_t *_p_intf )
 
     /* Margins */
     tree_panel_l->setMargin( 1 );
-    main_panel_l->setLayoutMargins( 6, 0, 0, 3, 3 );
+    main_panel_l->setContentsMargins( 6, 0, 0, 3 );
 
-    b_small = (p_intf->p_sys->i_screenHeight < 750);
+    b_small = (p_intf->p_sys->i_screenHeight < 850);
     if( b_small ) msg_Dbg( p_intf, "Small");
     setMaximumHeight( p_intf->p_sys->i_screenHeight );
     for( int i = 0; i < SPrefsMax ; i++ ) simple_panels[i] = NULL;
 
-    if( config_GetInt( p_intf, "qt-advanced-pref" ) || config_GetInt( p_intf, "advanced" ) )
+    if( var_InheritBool( p_intf, "qt-advanced-pref" )
+     || var_InheritBool( p_intf, "advanced" ) )
         setAdvanced();
     else
         setSmall();
@@ -291,7 +295,11 @@ void PrefsDialog::save()
     }
 
     /* Save to file */
-    config_SaveConfigFile( p_intf, NULL );
+    if( config_SaveConfigFile( p_intf, NULL ) != 0 )
+    {
+        ErrorsDialog::getInstance (p_intf)->addError( qtr( "Cannot save Configuration" ),
+            qtr("Preferences file could not be saved") );
+    }
     accept();
 }
 

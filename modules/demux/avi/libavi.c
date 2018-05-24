@@ -2,7 +2,7 @@
  * libavi.c : LibAVI
  *****************************************************************************
  * Copyright (C) 2001 the VideoLAN team
- * $Id: 75483331fd224400955112c0fa9c6ef8628896e0 $
+ * $Id: f45a5dcb6483e7fc08adc5351f17759cac3195cd $
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *
  * This program is free software; you can redistribute it and/or modify
@@ -31,7 +31,9 @@
 
 #include "libavi.h"
 
+#ifndef NDEBUG
 #define AVI_DEBUG 1
+#endif
 
 #define __EVEN( x ) (((x) + 1) & ~1)
 
@@ -163,7 +165,7 @@ static int AVI_ChunkRead_list( stream_t *s, avi_chunk_t *p_container )
     msg_Dbg( (vlc_object_t*)s, "<list \'%4.4s\'>", (char*)&p_container->list.i_type );
     for( ; ; )
     {
-        p_chk = malloc( sizeof( avi_chunk_t ) );
+        p_chk = xmalloc( sizeof( avi_chunk_t ) );
         memset( p_chk, 0, sizeof( avi_chunk_t ) );
         if( !p_container->common.p_first )
         {
@@ -203,6 +205,11 @@ static int AVI_ChunkRead_list( stream_t *s, avi_chunk_t *p_container )
 
 #define AVI_READCHUNK_ENTER \
     int64_t i_read = __EVEN(p_chk->common.i_chunk_size ) + 8; \
+    if( i_read > 100000000 ) \
+    { \
+        msg_Err( s, "Big chunk ignored" ); \
+        return VLC_EGENERIC; \
+    } \
     uint8_t  *p_read, *p_buff;    \
     if( !( p_read = p_buff = malloc(i_read ) ) ) \
     { \
@@ -331,7 +338,7 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
     {
         case( AVIFOURCC_auds ):
             p_chk->strf.auds.i_cat = AUDIO_ES;
-            p_chk->strf.auds.p_wf = malloc( __MAX( p_chk->common.i_chunk_size, sizeof( WAVEFORMATEX ) ) );
+            p_chk->strf.auds.p_wf = xmalloc( __MAX( p_chk->common.i_chunk_size, sizeof( WAVEFORMATEX ) ) );
             AVI_READ2BYTES( p_chk->strf.auds.p_wf->wFormatTag );
             AVI_READ2BYTES( p_chk->strf.auds.p_wf->nChannels );
             AVI_READ4BYTES( p_chk->strf.auds.p_wf->nSamplesPerSec );
@@ -379,7 +386,8 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
         case( AVIFOURCC_vids ):
             p_strh->strh.i_samplesize = 0; /* XXX for ffmpeg avi file */
             p_chk->strf.vids.i_cat = VIDEO_ES;
-            p_chk->strf.vids.p_bih = malloc( p_chk->common.i_chunk_size );
+            p_chk->strf.vids.p_bih = xmalloc( __MAX( p_chk->common.i_chunk_size,
+                                         sizeof( *p_chk->strf.vids.p_bih ) ) );
             AVI_READ4BYTES( p_chk->strf.vids.p_bih->biSize );
             AVI_READ4BYTES( p_chk->strf.vids.p_bih->biWidth );
             AVI_READ4BYTES( p_chk->strf.vids.p_bih->biHeight );
@@ -395,7 +403,7 @@ static int AVI_ChunkRead_strf( stream_t *s, avi_chunk_t *p_chk )
             {
                 p_chk->strf.vids.p_bih->biSize = p_chk->common.i_chunk_size;
             }
-            if( p_chk->common.i_chunk_size - sizeof(BITMAPINFOHEADER) > 0 )
+            if( p_chk->common.i_chunk_size > sizeof(BITMAPINFOHEADER) )
             {
                 memcpy( &p_chk->strf.vids.p_bih[1],
                         p_buff + 8 + sizeof(BITMAPINFOHEADER), /* 8=fourrc+size */
@@ -434,7 +442,7 @@ static void AVI_ChunkFree_strf( avi_chunk_t *p_chk )
 static int AVI_ChunkRead_strd( stream_t *s, avi_chunk_t *p_chk )
 {
     AVI_READCHUNK_ENTER;
-    p_chk->strd.p_data = malloc( p_chk->common.i_chunk_size );
+    p_chk->strd.p_data = xmalloc( p_chk->common.i_chunk_size );
     memcpy( p_chk->strd.p_data, p_buff + 8, p_chk->common.i_chunk_size );
     AVI_READCHUNK_EXIT( VLC_SUCCESS );
 }
@@ -456,7 +464,7 @@ static int AVI_ChunkRead_idx1( stream_t *s, avi_chunk_t *p_chk )
     p_chk->idx1.i_entry_max   = i_count;
     if( i_count > 0 )
     {
-        p_chk->idx1.entry = calloc( i_count, sizeof( idx1_entry_t ) );
+        p_chk->idx1.entry = xcalloc( i_count, sizeof( idx1_entry_t ) );
 
         for( i_index = 0; i_index < i_count ; i_index++ )
         {
@@ -510,7 +518,7 @@ static int AVI_ChunkRead_indx( stream_t *s, avi_chunk_t *p_chk )
 
         i_count = __MIN( p_indx->i_entriesinuse, i_read / 8 );
         p_indx->i_entriesinuse = i_count;
-        p_indx->idx.std = calloc( i_count, sizeof( indx_std_entry_t ) );
+        p_indx->idx.std = xcalloc( i_count, sizeof( indx_std_entry_t ) );
 
         for( i = 0; i < i_count; i++ )
         {
@@ -525,7 +533,7 @@ static int AVI_ChunkRead_indx( stream_t *s, avi_chunk_t *p_chk )
 
         i_count = __MIN( p_indx->i_entriesinuse, i_read / 12 );
         p_indx->i_entriesinuse = i_count;
-        p_indx->idx.field = calloc( i_count, sizeof( indx_field_entry_t ) );
+        p_indx->idx.field = xcalloc( i_count, sizeof( indx_field_entry_t ) );
         for( i = 0; i < i_count; i++ )
         {
             AVI_READ4BYTES( p_indx->idx.field[i].i_offset );
@@ -542,7 +550,7 @@ static int AVI_ChunkRead_indx( stream_t *s, avi_chunk_t *p_chk )
 
         i_count = __MIN( p_indx->i_entriesinuse, i_read / 16 );
         p_indx->i_entriesinuse = i_count;
-        p_indx->idx.super = calloc( i_count, sizeof( indx_super_entry_t ) );
+        p_indx->idx.super = xcalloc( i_count, sizeof( indx_super_entry_t ) );
 
         for( i = 0; i < i_count; i++ )
         {
@@ -621,7 +629,7 @@ static int AVI_ChunkRead_strz( stream_t *s, avi_chunk_t *p_chk )
         }
     }
     p_strz->p_type = strdup( AVI_strz_type[i_index].psz_type );
-    p_strz->p_str = malloc( i_read + 1);
+    p_strz->p_str = xmalloc( i_read + 1);
 
     if( p_strz->i_chunk_size )
     {
@@ -856,7 +864,7 @@ int AVI_ChunkReadRoot( stream_t *s, avi_chunk_t *p_root )
 
     for( ; ; )
     {
-        p_chk = malloc( sizeof( avi_chunk_t ) );
+        p_chk = xmalloc( sizeof( avi_chunk_t ) );
         memset( p_chk, 0, sizeof( avi_chunk_t ) );
         if( !p_root->common.p_first )
         {

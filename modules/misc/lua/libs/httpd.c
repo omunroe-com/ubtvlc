@@ -2,7 +2,7 @@
  * httpd.c: HTTPd wrapper
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: 09ca8a4ec47e8cacb5eea92c09d842814091b789 $
+ * $Id: 9d218afc9cff6e7b4c1086b56a3b3b8bb59260a7 $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *
@@ -145,7 +145,7 @@ static int vlclua_httpd_handler_callback(
         /* function data err */
         vlc_object_t *p_this = vlclua_get_this( L );
         const char *psz_err = lua_tostring( L, -1 );
-        msg_Err( p_this, "Error while runing the lua HTTPd handler "
+        msg_Err( p_this, "Error while running the lua HTTPd handler "
                  "callback: %s", psz_err );
         lua_settop( L, 2 );
         /* function data */
@@ -164,7 +164,7 @@ static int vlclua_httpd_handler_new( lua_State * L )
     const char *psz_url = luaL_checkstring( L, 2 );
     const char *psz_user = luaL_nilorcheckstring( L, 3 );
     const char *psz_password = luaL_nilorcheckstring( L, 4 );
-    const vlc_acl_t *p_acl = lua_isnil( L, 5 ) ? NULL : luaL_checkudata( L, 5, "acl" );
+    const vlc_acl_t **pp_acl = lua_isnil( L, 5 ) ? NULL : luaL_checkudata( L, 5, "acl" );
     /* Stack item 6 is the callback function */
     luaL_argcheck( L, lua_isfunction( L, 6 ), 6, "Should be a function" );
     /* Stack item 7 is the callback data */
@@ -180,7 +180,8 @@ static int vlclua_httpd_handler_new( lua_State * L )
     lua_xmove( L, p_sys->L, 2 );
     httpd_handler_t *p_handler = httpd_HandlerNew(
                             *pp_host, psz_url, psz_user, psz_password,
-                            p_acl, vlclua_httpd_handler_callback, p_sys );
+                            pp_acl?*pp_acl:NULL,
+                            vlclua_httpd_handler_callback, p_sys );
     if( !p_handler )
     {
         free( p_sys );
@@ -236,7 +237,7 @@ static int vlclua_httpd_file_callback(
         /* function data err */
         vlc_object_t *p_this = vlclua_get_this( L );
         const char *psz_err = lua_tostring( L, -1 );
-        msg_Err( p_this, "Error while runing the lua HTTPd file callback: %s",
+        msg_Err( p_this, "Error while running the lua HTTPd file callback: %s",
                  psz_err );
         lua_settop( L, 2 );
         /* function data */
@@ -256,7 +257,7 @@ static int vlclua_httpd_file_new( lua_State *L )
     const char *psz_mime = luaL_nilorcheckstring( L, 3 );
     const char *psz_user = luaL_nilorcheckstring( L, 4 );
     const char *psz_password = luaL_nilorcheckstring( L, 5 );
-    const vlc_acl_t *p_acl = lua_isnil( L, 6 ) ? NULL : luaL_checkudata( L, 6, "acl" );
+    const vlc_acl_t **pp_acl = lua_isnil( L, 6 ) ? NULL : luaL_checkudata( L, 6, "acl" );
     /* Stack item 7 is the callback function */
     luaL_argcheck( L, lua_isfunction( L, 7 ), 7, "Should be a function" );
     /* Stack item 8 is the callback data */
@@ -268,7 +269,8 @@ static int vlclua_httpd_file_new( lua_State *L )
     p_sys->ref = luaL_ref( L, LUA_REGISTRYINDEX ); /* pops the object too */
     lua_xmove( L, p_sys->L, 2 );
     httpd_file_t *p_file = httpd_FileNew( *pp_host, psz_url, psz_mime,
-                                          psz_user, psz_password, p_acl,
+                                          psz_user, psz_password,
+                                          pp_acl?*pp_acl:NULL,
                                           vlclua_httpd_file_callback, p_sys );
     if( !p_file )
     {

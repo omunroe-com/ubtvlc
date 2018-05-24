@@ -2,7 +2,7 @@
  * vlm.hpp : VLM Management
  ****************************************************************************
  * Copyright ( C ) 2006 the VideoLAN team
- * $Id: 3a13b7ac88b3e277c58435f76c7949b619e58a38 $
+ * $Id: 6feee5893d16528f295a00f796053d93402c6ff9 $
  *
  * Authors: Jean-François Massol <jf.massol@gmail.com>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -35,6 +35,7 @@
 
 #include "ui/vlm.h"
 #include "util/qvlcframe.hpp"
+#include "util/singleton.hpp"
 #include <QDateTime>
 
 enum{
@@ -67,25 +68,22 @@ class VLMAWidget;
 class VLMWrapper;
 
 
-class VLMDialog : public QVLCDialog
+class VLMDialog : public QVLCDialog, public Singleton<VLMDialog>
 {
-    Q_OBJECT;
+    Q_OBJECT
+
 public:
-    static VLMDialog * getInstance( intf_thread_t *p_intf )
-    {
-        if( !instance)
-             instance = new VLMDialog( (QWidget *)p_intf->p_sys->p_mi, p_intf );
-        return instance;
-    };
-    virtual ~VLMDialog();
     void toggleVisible();
 
     VLMWrapper *vlmWrapper;
     vlm_t *p_vlm;
 private:
-    VLMDialog( QWidget *, intf_thread_t * );
-    static VLMDialog *instance;
+    VLMDialog( intf_thread_t * );
+    virtual ~VLMDialog();
+
     Ui::Vlm ui;
+
+    QString inputOptions;
 
     QList<VLMAWidget *> vlmItems;
     int currentIndex;
@@ -111,6 +109,8 @@ private slots:
     void selectOutput();
     bool exportVLMConf();
     bool importVLMConf();
+
+    friend class    Singleton<VLMDialog>;
 };
 
 class VLMWrapper
@@ -119,24 +119,28 @@ public:
     VLMWrapper( vlm_t * );
     virtual ~VLMWrapper();
 
-    static void AddBroadcast( const QString&, const QString&, const QString&,
-                       bool b_enabled = true,
-                       bool b_loop = false );
-    static void EditBroadcast( const QString&, const QString&, const QString&,
-                       bool b_enabled = true,
-                       bool b_loop = false );
-    static void EditSchedule( const QString&, const QString&, const QString&,
-                       QDateTime _schetime, QDateTime _schedate,
-                       int _scherepeatnumber, int _repeatDays,
-                       bool b_enabled = true, const QString& mux = "" );
-    static void AddVod( const QString&, const QString&, const QString&,
-                       bool b_enabled = true, const QString& mux = "" );
-    static void EditVod( const QString&, const QString&, const QString&,
-                       bool b_enabled = true, const QString& mux = "" );
-    static void AddSchedule( const QString&, const QString&, const QString&,
-                       QDateTime _schetime, QDateTime _schedate,
-                       int _scherepeatnumber, int _repeatDays,
-                       bool b_enabled = true, const QString& mux = "" );
+    static void AddBroadcast( const QString&, const QString&,
+                              const QString&, const QString&,
+                              bool b_enabled = true, bool b_loop = false );
+    static void EditBroadcast( const QString&, const QString&,
+                               const QString&, const QString&,
+                               bool b_enabled = true, bool b_loop = false );
+    static void EditSchedule( const QString&, const QString&,
+                              const QString&, const QString&,
+                              QDateTime _schetime, QDateTime _schedate,
+                              int _scherepeatnumber, int _repeatDays,
+                              bool b_enabled = true, const QString& mux = "" );
+    static void AddVod( const QString&, const QString&,
+                        const QString&, const QString&,
+                        bool b_enabled = true, const QString& mux = "" );
+    static void EditVod( const QString&, const QString&,
+                         const QString&, const QString&,
+                         bool b_enabled = true, const QString& mux = "" );
+    static void AddSchedule( const QString&, const QString&,
+                             const QString&, const QString&,
+                             QDateTime _schetime, QDateTime _schedate,
+                             int _scherepeatnumber, int _repeatDays,
+                             bool b_enabled = true, const QString& mux = "" );
 
     static void ControlBroadcast( const QString&, int, unsigned int seek = 0 );
     static void EnableItem( const QString&, bool );
@@ -155,13 +159,15 @@ class VLMAWidget : public QGroupBox
     Q_OBJECT
     friend class VLMDialog;
 public:
-    VLMAWidget( const QString& name, const QString& input, const QString& output,
-            bool _enable, VLMDialog *parent, int _type = QVLM_Broadcast );
+    VLMAWidget( const QString& name, const QString& input,
+                const QString& inputOptions, const QString& output,
+                bool _enable, VLMDialog *parent, int _type = QVLM_Broadcast );
     virtual void update() = 0;
 protected:
     QLabel *nameLabel;
     QString name;
     QString input;
+    QString inputOptions;
     QString output;
     bool b_enabled;
     int type;
@@ -178,8 +184,9 @@ class VLMBroadcast : public VLMAWidget
     Q_OBJECT
     friend class VLMDialog;
 public:
-    VLMBroadcast( const QString& name, const QString& input, const QString& output,
-            bool _enable, bool _loop, VLMDialog *parent );
+    VLMBroadcast( const QString& name, const QString& input,
+                  const QString& inputOptions, const QString& output,
+                  bool _enable, bool _loop, VLMDialog *parent );
     void update();
 private:
     bool b_looped;
@@ -196,7 +203,8 @@ class VLMVod : public VLMAWidget
     Q_OBJECT
     friend class VLMDialog;
 public:
-    VLMVod( const QString& name, const QString& input, const QString& output,
+    VLMVod( const QString& name, const QString& input,
+            const QString& inputOptions, const QString& output,
             bool _enable, const QString& _mux, VLMDialog *parent );
     void update();
 private:
@@ -209,9 +217,10 @@ class VLMSchedule : public VLMAWidget
     Q_OBJECT
     friend class VLMDialog;
 public:
-    VLMSchedule( const QString& name, const QString& input, const QString& output,
-            QDateTime schetime, QDateTime schedate, int repeatnumber,
-            int repeatdays, bool enabled, VLMDialog *parent );
+    VLMSchedule( const QString& name, const QString& input,
+                 const QString& inputOptions, const QString& output,
+                 QDateTime schetime, QDateTime schedate, int repeatnumber,
+                 int repeatdays, bool enabled, VLMDialog *parent );
     void update();
 private:
     QDateTime schetime;

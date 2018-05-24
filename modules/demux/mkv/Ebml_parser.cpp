@@ -3,7 +3,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: e9b01cdd03e5f7cfe06c38da84e90295dd6f9c7f $
+ * $Id: 97dbdc3babde7a34fa16eba0aae6bb2b1a6dca5c $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -43,11 +43,18 @@ EbmlParser::EbmlParser( EbmlStream *es, EbmlElement *el_start, demux_t *p_demux 
     mi_level = 1;
     mi_user_level = 1;
     mb_keep = false;
-    mb_dummy = config_GetInt( p_demux, "mkv-use-dummy" );
+    mb_dummy = var_InheritBool( p_demux, "mkv-use-dummy" );
 }
 
 EbmlParser::~EbmlParser( void )
 {
+    if( !mi_level )
+    {
+        assert( !mb_keep );
+        delete m_el[1];
+        return;
+    }
+
     int i;
 
     for( i = 1; i < mi_level; i++ )
@@ -127,7 +134,7 @@ void EbmlParser::Reset( demux_t *p_demux )
     mi_user_level = mi_level = 1;
     // a little faster and cleaner
     m_es->I_O().setFilePointer( static_cast<KaxSegment*>(m_el[0])->GetGlobalPosition(0) );
-    mb_dummy = config_GetInt( p_demux, "mkv-use-dummy" );
+    mb_dummy = var_InheritBool( p_demux, "mkv-use-dummy" );
 }
 
 
@@ -137,7 +144,7 @@ class KaxBlockVirtualWorkaround : public KaxBlockVirtual
 public:
     void Fix()
     {
-        if( Data == DataBlock )
+        if( GetBuffer() == DataBlock )
             SetBuffer( NULL, 0 );
     }
 };
@@ -160,7 +167,7 @@ EbmlElement *EbmlParser::Get( void )
 
     if( m_el[mi_level] )
     {
-        m_el[mi_level]->SkipData( *m_es, m_el[mi_level]->Generic().Context );
+        m_el[mi_level]->SkipData( *m_es, EBML_CONTEXT(m_el[mi_level]) );
         if( !mb_keep )
         {
             if( MKV_IS_ID( m_el[mi_level], KaxBlockVirtual ) )
@@ -170,7 +177,7 @@ EbmlElement *EbmlParser::Get( void )
         mb_keep = false;
     }
 
-    m_el[mi_level] = m_es->FindNextElement( m_el[mi_level - 1]->Generic().Context, i_ulev, 0xFFFFFFFFL, mb_dummy != 0, 1 );
+    m_el[mi_level] = m_es->FindNextElement( EBML_CONTEXT(m_el[mi_level - 1]), i_ulev, 0xFFFFFFFFL, mb_dummy != 0, 1 );
 //    mi_remain_size[mi_level] = m_el[mi_level]->GetSize();
     if( i_ulev > 0 )
     {

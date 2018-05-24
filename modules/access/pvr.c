@@ -2,7 +2,7 @@
  * pvr.c
  *****************************************************************************
  * Copyright (C) 2001, 2002 the VideoLAN team
- * $Id: 70d0127afe6802cb6eebf26f4aeb724ebcc40e74 $
+ * $Id: 4f030d29b3727e5858c630887c13235e035094c3 $
  *
  * Authors: Eric Petit <titer@videolan.org>
  *          Paul Corke <paulc@datatote.co.uk>
@@ -32,15 +32,14 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 #include <vlc_access.h>
+#include <vlc_fs.h>
+#include <vlc_network.h>
 
 #include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <errno.h>
 #include <linux/types.h>
 #include <sys/ioctl.h>
-#include <sys/poll.h>
 #ifdef HAVE_NEW_LINUX_VIDEODEV2_H
 #   ifdef VIDEODEV2_H_FILE
 #   include VIDEODEV2_H_FILE
@@ -664,7 +663,7 @@ static int Open( vlc_object_t * p_this )
     free( psz_tofree );
 
     /* open the device */
-    p_sys->i_fd = open( p_sys->psz_videodev, O_RDWR );
+    p_sys->i_fd = vlc_open( p_sys->psz_videodev, O_RDWR );
     if( p_sys->i_fd < 0 )
     {
         msg_Err( p_access, "Cannot open device %s (%m).",
@@ -774,7 +773,7 @@ static int Open( vlc_object_t * p_this )
         if ( (p_sys->i_frequency >= pi_radio_range[0])
               && (p_sys->i_frequency <= pi_radio_range[1]) )
         {
-            p_sys->i_radio_fd = open( p_sys->psz_radiodev, O_RDWR );
+            p_sys->i_radio_fd = vlc_open( p_sys->psz_radiodev, O_RDWR );
             if( p_sys->i_radio_fd < 0 )
             {
                 msg_Err( p_access, "Cannot open radio device (%m)." );
@@ -905,31 +904,12 @@ static void Close( vlc_object_t * p_this )
 static ssize_t Read( access_t * p_access, uint8_t * p_buffer, size_t i_len )
 {
     access_sys_t *p_sys = (access_sys_t *) p_access->p_sys;
-    struct pollfd ufd;
-    int i_ret;
-
-    ufd.fd = p_sys->i_fd;
-    ufd.events = POLLIN;
+    ssize_t i_ret;
 
     if( p_access->info.b_eof )
         return 0;
 
-    do
-    {
-        if( !vlc_object_alive (p_access) )
-            return 0;
-
-        ufd.revents = 0;
-    }
-    while( ( i_ret = poll( &ufd, 1, 500 ) ) == 0 );
-
-    if( i_ret < 0 )
-    {
-        msg_Err( p_access, "Polling error (%m)." );
-        return -1;
-    }
-
-    i_ret = read( p_sys->i_fd, p_buffer, i_len );
+    i_ret = net_Read( p_access, p_sys->i_fd, NULL, p_buffer, i_len, false );
     if( i_ret == 0 )
     {
         p_access->info.b_eof = true;

@@ -2,7 +2,7 @@
  * qvlcapp.hpp : A few helpers
  *****************************************************************************
  * Copyright (C) 2008 the VideoLAN team
- * $Id: f43c1b526a16b4bc58f5c44cada8840ddcf74328 $
+ * $Id: 3e016f2c73a297f1b4e7805072f71fe513706e0b $
  *
  * Authors: Jean-Baptiste Kempf <jb@videolan.org>
  *
@@ -30,16 +30,27 @@
 
 #if defined(Q_WS_WIN)
 #   include <windows.h>
+#   include <vlc_common.h>
+#   include <vlc_interface.h>
+#   include "qt4.hpp"
+#   include "input_manager.hpp"
 #endif
 
 class QVLCApp : public QApplication
 {
     Q_OBJECT
 
+private slots:
+    void doQuit()
+    {
+        closeAllWindows();
+        quit();
+    }
+
 public:
     QVLCApp( int & argc, char ** argv ) : QApplication( argc, argv, true )
     {
-        connect( this, SIGNAL(quitSignal()), this, SLOT(quit()) );
+        connect( this, SIGNAL(quitSignal()), this, SLOT(doQuit()) );
     }
 
     static void triggerQuit()
@@ -56,22 +67,6 @@ public:
         connect( this, SIGNAL(quitSignal()), this, SLOT(quit()) );
      }
 #endif
-
-#if defined(Q_WS_WIN)
-protected:
-    virtual bool winEventFilter( MSG *msg, long *result )
-    {
-        switch( msg->message )
-        {
-            case 0x0319: /* WM_APPCOMMAND 0x0319 */
-                DefWindowProc( msg->hwnd, msg->message,
-                               msg->wParam, msg->lParam );
-                break;
-        }
-        return false;
-    }
-#endif
-
 
 signals:
     void quitSignal();

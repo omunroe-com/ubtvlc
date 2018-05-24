@@ -2,7 +2,7 @@
  * volume.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: 9227a61abb9c8198d07df341e96268d4bdc540db $
+ * $Id: 6aacfe677d73af4698bac6126bd524b9c47eb1f6 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -28,39 +28,57 @@
 
 #include <vlc_common.h>
 #include <vlc_aout.h>
+#include <vlc_playlist.h>
 #include "volume.hpp"
 
 Volume::Volume( intf_thread_t *pIntf ): VarPercent( pIntf )
 {
+    m_step = (float)config_GetInt( pIntf, "volume-step" ) / AOUT_VOLUME_MAX;
+    if( var_InheritBool( pIntf, "qt-volume-complete" ) )
+    {
+        m_max = 400;
+        m_volumeMax = AOUT_VOLUME_MAX;
+    }
+    else
+    {
+        m_max = 200;
+        m_volumeMax = AOUT_VOLUME_MAX / 2;
+    }
+
     // Initial value
     audio_volume_t val;
-    aout_VolumeGet( getIntf(), &val );
-    VarPercent::set( val * 2.0 / AOUT_VOLUME_MAX );
+
+    aout_VolumeGet( getIntf()->p_sys->p_playlist, &val );
+    set( val, false );
 }
 
 
-void Volume::set( float percentage )
+void Volume::set( float percentage, bool updateVLC )
 {
     // Avoid looping forever...
     if( (int)(get() * AOUT_VOLUME_MAX) !=
         (int)(percentage * AOUT_VOLUME_MAX) )
     {
         VarPercent::set( percentage );
-
-        aout_VolumeSet( getIntf(), (int)(get() * AOUT_VOLUME_MAX / 2.0) );
+        if( updateVLC )
+            aout_VolumeSet( getIntf()->p_sys->p_playlist,
+                            (int)(get() * m_volumeMax) );
     }
+}
+
+
+void Volume::set( int val, bool updateVLC )
+{
+    set( (float)val / m_volumeMax, updateVLC );
 }
 
 
 string Volume::getAsStringPercent() const
 {
-    int value = (int)(100. * VarPercent::get());
-    // 0 <= value <= 100, so we need 4 chars
-    char *str = new char[4];
+    int value = (int)(m_max * VarPercent::get());
+    // 0 <= value <= 400, so we need 4 chars
+    char str[4];
     snprintf( str, 4, "%d", value );
-    string ret = str;
-    delete[] str;
-
-    return ret;
+    return string(str);
 }
 

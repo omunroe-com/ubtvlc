@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: 0ea8ccb638b626d0150bbb4cb9429d0ecba4df75 $
+ * $Id: 99a407ce3788cb46dc44cf77c0709595a3cbd8cb $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -49,10 +49,9 @@
 #   include <time.h>                                               /* time() */
 #endif
 
-
 #include <vlc_codecs.h>               /* BITMAPINFOHEADER, WAVEFORMATEX */
 #include <vlc_iso_lang.h>
-#include "vlc_meta.h"
+#include <vlc_meta.h>
 #include <vlc_charset.h>
 #include <vlc_input.h>
 #include <vlc_demux.h>
@@ -93,17 +92,19 @@
 #include "matroska/KaxSegment.h"
 #include "matroska/KaxTag.h"
 #include "matroska/KaxTags.h"
+#include "matroska/KaxVersion.h"
+#if LIBMATROSKA_VERSION < 0x010100
 #include "matroska/KaxTagMulti.h"
+#endif
 #include "matroska/KaxTracks.h"
 #include "matroska/KaxTrackAudio.h"
 #include "matroska/KaxTrackVideo.h"
 #include "matroska/KaxTrackEntryData.h"
 #include "matroska/KaxContentEncoding.h"
-#include "matroska/KaxVersion.h"
 
 #include "ebml/StdIOCallback.h"
 
-#include "vlc_keys.h"
+#include <vlc_keys.h>
 
 extern "C" {
    #include "../mp4/libmp4.h"
@@ -120,21 +121,20 @@ extern "C" {
 
 #define MKVD_TIMECODESCALE 1000000
 
-/**
- * What's between a directory and a filename?
- */
-#if defined( WIN32 )
-    #define DIRECTORY_SEPARATOR '\\'
-#else
-    #define DIRECTORY_SEPARATOR '/'
+#define MKV_IS_ID( el, C ) ( el != NULL && typeid( *el ) == typeid( C ) )
+
+#if LIBEBML_VERSION < 0x010000
+#define EBML_INFO(ref)             ref::ClassInfos
+#define EBML_ID(ref)               ref::ClassInfos.GlobalId
+#define EBML_CLASS_CONTEXT(ref)    ref::ClassInfos.Context
+#define EBML_CONTEXT(e)            (e)->Generic().Context
 #endif
-
-
-#define MKV_IS_ID( el, C ) ( EbmlId( (*el) ) == C::ClassInfos.GlobalId )
-
 
 using namespace LIBMATROSKA_NAMESPACE;
 using namespace std;
+
+void BlockDecode( demux_t *p_demux, KaxBlock *block, KaxSimpleBlock *simpleblock,
+                         mtime_t i_pts, mtime_t i_duration, bool f_mandatory );
 
 class attachment_c
 {
@@ -196,6 +196,7 @@ typedef struct
 
     char         *psz_codec;
     bool         b_dts_only;
+    bool         b_pts_only;
 
     uint64_t     i_default_duration;
     float        f_timecodescale;

@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2005 the VideoLAN team
  * Copyright (C) 2002-2007 Rémi Denis-Courmont
- * $Id: 5f73492df81c395fbcf65f4b42e527c1a96fd432 $
+ * $Id: d92fef42e7762ee2b8cb7a2e903a0f8112615664 $
  *
  * Author: Rémi Denis-Courmont <rem # videolan.org>
  *
@@ -35,9 +35,7 @@
 #include <errno.h>
 #include <assert.h>
 
-#ifdef HAVE_SYS_TYPES_H
-#   include <sys/types.h>
-#endif
+#include <sys/types.h>
 #ifdef HAVE_ARPA_INET_H
 #   include <arpa/inet.h>
 #endif
@@ -168,7 +166,7 @@ stub_getnameinfo (const struct sockaddr *sa, socklen_t salen,
     return 0;
 }
 #undef getnameinfo
-#define getnameifo stub_getnameinfo
+#define getnameinfo stub_getnameinfo
 #endif /* if !HAVE_GETNAMEINFO */
 
 #ifndef HAVE_GETADDRINFO
@@ -441,9 +439,9 @@ stub_getaddrinfo (const char *node, const char *service,
     return 0;
 }
 #undef getaddrinfo
-#define getaddrifo stub_getaddrinfo
+#define getaddrinfo stub_getaddrinfo
 #undef freeaddrinfo
-#define freeaddrifo stub_freeaddrinfo
+#define freeaddrinfo stub_freeaddrinfo
 #endif /* if !HAVE_GETADDRINFO */
 
 #if defined( WIN32 ) && !defined( UNDER_CE )
@@ -689,7 +687,9 @@ int vlc_getaddrinfo( vlc_object_t *p_this, const char *node,
 #endif
     ret = getaddrinfo (node, psz_service, &hints, res);
 
+#if defined(AI_IDN) || defined(WIN32)
 out:
+#endif
     LocaleFree (node);
     return ret;
 }

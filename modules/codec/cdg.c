@@ -2,7 +2,7 @@
  * cdg.c: CDG decoder module
  *****************************************************************************
  * Copyright (C) 2007 Laurent Aimar
- * $Id: c1a3e754a014daecd5def969713962d1d3070999 $
+ * $Id: fe7b62d7448a3b313c92f98620701b50dab9f817 $
  *
  * Authors: Laurent Aimar <fenrir # via.ecp.fr>
  *
@@ -31,7 +31,6 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 #include <vlc_codec.h>
-#include <vlc_vout.h>
 
 /*****************************************************************************
  * decoder_sys_t : decoder descriptor
@@ -99,7 +98,7 @@ static int Open( vlc_object_t *p_this )
     decoder_t *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys;
 
-    if( p_dec->fmt_in.i_codec != VLC_FOURCC('C','D','G',' ') )
+    if( p_dec->fmt_in.i_codec != VLC_CODEC_CDG )
         return VLC_EGENERIC;
 
     /* Allocate the memory needed to store the decoder's structure */
@@ -114,11 +113,11 @@ static int Open( vlc_object_t *p_this )
     /* Set output properties
      * TODO maybe it would be better to use RV16 or RV24 ? */
     p_dec->fmt_out.i_cat = VIDEO_ES;
-    p_dec->fmt_out.i_codec = VLC_FOURCC('R','V','3','2');
+    p_dec->fmt_out.i_codec = VLC_CODEC_RGB32;
     p_dec->fmt_out.video.i_width = CDG_DISPLAY_WIDTH;
     p_dec->fmt_out.video.i_height = CDG_DISPLAY_HEIGHT;
-    p_dec->fmt_out.video.i_aspect =
-        VOUT_ASPECT_FACTOR * p_dec->fmt_out.video.i_width / p_dec->fmt_out.video.i_height;
+    p_dec->fmt_out.video.i_sar_num = 1;
+    p_dec->fmt_out.video.i_sar_den = 1;
     p_dec->fmt_out.video.i_rmask = 0xff << CDG_COLOR_R_SHIFT;
     p_dec->fmt_out.video.i_gmask = 0xff << CDG_COLOR_G_SHIFT;
     p_dec->fmt_out.video.i_bmask = 0xff << CDG_COLOR_B_SHIFT;
@@ -167,7 +166,7 @@ static picture_t *Decode( decoder_t *p_dec, block_t **pp_block )
             goto exit;
 
         Render( p_sys, p_pic );
-        p_pic->date = p_block->i_pts > 0 ? p_block->i_pts : p_block->i_dts;
+        p_pic->date = p_block->i_pts > VLC_TS_INVALID ? p_block->i_pts : p_block->i_dts;
     }
 
 exit:
@@ -255,7 +254,13 @@ static int DecodeTileBlock( decoder_sys_t *p_cdg, const uint8_t *p_data, int doX
         for( x = 0; x < 6; x++ )
         {
             const int idx = ( p_data[4+y] >> (5-x) ) & 0x01;
-            uint8_t *p = &p_cdg->p_screen[(sy+y)*CDG_SCREEN_PITCH+(sx+x)];
+
+            int index = (sy+y)*CDG_SCREEN_PITCH+(sx+x);
+            if( index >= CDG_SCREEN_PITCH*CDG_SCREEN_HEIGHT )
+                return 0;
+
+            uint8_t *p = &p_cdg->p_screen[index];
+
             if( doXor )
                 *p ^= p_color[idx];
             else
@@ -320,8 +325,8 @@ static int DecodeScroll( decoder_sys_t *p_cdg, const uint8_t *p_data, int b_copy
 
             if( b_copy )
             {
-                dy = ( dy + CDG_SCREEN_HEIGHT ) % CDG_SCREEN_HEIGHT;
-                dy = ( dy + CDG_SCREEN_WIDTH  ) % CDG_SCREEN_WIDTH;
+                dy %= CDG_SCREEN_HEIGHT;
+                dx %= CDG_SCREEN_WIDTH;
             }
             else
             {

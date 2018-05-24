@@ -2,7 +2,7 @@
  * mux.c: muxer using ffmpeg (libavformat).
  *****************************************************************************
  * Copyright (C) 2006 the VideoLAN team
- * $Id: 3e98975cd24396f8cde64a6f4aac43691e7720b6 $
+ * $Id: f622c90f2e8430558f854e83767f9ba93f7b25c1 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  *
@@ -101,12 +101,20 @@ int OpenMux( vlc_object_t *p_this )
     psz_mux = var_GetNonEmptyString( p_mux, "ffmpeg-mux" );
     if( psz_mux )
     {
+#if( LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT( 52, 45, 0 ) )
+        file_oformat = av_guess_format( psz_mux, NULL, NULL );
+#else
         file_oformat = guess_format( psz_mux, NULL, NULL );
+#endif
     }
     else
     {
         file_oformat =
-            guess_format(NULL, p_mux->p_access->psz_path, NULL);
+#if( LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT( 52, 45, 0 ) )
+            av_guess_format( NULL, p_mux->p_access->psz_path, NULL);
+#else
+            guess_format( NULL, p_mux->p_access->psz_path, NULL);
+#endif
     }
     if (!file_oformat)
     {
@@ -121,7 +129,11 @@ int OpenMux( vlc_object_t *p_this )
     p_mux->pf_mux       = Mux;
     p_mux->p_sys = p_sys = malloc( sizeof( sout_mux_sys_t ) );
 
+#if LIBAVFORMAT_VERSION_INT >= AV_VERSION_INT(52,26,0)
+    p_sys->oc = avformat_alloc_context();
+#else
     p_sys->oc = av_alloc_format_context();
+#endif
     p_sys->oc->oformat = file_oformat;
 
     /* Create I/O wrapper */
@@ -174,7 +186,7 @@ void CloseMux( vlc_object_t *p_this )
     sout_mux_sys_t *p_sys = p_mux->p_sys;
     unsigned int i;
 
-    if( av_write_trailer( p_sys->oc ) < 0 )
+    if( !p_sys->b_write_header && av_write_trailer( p_sys->oc ) < 0 )
     {
         msg_Err( p_mux, "could not write trailer" );
     }
@@ -200,7 +212,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     sout_mux_sys_t *p_sys = p_mux->p_sys;
     AVCodecContext *codec;
     AVStream *stream;
-    int i_codec_id, i_aspect_num, i_aspect_den;
+    int i_codec_id;
 
     msg_Dbg( p_mux, "adding input" );
 
@@ -213,6 +225,12 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
 
     p_input->p_sys = malloc( sizeof( int ) );
     *((int *)p_input->p_sys) = p_sys->oc->nb_streams;
+
+    if( p_input->p_fmt->i_cat != VIDEO_ES && p_input->p_fmt->i_cat != AUDIO_ES)
+    {
+        msg_Warn( p_mux, "Unhandled ES category" );
+        return VLC_EGENERIC;
+    }
 
     stream = av_new_stream( p_sys->oc, p_sys->oc->nb_streams);
     if( !stream )
@@ -228,10 +246,11 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     switch( p_input->p_fmt->i_cat )
     {
     case AUDIO_ES:
-        codec->codec_type = CODEC_TYPE_AUDIO;
+        codec->codec_type = AVMEDIA_TYPE_AUDIO;
         codec->channels = p_input->p_fmt->audio.i_channels;
         codec->sample_rate = p_input->p_fmt->audio.i_rate;
         codec->time_base = (AVRational){1, codec->sample_rate};
+        codec->frame_size = p_input->p_fmt->audio.i_frame_length;
         break;
 
     case VIDEO_ES:
@@ -242,16 +261,13 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
             p_input->p_fmt->video.i_frame_rate = 25;
             p_input->p_fmt->video.i_frame_rate_base = 1;
         }
-        codec->codec_type = CODEC_TYPE_VIDEO;
+        codec->codec_type = AVMEDIA_TYPE_VIDEO;
         codec->width = p_input->p_fmt->video.i_width;
         codec->height = p_input->p_fmt->video.i_height;
-        av_reduce( &i_aspect_num, &i_aspect_den,
-                   p_input->p_fmt->video.i_aspect,
-                   VOUT_ASPECT_FACTOR, 1 << 30 /* something big */ );
         av_reduce( &codec->sample_aspect_ratio.num,
                    &codec->sample_aspect_ratio.den,
-                   i_aspect_num * (int64_t)codec->height,
-                   i_aspect_den * (int64_t)codec->width, 1 << 30 );
+                   p_input->p_fmt->video.i_sar_num,
+                   p_input->p_fmt->video.i_sar_den, 1 << 30 /* something big */ );
 #if LIBAVFORMAT_VERSION_INT >= ((52<<16)+(21<<8)+0)
         stream->sample_aspect_ratio.num = codec->sample_aspect_ratio.num;
         stream->sample_aspect_ratio.den = codec->sample_aspect_ratio.den;
@@ -260,8 +276,6 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
         codec->time_base.num = p_input->p_fmt->video.i_frame_rate_base;
         break;
 
-    default:
-        msg_Warn( p_mux, "Unhandled ES category" );
     }
 
     codec->bit_rate = p_input->p_fmt->i_bitrate;
@@ -278,7 +292,7 @@ static int AddStream( sout_mux_t *p_mux, sout_input_t *p_input )
     /* This is a hack */
     if( i_codec_id == CODEC_ID_MP2 )
         i_codec_id = CODEC_ID_MP3;
-    codec->codec_tag = p_input->p_fmt->i_codec;
+    codec->codec_tag = p_input->p_fmt->i_original_fourcc ?: p_input->p_fmt->i_codec;
 #endif
     codec->codec_id = i_codec_id;
 
@@ -303,44 +317,6 @@ static int DelStream( sout_mux_t *p_mux, sout_input_t *p_input )
     return VLC_SUCCESS;
 }
 
-/*
- * TODO  move this function to src/stream_output.c (used by nearly all muxers)
- */
-static int MuxGetStream( sout_mux_t *p_mux, int *pi_stream, mtime_t *pi_dts )
-{
-    mtime_t i_dts;
-    int     i_stream, i;
-
-    for( i = 0, i_dts = 0, i_stream = -1; i < p_mux->i_nb_inputs; i++ )
-    {
-        block_fifo_t  *p_fifo;
-
-        p_fifo = p_mux->pp_inputs[i]->p_fifo;
-
-        /* We don't really need to have anything in the SPU fifo */
-        if( p_mux->pp_inputs[i]->p_fmt->i_cat == SPU_ES &&
-            block_FifoCount( p_fifo ) == 0 ) continue;
-
-        if( block_FifoCount( p_fifo ) )
-        {
-            block_t *p_buf;
-
-            p_buf = block_FifoShow( p_fifo );
-            if( i_stream < 0 || p_buf->i_dts < i_dts )
-            {
-                i_dts = p_buf->i_dts;
-                i_stream = i;
-            }
-        }
-        else return -1;
-
-    }
-    if( pi_stream ) *pi_stream = i_stream;
-    if( pi_dts ) *pi_dts = i_dts;
-    if( !p_mux->p_sys->i_initial_dts ) p_mux->p_sys->i_initial_dts = i_dts;
-    return i_stream;
-}
-
 static int MuxBlock( sout_mux_t *p_mux, sout_input_t *p_input )
 {
     sout_mux_sys_t *p_sys = p_mux->p_sys;
@@ -356,7 +332,7 @@ static int MuxBlock( sout_mux_t *p_mux, sout_input_t *p_input )
     pkt.size = p_data->i_buffer;
     pkt.stream_index = i_stream;
 
-    if( p_data->i_flags & BLOCK_FLAG_TYPE_I ) pkt.flags |= PKT_FLAG_KEY;
+    if( p_data->i_flags & BLOCK_FLAG_TYPE_I ) pkt.flags |= AV_PKT_FLAG_KEY;
 
     /* avformat expects pts/dts which start from 0 */
     p_data->i_dts -= p_mux->p_sys->i_initial_dts;
@@ -392,7 +368,6 @@ static int MuxBlock( sout_mux_t *p_mux, sout_input_t *p_input )
 static int Mux( sout_mux_t *p_mux )
 {
     sout_mux_sys_t *p_sys = p_mux->p_sys;
-    int i_stream;
 
     if( p_sys->b_error ) return VLC_EGENERIC;
 
@@ -418,7 +393,15 @@ static int Mux( sout_mux_t *p_mux )
 
     for( ;; )
     {
-        if( MuxGetStream( p_mux, &i_stream, 0 ) < 0 ) return VLC_SUCCESS;
+        mtime_t i_dts;
+
+        int i_stream = sout_MuxGetStream( p_mux, 1, &i_dts );
+        if( i_stream < 0 )
+            return VLC_SUCCESS;
+
+        if( !p_mux->p_sys->i_initial_dts )
+            p_mux->p_sys->i_initial_dts = i_dts;
+
         MuxBlock( p_mux, p_mux->pp_inputs[i_stream] );
     }
 
@@ -483,7 +466,6 @@ static int64_t IOSeek( void *opaque, int64_t offset, int whence )
 {
     URLContext *p_url = opaque;
     sout_mux_t *p_mux = p_url->priv_data;
-    int64_t i_absolute;
 
 #ifdef AVFORMAT_DEBUG
     msg_Dbg( p_mux, "IOSeek offset: %"PRId64", whence: %i", offset, whence );
@@ -492,18 +474,10 @@ static int64_t IOSeek( void *opaque, int64_t offset, int whence )
     switch( whence )
     {
     case SEEK_SET:
-        i_absolute = offset;
-        break;
+        return sout_AccessOutSeek( p_mux->p_access, offset );
     case SEEK_CUR:
     case SEEK_END:
     default:
         return -1;
     }
-
-    if( sout_AccessOutSeek( p_mux->p_access, i_absolute ) )
-    {
-        return -1;
-    }
-
-    return 0;
 }

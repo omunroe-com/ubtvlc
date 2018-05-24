@@ -18,9 +18,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston MA 02110-1301, USA.
  *****************************************************************************/
 
 
@@ -42,9 +42,8 @@
 #   include <unistd.h>
 #endif
 
-#include <fcntl.h>
 #include <sys/types.h>
-#include <sys/poll.h>
+#include <poll.h>
 
 #include <errno.h>
 
@@ -70,7 +69,7 @@
 #endif
 
 #ifdef ENABLE_HTTPD
-#   include "vlc_httpd.h"
+#   include <vlc_httpd.h>
 #endif
 
 #include "dvb.h"
@@ -90,7 +89,7 @@ static void Close( vlc_object_t *p_this );
 #define ADAPTER_LONGTEXT N_("Adapter cards have a device file in directory named /dev/dvb/adapter[n] with n>=0.")
 
 #define DEVICE_TEXT N_("Device number to use on adapter")
-#define DEVICE_LONGTEXT ""
+#define DEVICE_LONGTEXT DEVICE_TEXT
 
 #define FREQ_TEXT N_("Transponder/multiplex frequency")
 #define FREQ_LONGTEXT N_("In kHz for DVB-S or Hz for DVB-C/T")
@@ -122,16 +121,16 @@ static void Close( vlc_object_t *p_this );
 #define FEC_LONGTEXT N_("FEC=Forward Error Correction mode [9=auto].")
 
 #define SRATE_TEXT N_("Transponder symbol rate in kHz")
-#define SRATE_LONGTEXT ""
+#define SRATE_LONGTEXT SRATE_TEXT
 
 #define LNB_LOF1_TEXT N_("Antenna lnb_lof1 (kHz)")
-#define LNB_LOF1_LONGTEXT ""
+#define LNB_LOF1_LONGTEXT LNB_LOF1_TEXT
 
 #define LNB_LOF2_TEXT N_("Antenna lnb_lof2 (kHz)")
-#define LNB_LOF2_LONGTEXT ""
+#define LNB_LOF2_LONGTEXT LNB_LOF2_TEXT
 
 #define LNB_SLOF_TEXT N_("Antenna lnb_slof (kHz)")
-#define LNB_SLOF_LONGTEXT ""
+#define LNB_SLOF_LONGTEXT LNB_SLOF_TEXT
 
 /* Cable */
 #define MODULATION_TEXT N_("Modulation type")
@@ -139,22 +138,22 @@ static void Close( vlc_object_t *p_this );
 
 /* Terrestrial */
 #define CODE_RATE_HP_TEXT N_("Terrestrial high priority stream code rate (FEC)")
-#define CODE_RATE_HP_LONGTEXT ""
+#define CODE_RATE_HP_LONGTEXT CODE_RATE_HP_TEXT
 
 #define CODE_RATE_LP_TEXT N_("Terrestrial low priority stream code rate (FEC)")
-#define CODE_RATE_LP_LONGTEXT ""
+#define CODE_RATE_LP_LONGTEXT CODE_RATE_LP_TEXT
 
 #define BANDWIDTH_TEXT N_("Terrestrial bandwidth")
 #define BANDWIDTH_LONGTEXT N_("Terrestrial bandwidth [0=auto,6,7,8 in MHz]")
 
 #define GUARD_TEXT N_("Terrestrial guard interval")
-#define GUARD_LONGTEXT ""
+#define GUARD_LONGTEXT GUARD_TEXT
 
 #define TRANSMISSION_TEXT N_("Terrestrial transmission mode")
-#define TRANSMISSION_LONGTEXT ""
+#define TRANSMISSION_LONGTEXT TRANSMISSION_TEXT
 
 #define HIERARCHY_TEXT N_("Terrestrial hierarchy mode")
-#define HIERARCHY_LONGTEXT ""
+#define HIERARCHY_LONGTEXT HIERARCHY_TEXT
 
 #define HOST_TEXT N_( "HTTP Host address" )
 #define HOST_LONGTEXT N_( \
@@ -205,17 +204,18 @@ vlc_module_begin ()
                  true )
     add_integer( "dvb-frequency", 0, NULL, FREQ_TEXT, FREQ_LONGTEXT,
                  false )
+        change_safe()
     add_integer( "dvb-inversion", 2, NULL, INVERSION_TEXT, INVERSION_LONGTEXT,
                  true )
-    add_bool( "dvb-probe", 1, NULL, PROBE_TEXT, PROBE_LONGTEXT, true )
-    add_bool( "dvb-budget-mode", 0, NULL, BUDGET_TEXT, BUDGET_LONGTEXT,
+    add_bool( "dvb-probe", true, NULL, PROBE_TEXT, PROBE_LONGTEXT, true )
+    add_bool( "dvb-budget-mode", false, NULL, BUDGET_TEXT, BUDGET_LONGTEXT,
               true )
     /* DVB-S (satellite) */
     add_integer( "dvb-satno", 0, NULL, SATNO_TEXT, SATNO_LONGTEXT,
                  true )
     add_integer( "dvb-voltage", 13, NULL, VOLTAGE_TEXT, VOLTAGE_LONGTEXT,
                  true )
-    add_bool( "dvb-high-voltage", 0, NULL, HIGH_VOLTAGE_TEXT,
+    add_bool( "dvb-high-voltage", false, NULL, HIGH_VOLTAGE_TEXT,
               HIGH_VOLTAGE_LONGTEXT, true )
     add_integer( "dvb-tone", -1, NULL, TONE_TEXT, TONE_LONGTEXT,
                  true )
@@ -238,6 +238,7 @@ vlc_module_begin ()
                  CODE_RATE_LP_LONGTEXT, true )
     add_integer( "dvb-bandwidth", 0, NULL, BANDWIDTH_TEXT, BANDWIDTH_LONGTEXT,
                  true )
+        change_safe()
     add_integer( "dvb-guard", 0, NULL, GUARD_TEXT, GUARD_LONGTEXT, true )
     add_integer( "dvb-transmission", 0, NULL, TRANSMISSION_TEXT,
                  TRANSMISSION_LONGTEXT, true )
@@ -250,8 +251,8 @@ vlc_module_begin ()
                 true )
     add_string( "dvb-http-user", NULL, NULL, USER_TEXT, USER_LONGTEXT,
                 true )
-    add_string( "dvb-http-password", NULL, NULL, PASSWORD_TEXT,
-                PASSWORD_LONGTEXT, true )
+    add_password( "dvb-http-password", NULL, NULL, PASSWORD_TEXT,
+                  PASSWORD_LONGTEXT, true )
     add_string( "dvb-http-acl", NULL, NULL, ACL_TEXT, ACL_LONGTEXT,
                 true )
     add_string( "dvb-http-intf-cert", NULL, NULL, CERT_TEXT, CERT_LONGTEXT,
@@ -735,7 +736,7 @@ static int Control( access_t *p_access, int i_query, va_list args )
         /* */
         case ACCESS_GET_PTS_DELAY:
             pi_64 = (int64_t*)va_arg( args, int64_t * );
-            *pi_64 = var_GetInteger( p_access, "dvb-caching" ) * 1000;
+            *pi_64 = (int64_t)var_GetInteger( p_access, "dvb-caching" ) * 1000;
             break;
 
         /* */

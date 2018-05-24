@@ -27,7 +27,7 @@ Example use:
     require "host"
     h = host.host()
 
-    -- Bypass any authentification
+    -- Bypass any authentication
     function on_password( client )
         client:switch_status( host.status.read )
     end
@@ -39,11 +39,8 @@ Example use:
 
     -- The main loop
     while not vlc.misc.should_die() do
-        -- accept new connections
-        h:accept()
-
-        -- select active clients
-        local write, read = h:select( 0.1 ) -- 0.1 is a timeout in seconds
+        -- accept new connections and select active clients
+        local write, read = h:accept_and_select()
 
         -- handle clients in write mode
         for _, client in pairs(write) do
@@ -69,27 +66,17 @@ module("host",package.seeall)
 status = { init = 0, read = 1, write = 2, password = 3 }
 client_type = { net = 1, stdio = 2, fifo = 3 }
 
+function is_flag_set(val, flag)
+    return (((val - (val % flag)) / flag) % 2 ~= 0)
+end
+
 function host()
     -- private data
     local clients = {}
     local listeners = {}
     local status_callbacks = {}
 
-    -- private data
-    local fds_read = vlc.net.fd_set_new()
-    local fds_write = vlc.net.fd_set_new()
-
     -- private methods
-    local function client_accept( clients, listen )
-        local wait
-        if #clients == 0 then
-            wait = -1
-        else
-            wait = 0
-        end
-        return listen:accept( wait )
-    end
-
     local function fd_client( client )
         if client.status == status.read then
             return client.rfd
@@ -176,6 +163,7 @@ function host()
                          wfd = wfd or fd,
                          status = status.init,
                          buffer = "",
+                         cmds = "",
                          type = t,
                          -- methods
                          fd = fd_client,
@@ -188,18 +176,6 @@ function host()
         client:send( "VLC media player "..vlc.misc.version().."\n" )
         table.insert(clients, client)
         client:switch_status(status.password)
-    end
-
-    function filter_client( fd, status, status2 )
-        local l = 0
-        fd:zero()
-        for _, client in pairs(clients) do
-            if client.status == status or client.status == status2 then
-                fd:set( client:fd() )
-                l = math.max( l, client:fd() )
-            end
-        end
-        return l
     end
 
     -- public methods
@@ -250,38 +226,55 @@ function host()
         end
     end
 
-    local function _accept( h )
-        if listeners.tcp then
-            local wait
-            if #clients == 0 and not listeners.stdio and #listeners.tcp.list == 1 then
-                wait = -1 -- blocking
-            else
-                wait = 0
-            end
-            for _, listener in pairs(listeners.tcp.list) do
-                local fd = listener:accept( wait )
-                new_client( h, fd, fd, client_type.net )
+    local function _accept_and_select( h, timeout )
+        local function filter_client( fds, status, event )
+            for _, client in pairs(clients) do
+                if client.status == status then
+                    fds[client:fd()] = event
+                end
             end
         end
-    end
 
-    local function _select( h, timeout )
-        local nfds = math.max( filter_client( fds_read, status.read, status.password ),
-                               filter_client( fds_write, status.write ) ) + 1
-        local ret = vlc.net.select( nfds, fds_read, fds_write,
-                                    timeout or 0.5 )
+        local pollfds = {}
+        filter_client( pollfds, status.read, vlc.net.POLLIN )
+        filter_client( pollfds, status.password, vlc.net.POLLIN )
+        filter_client( pollfds, status.write, vlc.net.POLLOUT )
+        if listeners.tcp then
+            for _, listener in pairs(listeners.tcp.list) do
+                for _, fd in pairs({listener:fds()}) do
+                    pollfds[fd] = vlc.net.POLLIN
+                end
+            end
+        end
+
+        local ret = vlc.net.poll( pollfds )
         local wclients = {}
         local rclients = {}
         if ret > 0 then
             for _, client in pairs(clients) do
-                if fds_write:isset( client:fd() ) then
+                if is_flag_set(pollfds[client:fd()], vlc.net.POLLERR)
+                or is_flag_set(pollfds[client:fd()], vlc.net.POLLHUP)
+                or is_flag_set(pollfds[client:fd()], vlc.net.POLLNVAL) then
+                    del_client(client)
+                elseif is_flag_set(pollfds[client:fd()], vlc.net.POLLOUT) then
                     table.insert(wclients,client)
-                end
-                if fds_read:isset( client:fd() ) then
+                elseif is_flag_set(pollfds[client:fd()], vlc.net.POLLIN) then
                     table.insert(rclients,client)
                 end
             end
+            if listeners.tcp then
+                for _, listener in pairs(listeners.tcp.list) do
+                    for _, fd in pairs({listener:fds()}) do
+                        if is_flag_set(pollfds[fd], vlc.net.POLLIN) then
+                            local afd = listener:accept()
+                            new_client( h, afd, afd, client_type.net )
+                            break
+                        end
+                    end
+                end
+            end
         end
+
         return wclients, rclients
     end
 
@@ -311,8 +304,7 @@ function host()
                 listen = _listen,
                 listen_tcp = _listen_tcp,
                 listen_stdio = _listen_stdio,
-                accept = _accept,
-                select = _select,
+                accept_and_select = _accept_and_select,
                 broadcast = _broadcast,
               }
 

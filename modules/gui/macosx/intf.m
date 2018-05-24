@@ -1,8 +1,8 @@
 /*****************************************************************************
  * intf.m: MacOS X interface module
  *****************************************************************************
- * Copyright (C) 2002-2009 the VideoLAN team
- * $Id: 7cca1d69d141a3045f4f56751d5e0e883308b0e6 $
+ * Copyright (C) 2002-2011 the VideoLAN team
+ * $Id: d5e411756e36e5447428cda304e12fb955c18b1a $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -33,6 +33,7 @@
 #include <vlc_common.h>
 #include <vlc_keys.h>
 #include <vlc_dialog.h>
+#include <vlc_url.h>
 #include <unistd.h> /* execl() */
 
 #import "intf.h"
@@ -49,13 +50,12 @@
 #import "bookmarks.h"
 #import "coredialogs.h"
 #import "embeddedwindow.h"
-#import "update.h"
 #import "AppleRemote.h"
 #import "eyetv.h"
 #import "simple_prefs.h"
 
 #import <AddressBook/AddressBook.h>         /* for crashlog send mechanism */
-#import <IOKit/hidsystem/ev_keymap.h>         /* for the media key support */
+#import <Sparkle/Sparkle.h>                 /* we're the update delegate */
 
 /*****************************************************************************
  * Local prototypes.
@@ -110,7 +110,8 @@ void CloseIntf ( vlc_object_t *p_this )
 /*****************************************************************************
  * Run: main loop
  *****************************************************************************/
-jmp_buf jmpbuffer;
+static NSLock * o_appLock = nil;    // controls access to f_appExit
+static int f_appExit = 0;           // set to 1 when application termination signaled
 
 static void Run( intf_thread_t *p_intf )
 {
@@ -131,18 +132,16 @@ static void Run( intf_thread_t *p_intf )
 
     NSAutoreleasePool * o_pool = [[NSAutoreleasePool alloc] init];
 
-    /* Install a jmpbuffer to where we can go back before the NSApp exit
-     * see applicationWillTerminate: */
+    o_appLock = [[NSLock alloc] init];
+
     [VLCApplication sharedApplication];
 
     [[VLCMain sharedInstance] setIntf: p_intf];
     [NSBundle loadNibNamed: @"MainMenu" owner: NSApp];
 
-    /* Install a jmpbuffer to where we can go back before the NSApp exit
-     * see applicationWillTerminate: */
-    if(setjmp(jmpbuffer) == 0)
-        [NSApp run];
-    
+    [NSApp run];
+    [[VLCMain sharedInstance] applicationWillTerminate:nil];
+
     [o_pool release];
 }
 
@@ -159,7 +158,7 @@ static void MsgCallback( msg_cb_data_t *data, msg_item_t *item, unsigned int i )
     int canc = vlc_savecancel();
     NSAutoreleasePool * o_pool = [[NSAutoreleasePool alloc] init];
 
-    /* this may happen from time to time, let's bail out as info would be useless anyway */ 
+    /* this may happen from time to time, let's bail out as info would be useless anyway */
     if( !item->psz_module || !item->psz_msg )
         return;
 
@@ -168,8 +167,8 @@ static void MsgCallback( msg_cb_data_t *data, msg_item_t *item, unsigned int i )
                                 [NSString stringWithUTF8String: item->psz_msg], @"Message",
                                 [NSNumber numberWithInt: item->i_type], @"Type", nil];
 
-    [[NSNotificationCenter defaultCenter] postNotificationName: @"VLCCoreMessageReceived" 
-                                                        object: nil 
+    [[NSNotificationCenter defaultCenter] postNotificationName: @"VLCCoreMessageReceived"
+                                                        object: nil
                                                       userInfo: o_dict];
 
     [o_pool release];
@@ -222,7 +221,7 @@ static int FullscreenChanged( vlc_object_t *p_this, const char *psz_variable,
 }
 
 /*****************************************************************************
- * DialogCallback: Callback triggered by the "dialog-*" variables 
+ * DialogCallback: Callback triggered by the "dialog-*" variables
  * to let the intf display error and interaction dialogs
  *****************************************************************************/
 static int DialogCallback( vlc_object_t *p_this, const char *type, vlc_value_t previous, vlc_value_t value, void *data )
@@ -266,7 +265,7 @@ void updateProgressPanel (void *priv, const char *text, float value)
 void destroyProgressPanel (void *priv)
 {
     NSAutoreleasePool *o_pool = [[NSAutoreleasePool alloc] init];
-    [[[VLCMain sharedInstance] coreDialogProvider] destroyProgressPanel];
+    [[[VLCMain sharedInstance] coreDialogProvider] performSelectorOnMainThread:@selector(destroyProgressPanel) withObject: nil waitUntilDone: NO];
     [o_pool release];
 }
 
@@ -275,6 +274,37 @@ bool checkProgressPanel (void *priv)
     NSAutoreleasePool *o_pool = [[NSAutoreleasePool alloc] init];
     return [[[VLCMain sharedInstance] coreDialogProvider] progressCancelled];
     [o_pool release];
+}
+
+#pragma mark -
+#pragma mark Helpers
+
+input_thread_t *getInput(void)
+{
+    intf_thread_t *p_intf = VLCIntf;
+    if (!p_intf)
+        return NULL;
+    return pl_CurrentInput(p_intf);
+}
+
+vout_thread_t *getVout(void)
+{
+    input_thread_t *p_input = getInput();
+    if (!p_input)
+        return NULL;
+    vout_thread_t *p_vout = input_GetVout(p_input);
+    vlc_object_release(p_input);
+    return p_vout;
+}
+
+aout_instance_t *getAout(void)
+{
+    input_thread_t *p_input = getInput();
+    if (!p_input)
+        return NULL;
+    aout_instance_t *p_aout = input_GetAout(p_input);
+    vlc_object_release(p_input);
+    return p_aout;
 }
 
 #pragma mark -
@@ -301,11 +331,11 @@ static VLCMain *_o_sharedMainInstance = nil;
 
 - (id)init
 {
-    if( _o_sharedMainInstance) 
+    if( _o_sharedMainInstance)
     {
         [self dealloc];
         return _o_sharedMainInstance;
-    } 
+    }
     else
         _o_sharedMainInstance = [super init];
 
@@ -315,7 +345,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     o_msg_arr = [[NSMutableArray arrayWithCapacity: 600] retain];
     /* subscribe to LibVLC's debug messages as early as possible (for us) */
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(libvlcMessageReceived:) name: @"VLCCoreMessageReceived" object: nil];
-    
+
     o_about = [[VLAboutBox alloc] init];
     o_prefs = nil;
     o_open = [[VLCOpen alloc] init];
@@ -325,9 +355,6 @@ static VLCMain *_o_sharedMainInstance = nil;
     o_embedded_list = [[VLCEmbeddedList alloc] init];
     o_coredialogs = [[VLCCoreDialogProvider alloc] init];
     o_info = [[VLCInfo alloc] init];
-#ifdef UPDATE_CHECK
-    o_update = [[VLCUpdate alloc] init];
-#endif
 
     i_lastShownVolume = -1;
 
@@ -338,7 +365,6 @@ static VLCMain *_o_sharedMainInstance = nil;
                                                                    object: @"VLCEyeTVSupport"
                                                                  userInfo: NULL
                                                        deliverImmediately: YES];
-
     return _o_sharedMainInstance;
 }
 
@@ -361,30 +387,6 @@ static VLCMain *_o_sharedMainInstance = nil;
     /* Check if we already did this once. Opening the other nibs calls it too,
        because VLCMain is the owner */
     if( nib_main_loaded ) return;
-
-    /* check whether the user runs a valid version of OS X */
-    if( MACOS_VERSION < 10.5f )
-    {
-        NSAlert *ourAlert;
-        int i_returnValue;
-        NSString *o_blabla;
-        if( MACOS_VERSION == 10.4f )
-            o_blabla = _NS("VLC's last release for your OS is the 0.9 series." );
-        else if( MACOS_VERSION == 10.3f )
-            o_blabla = _NS("VLC's last release for your OS is VLC 0.8.6i, which is prone to known security issues." );
-        else // 10.2 and 10.1, still 3% of the OS X market share
-            o_blabla = _NS("VLC's last release for your OS is VLC 0.7.2, which is highly out of date and prone to " \
-                         "known security issues. We recommend you to update your Mac to a modern version of Mac OS X.");
-        ourAlert = [NSAlert alertWithMessageText: _NS("Your version of Mac OS X is no longer supported")
-                                   defaultButton: _NS("Quit")
-                                 alternateButton: NULL
-                                     otherButton: NULL
-                       informativeTextWithFormat: _NS("VLC media player %s requires Mac OS X 10.5 or higher.\n\n%@"), VLC_Version(), o_blabla];
-        [ourAlert setAlertStyle: NSCriticalAlertStyle];
-        i_returnValue = [ourAlert runModal];
-        [NSApp performSelectorOnMainThread: @selector(terminate:) withObject:nil waitUntilDone:NO];
-        return;
-    }
 
     [self initStrings];
 
@@ -416,6 +418,9 @@ static VLCMain *_o_sharedMainInstance = nil;
     i_key = config_GetInt( p_intf, "key-slower" );
     [o_mi_slower setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
     [o_mi_slower setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
+    i_key = config_GetInt( p_intf, "key-rate-normal" );
+    [o_mi_normalSpeed setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
+    [o_mi_normalSpeed setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
     i_key = config_GetInt( p_intf, "key-prev" );
     [o_mi_previous setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
     [o_mi_previous setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
@@ -449,12 +454,24 @@ static VLCMain *_o_sharedMainInstance = nil;
     i_key = config_GetInt( p_intf, "key-vol-mute" );
     [o_mi_mute setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
     [o_mi_mute setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
-    i_key = config_GetInt( p_intf, "key-fullscreen" );
+    i_key = config_GetInt( p_intf, "key-toggle-fullscreen" );
     [o_mi_fullscreen setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
     [o_mi_fullscreen setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
     i_key = config_GetInt( p_intf, "key-snapshot" );
     [o_mi_snapshot setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
     [o_mi_snapshot setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
+    i_key = config_GetInt( p_intf, "key-random" );
+    [o_mi_random setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
+    [o_mi_random setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
+    i_key = config_GetInt( p_intf, "key-zoom-half" );
+    [o_mi_half_window setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
+    [o_mi_half_window setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
+    i_key = config_GetInt( p_intf, "key-zoom-original" );
+    [o_mi_normal_window setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
+    [o_mi_normal_window setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
+    i_key = config_GetInt( p_intf, "key-zoom-double" );
+    [o_mi_double_window setKeyEquivalent: [NSString stringWithFormat:@"%C", VLCKeyToCocoa( i_key )]];
+    [o_mi_double_window setKeyEquivalentModifierMask: VLCModifiersToCocoa(i_key)];
 
     var_Create( p_intf, "intf-change", VLC_VAR_BOOL );
 
@@ -462,7 +479,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_volumeslider setEnabled: YES];
     [self manageVolumeSlider];
     [o_window setDelegate: self];
- 
+
     b_restore_size = false;
 
     // Set that here as IB seems to be buggy
@@ -490,19 +507,16 @@ static VLCMain *_o_sharedMainInstance = nil;
 
     o_size_with_playlist = [o_window contentRectForFrameRect:[o_window frame]].size;
 
-    p_playlist = pl_Hold( p_intf );
+    p_playlist = pl_Get( p_intf );
 
-    var_Create( p_playlist, "fullscreen", VLC_VAR_BOOL | VLC_VAR_DOINHERIT);
     val.b_bool = false;
 
     var_AddCallback( p_playlist, "fullscreen", FullscreenChanged, self);
     var_AddCallback( p_intf->p_libvlc, "intf-show", ShowController, self);
 
-    pl_Release( p_intf );
-
     /* load our Core Dialogs nib */
     nib_coredialogs_loaded = [NSBundle loadNibNamed:@"CoreDialogs" owner: NSApp];
-    
+
     /* subscribe to various interactive dialogues */
     var_Create( p_intf, "dialog-error", VLC_VAR_ADDRESS );
     var_AddCallback( p_intf, "dialog-error", DialogCallback, self );
@@ -526,12 +540,7 @@ static VLCMain *_o_sharedMainInstance = nil;
 
     /* take care of tint changes during runtime */
     o_img_play = [NSImage imageNamed: @"play"];
-    o_img_pause = [NSImage imageNamed: @"pause"];    
-    [self controlTintChanged];
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector( controlTintChanged )
-                                                 name: NSControlTintDidChangeNotification
-                                               object: nil];
+    o_img_pause = [NSImage imageNamed: @"pause"];
 
     /* init Apple Remote support */
     o_remote = [[AppleRemote alloc] init];
@@ -564,16 +573,19 @@ static VLCMain *_o_sharedMainInstance = nil;
 {
     if( !p_intf ) return;
 
+    /* init media key support */
+    b_mediaKeySupport = config_GetInt( VLCIntf, "macosx-mediakeys" );
+    if( b_mediaKeySupport )
+    {
+        o_mediaKeyController = [[SPMediaKeyTap alloc] initWithDelegate:self];
+        [o_mediaKeyController startWatchingMediaKeys];
+        [[NSUserDefaults standardUserDefaults] registerDefaults:[NSDictionary dictionaryWithObjectsAndKeys:
+                                                                 [SPMediaKeyTap defaultMediaKeyUserBundleIdentifiers], kMediaKeyUsingBundleIdentifiersDefaultsKey,
+                                                                 nil]];
+    }
+    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(coreChangedMediaKeySupportSetting:) name: @"VLCMediaKeySupportSettingChanged" object: nil];
+
     [self _removeOldPreferences];
-
-#ifdef UPDATE_CHECK
-    /* Check for update silently on startup */
-    if( !nib_update_loaded )
-        nib_update_loaded = [NSBundle loadNibNamed:@"Update" owner: NSApp];
-
-    if([o_update shouldCheckForUpdate])
-        [NSThread detachNewThreadSelector:@selector(checkForUpdate) toTarget:o_update withObject:nil];
-#endif
 
     /* Handle sleep notification */
     [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self selector:@selector(computerWillSleep:)
@@ -641,6 +653,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_stop setTitle: _NS("Stop")];
     [o_mi_faster setTitle: _NS("Faster")];
     [o_mi_slower setTitle: _NS("Slower")];
+    [o_mi_normalSpeed setTitle: _NS("Normal rate")];
     [o_mi_previous setTitle: _NS("Previous")];
     [o_mi_next setTitle: _NS("Next")];
     [o_mi_random setTitle: _NS("Random")];
@@ -691,6 +704,8 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mi_addSub setTitle: _NS("Open File...")];
     [o_mi_deinterlace setTitle: _NS("Deinterlace")];
     [o_mu_deinterlace setTitle: _NS("Deinterlace")];
+    [o_mi_deinterlace_mode setTitle: _NS("Deinterlace mode")];
+    [o_mu_deinterlace_mode setTitle: _NS("Deinterlace mode")];
     [o_mi_ffmpeg_pp setTitle: _NS("Post processing")];
     [o_mu_ffmpeg_pp setTitle: _NS("Post processing")];
     [o_mi_teletext setTitle: _NS("Teletext")];
@@ -704,6 +719,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_mu_window setTitle: _NS("Window")];
     [o_mi_minimize setTitle: _NS("Minimize Window")];
     [o_mi_close_window setTitle: _NS("Close Window")];
+    [o_mi_player setTitle: _NS("Player...")];
     [o_mi_controller setTitle: _NS("Controller...")];
     [o_mi_equalizer setTitle: _NS("Equalizer...")];
     [o_mi_extended setTitle: _NS("Extended Controls...")];
@@ -730,7 +746,7 @@ static VLCMain *_o_sharedMainInstance = nil;
     [o_dmi_next setTitle: _NS("Next")];
     [o_dmi_previous setTitle: _NS("Previous")];
     [o_dmi_mute setTitle: _NS("Mute")];
- 
+
     /* vout menu */
     [o_vmi_play setTitle: _NS("Play")];
     [o_vmi_stop setTitle: _NS("Stop")];
@@ -775,19 +791,27 @@ static VLCMain *_o_sharedMainInstance = nil;
     playlist_t * p_playlist;
     vout_thread_t * p_vout;
     int returnedValue = 0;
- 
-    if( !p_intf ) return;
+
+    if( !p_intf )
+        return;
+
+    // don't allow a double termination call. If the user has
+    // already invoked the quit then simply return this time.
+    int isTerminating = false;
+
+    [o_appLock lock];
+    isTerminating = (f_appExit++ > 0 ? 1 : 0);
+    [o_appLock unlock];
+
+    if (isTerminating)
+        return;
 
     msg_Dbg( p_intf, "Terminating" );
 
-    /* Make sure the manage_thread won't call -terminate: again */
-    pthread_cancel( manage_thread );
+    pthread_join( manage_thread, NULL );
 
     /* Make sure the intf object is getting killed */
     vlc_object_kill( p_intf );
-
-    /* Make sure our manage_thread ends */
-    pthread_join( manage_thread, NULL );
 
     /* Make sure the interfaceTimer is destroyed */
     [interfaceTimer invalidate];
@@ -816,6 +840,9 @@ static VLCMain *_o_sharedMainInstance = nil;
 
     /* release some other objects here, because it isn't sure whether dealloc
      * will be called later on */
+    if( o_mediaKeyController )
+        [o_mediaKeyController release];
+
     if( nib_about_loaded )
         [o_about release];
 
@@ -845,13 +872,9 @@ static VLCMain *_o_sharedMainInstance = nil;
     if( nib_wizard_loaded )
         [o_wizard release];
 
-#ifdef UPDATE_CHECK
-    [o_update release]; 
-#endif
-
     [crashLogURLConnection cancel];
     [crashLogURLConnection release];
- 
+
     [o_embedded_list release];
     [o_coredialogs release];
     [o_eyetv release];
@@ -877,18 +900,24 @@ static VLCMain *_o_sharedMainInstance = nil;
 
     /* Kill the playlist, so that it doesn't accept new request
      * such as the play request from vlc.c (we are a blocking interface). */
-    p_playlist = pl_Hold( p_intf );
+    p_playlist = pl_Get( p_intf );
     vlc_object_kill( p_playlist );
-    pl_Release( p_intf );
-
     libvlc_Quit( p_intf->p_libvlc );
 
     [self setIntf:nil];
+}
 
-    /* Go back to Run() and make libvlc exit properly */
-    if( jmpbuffer )
-        longjmp( jmpbuffer, 1 );
-    /* not reached */
+#pragma mark -
+#pragma mark Sparkle delegate
+/* received directly before the update gets installed, so let's shut down a bit */
+- (void)updater:(SUUpdater *)updater willInstallUpdate:(SUAppcastItem *)update
+{
+    [o_remote stopListening: self];
+    var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_STOP );
+
+    /* Close the window directly, because we do know that there
+     * won't be anymore video. It's currently waiting a bit. */
+    [[[o_controls voutView] window] orderOut:self];
 }
 
 #pragma mark -
@@ -952,56 +981,62 @@ static NSString * VLCToolbarMediaControl     = @"VLCToolbarMediaControl";
 }
 
 #pragma mark -
-#pragma mark Other notification
+#pragma mark Media Key support
 
-- (void)controlTintChanged
+-(void)mediaKeyTap:(SPMediaKeyTap*)keyTap receivedMediaKeyEvent:(NSEvent*)event
 {
-    BOOL b_playing = NO;
-    
-    if( [o_btn_play alternateImage] == o_img_play_pressed )
-        b_playing = YES;
-    
-    if( [NSColor currentControlTint] == NSGraphiteControlTint )
-    {
-        o_img_play_pressed = [NSImage imageNamed: @"play_graphite"];
-        o_img_pause_pressed = [NSImage imageNamed: @"pause_graphite"];
-        
-        [o_btn_prev setAlternateImage: [NSImage imageNamed: @"previous_graphite"]];
-        [o_btn_rewind setAlternateImage: [NSImage imageNamed: @"skip_previous_graphite"]];
-        [o_btn_stop setAlternateImage: [NSImage imageNamed: @"stop_graphite"]];
-        [o_btn_ff setAlternateImage: [NSImage imageNamed: @"skip_forward_graphite"]];
-        [o_btn_next setAlternateImage: [NSImage imageNamed: @"next_graphite"]];
-        [o_btn_fullscreen setAlternateImage: [NSImage imageNamed: @"fullscreen_graphite"]];
-        [o_btn_playlist setAlternateImage: [NSImage imageNamed: @"playlistdrawer_graphite"]];
-        [o_btn_equalizer setAlternateImage: [NSImage imageNamed: @"equalizerdrawer_graphite"]];
+    if( b_mediaKeySupport )
+       {
+        assert([event type] == NSSystemDefined && [event subtype] == SPSystemDefinedEventMediaKeys);
+
+        int keyCode = (([event data1] & 0xFFFF0000) >> 16);
+        int keyFlags = ([event data1] & 0x0000FFFF);
+        int keyState = (((keyFlags & 0xFF00) >> 8)) == 0xA;
+        int keyRepeat = (keyFlags & 0x1);
+
+        if( keyCode == NX_KEYTYPE_PLAY && keyState == 0 )
+            var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_PLAY_PAUSE );
+
+        if( keyCode == NX_KEYTYPE_FAST && !b_mediakeyJustJumped )
+        {
+            if( keyState == 0 && keyRepeat == 0 )
+                var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_NEXT );
+            else if( keyRepeat == 1 )
+            {
+                var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_JUMP_FORWARD_SHORT );
+                b_mediakeyJustJumped = YES;
+                [self performSelector:@selector(resetMediaKeyJump)
+                           withObject: NULL
+                           afterDelay:0.25];
+            }
+        }
+
+        if( keyCode == NX_KEYTYPE_REWIND && !b_mediakeyJustJumped )
+        {
+            if( keyState == 0 && keyRepeat == 0 )
+                var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_PREV );
+            else if( keyRepeat == 1 )
+            {
+                var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_JUMP_BACKWARD_SHORT );
+                b_mediakeyJustJumped = YES;
+                [self performSelector:@selector(resetMediaKeyJump)
+                           withObject: NULL
+                           afterDelay:0.25];
+            }
+        }
     }
-    else
-    {
-        o_img_play_pressed = [NSImage imageNamed: @"play_blue"];
-        o_img_pause_pressed = [NSImage imageNamed: @"pause_blue"];
-        
-        [o_btn_prev setAlternateImage: [NSImage imageNamed: @"previous_blue"]];
-        [o_btn_rewind setAlternateImage: [NSImage imageNamed: @"skip_previous_blue"]];
-        [o_btn_stop setAlternateImage: [NSImage imageNamed: @"stop_blue"]];
-        [o_btn_ff setAlternateImage: [NSImage imageNamed: @"skip_forward_blue"]];
-        [o_btn_next setAlternateImage: [NSImage imageNamed: @"next_blue"]];
-        [o_btn_fullscreen setAlternateImage: [NSImage imageNamed: @"fullscreen_blue"]];
-        [o_btn_playlist setAlternateImage: [NSImage imageNamed: @"playlistdrawer_blue"]];
-        [o_btn_equalizer setAlternateImage: [NSImage imageNamed: @"equalizerdrawer_blue"]];
-    }
-    
-    if( b_playing )
-        [o_btn_play setAlternateImage: o_img_play_pressed];
-    else
-        [o_btn_play setAlternateImage: o_img_pause_pressed];
 }
+
+#pragma mark -
+#pragma mark Other notification
 
 /* Listen to the remote in exclusive mode, only when VLC is the active
    application */
 - (void)applicationDidBecomeActive:(NSNotification *)aNotification
 {
     if( !p_intf ) return;
-    [o_remote startListening: self];
+	if( config_GetInt( p_intf, "macosx-appleremote" ) == YES )
+		[o_remote startListening: self];
 }
 - (void)applicationDidResignActive:(NSNotification *)aNotification
 {
@@ -1015,9 +1050,7 @@ static NSString * VLCToolbarMediaControl     = @"VLCToolbarMediaControl";
     /* Pause */
     if( p_intf && p_intf->p_sys->i_play_status == PLAYING_S )
     {
-        vlc_value_t val;
-        val.i_int = config_GetInt( p_intf, "key-play-pause" );
-        var_Set( p_intf->p_libvlc, "key-pressed", val );
+        var_SetInteger( p_intf->p_libvlc, "key-action", ACTIONID_PLAY_PAUSE );
     }
 }
 
@@ -1027,7 +1060,14 @@ static NSString * VLCToolbarMediaControl     = @"VLCToolbarMediaControl";
 - (BOOL)application:(NSApplication *)o_app openFile:(NSString *)o_filename
 {
     BOOL b_autoplay = config_GetInt( VLCIntf, "macosx-autoplay" );
-    NSDictionary *o_dic = [NSDictionary dictionaryWithObjectsAndKeys: o_filename, @"ITEM_URL", nil];
+    char *psz_uri = make_URI([o_filename UTF8String]);
+    if( !psz_uri )
+        return( FALSE );
+
+    NSDictionary *o_dic = [NSDictionary dictionaryWithObject:[NSString stringWithCString:psz_uri encoding:NSUTF8StringEncoding] forKey:@"ITEM_URL"];
+
+    free( psz_uri );
+
     if( b_autoplay )
         [o_playlist appendArray: [NSArray arrayWithObject: o_dic] atPos: -1 enqueue: NO];
     else
@@ -1038,7 +1078,7 @@ static NSString * VLCToolbarMediaControl     = @"VLCToolbarMediaControl";
 
 /* When user click in the Dock icon our double click in the finder */
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)hasVisibleWindows
-{    
+{
     if(!hasVisibleWindows)
         [o_window makeKeyAndOrderFront:self];
 
@@ -1086,6 +1126,12 @@ static NSString * VLCToolbarMediaControl     = @"VLCToolbarMediaControl";
 {
     switch( buttonIdentifier )
     {
+        case k2009RemoteButtonFullscreen:
+            [o_controls toogleFullscreen:self];
+            break;
+        case k2009RemoteButtonPlay:
+            [o_controls play:self];
+            break;
         case kRemoteButtonPlay:
             if(count >= 2) {
                 [o_controls toogleFullscreen:self];
@@ -1261,8 +1307,6 @@ static struct
     { NSCarriageReturnCharacter, KEY_ENTER },
     { NSEnterCharacter, KEY_ENTER },
     { NSBackspaceCharacter, KEY_BACKSPACE },
-    { (unichar) ' ', KEY_SPACE },
-    { (unichar) 0x1b, KEY_ESC },
     {0,0}
 };
 
@@ -1521,8 +1565,6 @@ static void manage_cleanup( void * args )
     var_DelCallback( p_playlist, "playlist-item-append", PlaylistChanged, self );
     var_DelCallback( p_playlist, "playlist-item-deleted", PlaylistChanged, self );
 
-    pl_Release( p_intf );
-
     if( p_input ) vlc_object_release( p_input );
 }
 
@@ -1535,7 +1577,7 @@ static void manage_cleanup( void * args )
 
     vlc_thread_set_priority( p_intf, VLC_THREAD_PRIORITY_LOW );
 
-    p_playlist = pl_Hold( p_intf );
+    p_playlist = pl_Get( p_intf );
 
     var_AddCallback( p_playlist, "item-current", PlaylistChanged, self );
     var_AddCallback( p_playlist, "intf-change", PlaylistChanged, self );
@@ -1546,7 +1588,8 @@ static void manage_cleanup( void * args )
     struct manage_cleanup_stack stack = { p_intf, &p_input, p_playlist, self };
     pthread_cleanup_push(manage_cleanup, &stack);
 
-    while( true )
+    bool exitLoop = false;
+    while( !exitLoop )
     {
         NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
 
@@ -1581,20 +1624,21 @@ static void manage_cleanup( void * args )
         msleep( INTF_IDLE_SLEEP );
 
         [pool release];
+
+        [o_appLock lock];
+        exitLoop = (f_appExit != 0 ? true : false);
+        [o_appLock unlock];
     }
 
     pthread_cleanup_pop(1);
-
-    msg_Dbg( p_intf, "Killing the Mac OS X module" );
-
-    /* We are dead, terminate */
-    [NSApp performSelectorOnMainThread: @selector(terminate:) withObject:nil waitUntilDone:NO];
 }
 
 - (void)manageVolumeSlider
 {
     audio_volume_t i_volume;
-    aout_VolumeGet( p_intf, &i_volume );
+    playlist_t * p_playlist = pl_Get( p_intf );
+
+    aout_VolumeGet( p_playlist, &i_volume );
 
     if( i_volume != i_lastShownVolume )
     {
@@ -1621,13 +1665,12 @@ static void manage_cleanup( void * args )
          * the playlist or the selection is empty */
         if( [self isPlaylistCollapsed] == YES )
         {
-            playlist_t * p_playlist = pl_Hold( p_intf );
+            playlist_t * p_playlist = pl_Get( p_intf );
             PL_LOCK;
             playlist_item_t * p_item = playlist_CurrentPlayingItem( p_playlist );
             PL_UNLOCK;
             if( p_item )
                 [[self info] updatePanelWithItem: p_item->p_input];
-            pl_Release( p_intf );
         }
     }
     if( p_intf->p_sys->b_intf_update )
@@ -1638,7 +1681,7 @@ static void manage_cleanup( void * args )
         bool b_seekable = false;
         bool b_chapters = false;
 
-        playlist_t * p_playlist = pl_Hold( p_intf );
+        playlist_t * p_playlist = pl_Get( p_intf );
 
         PL_LOCK;
         b_plmul = playlist_CurrentSize( p_playlist ) > 1;
@@ -1647,7 +1690,7 @@ static void manage_cleanup( void * args )
         p_input = playlist_CurrentInput( p_playlist );
 
         bool b_buffering = NO;
-    
+
         if( ( b_input = ( p_input != NULL ) ) )
         {
             /* seekable streams */
@@ -1668,7 +1711,6 @@ static void manage_cleanup( void * args )
             //b_chapters = p_input->stream.i_area_nb > 1;
             vlc_object_release( p_input );
         }
-        pl_Release( p_intf );
 
         if( b_buffering )
         {
@@ -1683,10 +1725,13 @@ static void manage_cleanup( void * args )
         }
 
         [o_btn_stop setEnabled: b_input];
+        [o_embedded_window setStop: b_input];
         [o_btn_ff setEnabled: b_seekable];
         [o_btn_rewind setEnabled: b_seekable];
         [o_btn_prev setEnabled: (b_plmul || b_chapters)];
+        [o_embedded_window setPrev: (b_plmul || b_chapters)];
         [o_btn_next setEnabled: (b_plmul || b_chapters)];
+        [o_embedded_window setNext: (b_plmul || b_chapters)];
 
         [o_timeslider setFloatValue: 0.0];
         [o_timeslider setEnabled: b_seekable];
@@ -1695,9 +1740,10 @@ static void manage_cleanup( void * args )
         [[[self controls] fspanel] setSeekable: b_seekable];
 
         [o_embedded_window setSeekable: b_seekable];
+        [o_embedded_window setTime:@"00:00" position:0.0];
 
         p_intf->p_sys->b_current_title_update = true;
-        
+
         p_intf->p_sys->b_intf_update = false;
     }
 
@@ -1749,7 +1795,7 @@ static void manage_cleanup( void * args )
             [[[self controls] fspanel] setStreamTitle: aString];
 
             [[o_controls voutView] updateTitle];
- 
+
             [o_playlist updateRowSelection];
 
             p_intf->p_sys->b_current_title_update = FALSE;
@@ -1815,6 +1861,8 @@ static void manage_cleanup( void * args )
         i_volume_step = config_GetInt( p_intf->p_libvlc, "volume-step" );
         [o_volumeslider setFloatValue: (float)i_lastShownVolume / i_volume_step];
         [o_volumeslider setEnabled: TRUE];
+        [o_embedded_window setVolumeSlider: (float)i_lastShownVolume / i_volume_step];
+        [o_embedded_window setVolumeEnabled: TRUE];
         [[[self controls] fspanel] setVolumeLevel: (float)i_lastShownVolume / i_volume_step];
         p_intf->p_sys->b_mute = ( i_lastShownVolume == 0 );
         p_intf->p_sys->b_volume_update = FALSE;
@@ -1838,7 +1886,7 @@ end:
 
 - (void)setupMenus
 {
-    playlist_t * p_playlist = pl_Hold( p_intf );
+    playlist_t * p_playlist = pl_Get( p_intf );
     input_thread_t * p_input = playlist_CurrentInput( p_playlist );
     if( p_input != NULL )
     {
@@ -1896,6 +1944,9 @@ end:
             [o_controls setupVarMenuItem: o_mi_deinterlace target: (vlc_object_t *)p_vout
                 var: "deinterlace" selector: @selector(toggleVar:)];
 
+            [o_controls setupVarMenuItem: o_mi_deinterlace_mode target: (vlc_object_t *)p_vout
+                var: "deinterlace-mode" selector: @selector(toggleVar:)];
+
 #if 1
            [o_controls setupVarMenuItem: o_mi_ffmpeg_pp target:
                     (vlc_object_t *)p_vout var:"postprocess" selector:
@@ -1906,18 +1957,15 @@ end:
         }
         vlc_object_release( p_input );
     }
-    pl_Release( p_intf );
 }
 
 - (void)refreshVoutDeviceMenu:(NSNotification *)o_notification
 {
-    int x,y = 0;
-    vout_thread_t * p_vout = vlc_object_find( p_intf, VLC_OBJECT_VOUT,
-                                              FIND_ANYWHERE );
- 
-    if(! p_vout )
+    int x, y = 0;
+    vout_thread_t * p_vout = getVout();
+    if( !p_vout )
         return;
- 
+
     /* clean the menu before adding new entries */
     if( [o_mi_screen hasSubmenu] )
     {
@@ -1943,11 +1991,12 @@ end:
     else
         i_end_scroll = -1;
     [o_scrollfield setStringValue: o_string];
+    [o_embedded_window setScrollString: o_string];
 }
 
 - (void)resetScrollField
 {
-    playlist_t * p_playlist = pl_Hold( p_intf );
+    playlist_t * p_playlist = pl_Get( p_intf );
     input_thread_t * p_input = playlist_CurrentInput( p_playlist );
 
     i_end_scroll = -1;
@@ -1964,10 +2013,8 @@ end:
         [self setScrollField: o_temp stopAfter:-1];
         [[[self controls] fspanel] setStreamTitle: o_temp];
         vlc_object_release( p_input );
-        pl_Release( p_intf );
         return;
     }
-    pl_Release( p_intf );
     [self setScrollField: _NS("VLC media player") stopAfter:-1];
 }
 
@@ -2006,6 +2053,7 @@ end:
     [o_mi_subtitle setEnabled: b_enabled];
     [o_mi_channels setEnabled: b_enabled];
     [o_mi_deinterlace setEnabled: b_enabled];
+    [o_mi_deinterlace_mode setEnabled: b_enabled];
     [o_mi_ffmpeg_pp setEnabled: b_enabled];
     [o_mi_device setEnabled: b_enabled];
     [o_mi_screen setEnabled: b_enabled];
@@ -2031,7 +2079,7 @@ end:
         default:
             return;
     }
-    p_playlist = pl_Hold( p_intf );
+    p_playlist = pl_Get( p_intf );
     p_input = playlist_CurrentInput( p_playlist );
     if( p_input != NULL )
     {
@@ -2059,14 +2107,13 @@ end:
         [o_embedded_window setTime: o_time position: f_updated];
         vlc_object_release( p_input );
     }
-    pl_Release( p_intf );
 }
 
 - (IBAction)timeFieldWasClicked:(id)sender
 {
     b_time_remaining = !b_time_remaining;
 }
-    
+
 
 #pragma mark -
 #pragma mark Recent Items
@@ -2178,7 +2225,7 @@ end:
         nib_wizard_loaded = [NSBundle loadNibNamed:@"Wizard" owner: NSApp];
         [o_wizard initStrings];
     }
- 
+
     if( !nib_bookmarks_loaded )
         nib_bookmarks_loaded = [NSBundle loadNibNamed:@"Bookmarks" owner: NSApp];
 
@@ -2195,21 +2242,6 @@ end:
     }
 
     [o_sprefs showSimplePrefs];
-}
-
-#pragma mark -
-#pragma mark Update
-
-- (IBAction)checkForUpdate:(id)sender
-{
-#ifdef UPDATE_CHECK
-    if( !nib_update_loaded )
-        nib_update_loaded = [NSBundle loadNibNamed:@"Update" owner: NSApp];
-    [o_update showUpdateWindow];
-#else
-    msg_Err( VLCIntf, "Update checker wasn't enabled in this build" );
-    dialog_FatalWait( VLCIntf, _("Update check failed"), _("Checking for updates was not enabled in this build.") );
-#endif
 }
 
 #pragma mark -
@@ -2230,7 +2262,7 @@ end:
 
     [o_about showGPL: sender];
 }
-    
+
 - (IBAction)viewHelp:(id)sender
 {
     if( !nib_about_loaded )
@@ -2349,7 +2381,7 @@ end:
 
             // Dooh. ugly.
             if( year < [[compo objectAtIndex:0] intValue] ||
-                (year ==[[compo objectAtIndex:0] intValue] && 
+                (year ==[[compo objectAtIndex:0] intValue] &&
                  (month < [[compo objectAtIndex:1] intValue] ||
                   (month ==[[compo objectAtIndex:1] intValue] &&
                    (day   < [[compo objectAtIndex:2] intValue] ||
@@ -2426,7 +2458,7 @@ end:
     int version = [[NSUserDefaults standardUserDefaults] integerForKey:kVLCPreferencesVersion];
     if( version >= kCurrentPreferencesVersion ) return;
 
-    NSArray *libraries = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, 
+    NSArray *libraries = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,
         NSUserDomainMask, YES);
     if( !libraries || [libraries count] == 0) return;
     NSString * preferences = [[libraries objectAtIndex:0] stringByAppendingPathComponent:@"Preferences"];
@@ -2488,7 +2520,7 @@ end:
 {
     if(! nib_info_loaded )
         nib_info_loaded = [NSBundle loadNibNamed:@"MediaInfo" owner: NSApp];
-    
+
     [o_info initPanel];
 }
 
@@ -2557,9 +2589,8 @@ end:
 
     o_attr = [NSDictionary dictionaryWithObject: pp_color[i_type]
                                          forKey: NSForegroundColorAttributeName];
-    o_msg = [[[o_notification userInfo] objectForKey: @"Message"] stringByAppendingString: @"\n"];
-    o_msg_color = [[NSAttributedString alloc]
-                   initWithString: o_msg attributes: o_attr];
+    o_msg = [NSString stringWithFormat:@"%@\n", [[o_notification userInfo] objectForKey: @"Message"]];
+    o_msg_color = [[NSAttributedString alloc] initWithString: o_msg attributes: o_attr];
     [o_msg_arr addObject: [o_msg_color autorelease]];
 
     b_msg_arr_changed = YES;
@@ -2569,7 +2600,7 @@ end:
 - (IBAction)saveDebugLog:(id)sender
 {
     NSOpenPanel * saveFolderPanel = [[NSSavePanel alloc] init];
-    
+
     [saveFolderPanel setCanChooseDirectories: NO];
     [saveFolderPanel setCanChooseFiles: YES];
     [saveFolderPanel setCanSelectHiddenExtension: NO];
@@ -2608,7 +2639,7 @@ end:
             o_rect.size.height = o_size_with_playlist.height;
         else
             o_rect.size.height = 500.;
- 
+
         if( o_size_with_playlist.width >= [o_window contentMinSize].width )
             o_rect.size.width = o_size_with_playlist.width;
         else
@@ -2809,101 +2840,55 @@ end:
     [o_inv invoke];
     [o_lock unlockWithCondition: 1];
 }
+- (void)resetMediaKeyJump
+{
+    b_mediakeyJustJumped = NO;
+}
+- (void)coreChangedMediaKeySupportSetting: (NSNotification *)o_notification
+{
+    b_mediaKeySupport = config_GetInt( VLCIntf, "macosx-mediakeys" );
+    if (b_mediaKeySupport) {
+        if (!o_mediaKeyController)
+            o_mediaKeyController = [[SPMediaKeyTap alloc] initWithDelegate:self];
+        [o_mediaKeyController startWatchingMediaKeys];
+    }
+    else if (!b_mediaKeySupport && o_mediaKeyController)
+    {
+        int returnedValue = NSRunInformationalAlertPanel(_NS("Relaunch required"),
+                                               _NS("To make sure that VLC no longer listens to your media key events, it needs to be restarted."),
+                                               _NS("Relaunch VLC"), _NS("Ignore"), nil, nil);
+        if( returnedValue == NSOKButton )
+        {
+            /* Relaunch now */
+            const char * path = [[[NSBundle mainBundle] executablePath] UTF8String];
+
+            /* For some reason we need to fork(), not just execl(), which reports a ENOTSUP then. */
+            if(fork() != 0)
+            {
+                exit(0);
+                return;
+            }
+            execl(path, path, NULL);
+        }
+    }
+}
 
 @end
 
 /*****************************************************************************
  * VLCApplication interface
- * exclusively used to implement media key support on Al Apple keyboards
- *   b_justJumped is required as the keyboard send its events faster than
- *    the user can actually jump through his media
  *****************************************************************************/
 
 @implementation VLCApplication
-
-- (void)awakeFromNib
+// when user selects the quit menu from dock it sends a terminate:
+// but we need to send a stop: to properly exits libvlc.
+// However, we are not able to change the action-method sent by this standard menu item.
+// thus we override terminat: to send a stop:
+// see [af97f24d528acab89969d6541d83f17ce1ecd580] that introduced the removal of setjmp() and longjmp() 
+- (void)terminate:(id)sender
 {
-	b_active = b_mediaKeySupport = config_GetInt( VLCIntf, "macosx-mediakeys" );
-    b_activeInBackground = config_GetInt( VLCIntf, "macosx-mediakeys-background" );
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(coreChangedMediaKeySupportSetting:) name: @"VLCMediaKeySupportSettingChanged" object: nil];
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appGotActiveOrInactive:) name: @"NSApplicationDidBecomeActiveNotification" object: nil];
-    [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(appGotActiveOrInactive:) name: @"NSApplicationWillResignActiveNotification" object: nil];
-}
-
-- (void)dealloc
-{
-    [[NSNotificationCenter defaultCenter] removeObserver: self];
-    [super dealloc];
-}
-
-- (void)appGotActiveOrInactive: (NSNotification *)o_notification
-{
-    if(( [[o_notification name] isEqualToString: @"NSApplicationWillResignActiveNotification"] && !b_activeInBackground ) || !b_mediaKeySupport)
-        b_active = NO;
-    else
-        b_active = YES;
-}
-
-- (void)coreChangedMediaKeySupportSetting: (NSNotification *)o_notification
-{
-    b_active = b_mediaKeySupport = config_GetInt( VLCIntf, "macosx-mediakeys" );
-    b_activeInBackground = config_GetInt( VLCIntf, "macosx-mediakeys-background" );
-}
-
-
-- (void)sendEvent: (NSEvent*)event
-{
-    if( b_active )
-	{
-        if( [event type] == NSSystemDefined && [event subtype] == 8 )
-        {
-            int keyCode = (([event data1] & 0xFFFF0000) >> 16);
-            int keyFlags = ([event data1] & 0x0000FFFF);
-            int keyState = (((keyFlags & 0xFF00) >> 8)) == 0xA;
-            int keyRepeat = (keyFlags & 0x1);
-
-            if( keyCode == NX_KEYTYPE_PLAY && keyState == 0 )
-                var_SetInteger( VLCIntf->p_libvlc, "key-action", ACTIONID_PLAY_PAUSE );
-
-            if( keyCode == NX_KEYTYPE_FAST && !b_justJumped )
-            {
-                if( keyState == 0 && keyRepeat == 0 )
-                {
-                        var_SetInteger( VLCIntf->p_libvlc, "key-action", ACTIONID_NEXT );
-                }
-                else if( keyRepeat == 1 )
-                {
-                    var_SetInteger( VLCIntf->p_libvlc, "key-action", ACTIONID_JUMP_FORWARD_SHORT );
-                    b_justJumped = YES;
-                    [self performSelector:@selector(resetJump)
-                               withObject: NULL
-                               afterDelay:0.25];
-                }
-            }
-
-            if( keyCode == NX_KEYTYPE_REWIND && !b_justJumped )
-            {
-                if( keyState == 0 && keyRepeat == 0 )
-                {
-                    var_SetInteger( VLCIntf->p_libvlc, "key-action", ACTIONID_PREV );
-                }
-                else if( keyRepeat == 1 )
-                {
-                    var_SetInteger( VLCIntf->p_libvlc, "key-action", ACTIONID_JUMP_BACKWARD_SHORT );
-                    b_justJumped = YES;
-                    [self performSelector:@selector(resetJump)
-                               withObject: NULL
-                               afterDelay:0.25];
-                }
-            }
-        }
-    }
-	[super sendEvent: event];
-}
-
-- (void)resetJump
-{
-    b_justJumped = NO;
+    [self activateIgnoringOtherApps:YES];
+    [self stop:sender];
 }
 
 @end

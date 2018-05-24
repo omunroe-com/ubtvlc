@@ -2,7 +2,7 @@
  * dirac.c
  *****************************************************************************
  * Copyright (C) 2008 the VideoLAN team
- * $Id: 75f9ce5796c3c6fc74f12cbc2066dc93b31dcc0b $
+ * $Id: 63010d602c8c96668cdc2c4e48629e1324d2301b $
  *
  * Authors: David Flynn <davidf@rd.bbc.co.uk>
  *
@@ -51,7 +51,7 @@
  *        distinguish from the fake dts case.)
  *
  *  DIRAC_NON_DATED is used to show a block should not have a time stamp
- *  associated (ie, don't interpolate a counter).  At the ouput, these
+ *  associated (ie, don't interpolate a counter).  At the output, these
  *  blocks get dated with the last used timestamp (or are merged with
  *  another encapsulation unit).
  */
@@ -70,8 +70,8 @@
 #include <vlc_codec.h>
 #include <vlc_block.h>
 
-#include "vlc_bits.h"
-#include "vlc_block_helper.h"
+#include <vlc_bits.h>
+#include <vlc_block_helper.h>
 
 #define SANITIZE_PREV_PARSE_OFFSET 1
 
@@ -279,7 +279,7 @@ static int block_ChainToArray( block_t *p_block, block_t ***ppp_array)
     block_ChainProperties( p_block, &i_num_blocks, NULL, NULL );
 
     *ppp_array = calloc( i_num_blocks, sizeof( block_t* ) );
-    if( !ppp_array ) return 0;
+    if( !*ppp_array ) return 0;
 
     for( int i = 0; i < i_num_blocks; i++ )
     {
@@ -922,8 +922,7 @@ static int dirac_InspectDataUnit( decoder_t *p_dec, block_t **pp_block, block_t 
          *  - required for ogg muxing
          *  - useful for error checking
          *  - it isn't allowed to change until an eos */
-        if( p_es->p_extra )
-            free( p_es->p_extra );
+        free( p_es->p_extra );
         p_es->p_extra = calloc( 1, p_block->i_buffer + 13 );
         if( !p_es->p_extra )
         {
@@ -1259,7 +1258,7 @@ static block_t *Packetize( decoder_t *p_dec, block_t **pp_block )
     block_t *p_output = NULL;
     block_t **pp_output = &p_output;
 
-    /* extract all the dated packets from the head of the ouput queue */
+    /* extract all the dated packets from the head of the output queue */
     /* explicitly nondated packets repeat the previous timestamps to
      * stop vlc discarding them */
     while( (p_block = p_sys->p_outqueue) )
@@ -1349,7 +1348,7 @@ static int Open( vlc_object_t *p_this )
     decoder_t     *p_dec = (decoder_t*)p_this;
     decoder_sys_t *p_sys;
 
-    if( p_dec->fmt_in.i_codec !=  VLC_FOURCC( 'd','r','a','c' ) )
+    if( p_dec->fmt_in.i_codec !=  VLC_CODEC_DIRAC )
         return VLC_EGENERIC;
 
     p_dec->pf_packetize = Packetize;

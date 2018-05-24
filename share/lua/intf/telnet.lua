@@ -58,7 +58,7 @@ function on_password( client )
     if client.type == host.client_type.net then
         client:send( "Password: " ..IAC..WILL..ECHO )
     else
-        -- no authentification needed on stdin
+        -- no authentication needed on stdin
         client:switch_status( host.status.read )
     end
 end
@@ -78,15 +78,13 @@ function vlm_message_to_string(client,message,prefix)
     local prefix = prefix or ""
     if message.value then
         client:append(prefix .. message.name .. " : " .. message.value)
-        return
     else
         client:append(prefix .. message.name)
-        if message.children then
-            for i,c in ipairs(message.children) do
-                vlm_message_to_string(client,c,prefix.."    ")
-            end
+    end
+    if message.children then
+        for i,c in ipairs(message.children) do
+            vlm_message_to_string(client,c,prefix.."    ")
         end
-        return
     end
 end
 
@@ -172,8 +170,7 @@ end
 
 --[[ The main loop ]]
 while not vlc.misc.should_die() do
-    h:accept()
-    local w, r = h:select( 0.1 )
+    local w, r = h:accept_and_select()
 
     -- Handle writes
     for _, client in pairs(w) do
@@ -185,28 +182,39 @@ while not vlc.misc.should_die() do
     -- Handle reads
     for _, client in pairs(r) do
         local str = client:recv(1000)
-        local done = false
-        if string.match(str,"\n$") then
-            client.buffer = string.gsub(client.buffer..str,"\r?\n$","")
-            done = true
-        elseif client.buffer == ""
-           and ((client.type == host.client_type.stdio and str == "")
-           or  (client.type == host.client_type.net and str == "\004")) then
+
+        if not str or str == "" -- the telnet client program has left
+           or  (client.type == host.client_type.net and str == "\004") then
             -- Caught a ^D
-            client.buffer = "quit"
-            done = true
+            client.cmds = "quit\n"
         else
-            client.buffer = client.buffer .. str
+            client.cmds = client.cmds .. str
         end
-        if client.type == host.client_type.net then
-            telnet_commands( client )
-        end
-        if done then
+
+        client.buffer = ""
+        -- split the command at the first '\n'
+        while string.find(client.cmds, "\n") do
+            -- save the buffer to send to the client
+            local saved_buffer = client.buffer
+
+            -- get the next command
+            local index = string.find(client.cmds, "\n")
+            client.buffer = string.gsub(string.sub(client.cmds, 0, index - 1), "^%s*(.-)%s*$", "%1")
+            client.cmds = string.sub(client.cmds, index + 1)
+
+            -- Remove telnet commands from the command line
+            if client.type == host.client_type.net then
+                telnet_commands( client )
+            end
+
+            -- Run the command
             if client.status == host.status.password then
                 if client.buffer == password then
                     client:send( IAC..WONT..ECHO.."\r\nWelcome, Master\r\n" )
                     client.buffer = ""
                     client:switch_status( host.status.write )
+                elseif client.buffer == "quit" then
+                    client_command( client )
                 else
                     client:send( "\r\nWrong password\r\nPassword: " )
                     client.buffer = ""
@@ -214,6 +222,7 @@ while not vlc.misc.should_die() do
             elseif client_command( client ) then
                 client:switch_status( host.status.write )
             end
+            client.buffer = saved_buffer .. client.buffer
         end
     end
 end

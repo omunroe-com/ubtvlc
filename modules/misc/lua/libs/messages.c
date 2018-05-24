@@ -2,7 +2,7 @@
  * messages.c
  *****************************************************************************
  * Copyright (C) 2007-2008 the VideoLAN team
- * $Id: 5d3dce06d5d5cc5fa8beb5b3169b975429993c65 $
+ * $Id: 9c40e539f6a1b19b55d0c3a48c41b524e2883d1c $
  *
  * Authors: Antoine Cellerier <dionoea at videolan tod org>
  *          Pierre d'Herbemont <pdherbemont # videolan.org>
@@ -36,7 +36,6 @@
 #include <vlc_common.h>
 #include <vlc_plugin.h>
 #include <vlc_meta.h>
-#include <vlc_charset.h>
 #include <vlc_aout.h>
 
 #include <lua.h>        /* Low level lua C API */
@@ -55,7 +54,7 @@ static int vlclua_msg_dbg( lua_State *L )
     vlc_object_t *p_this = vlclua_get_this( L );
     int i;
     for( i = 1; i <= i_top; i++ )
-        msg_Dbg( p_this, "%s", luaL_checkstring( L, 1 ) );
+        msg_Dbg( p_this, "%s", luaL_checkstring( L, i ) );
     return 0;
 }
 
