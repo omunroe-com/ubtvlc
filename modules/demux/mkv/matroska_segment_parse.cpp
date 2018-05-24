@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2010 the VideoLAN team
- * $Id: 4ad9e68c00b1bcd3ce1f99b8f0fe03dfe0b9be58 $
+ * $Id: 0466d94d161f4f1e37b743b078d69f1204e4e2f0 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -1008,6 +1008,17 @@ void matroska_segment_c::ParseAttachments( KaxAttachments *attachments )
         {
              memcpy( new_attachment->p_data, img_data.GetBuffer(), img_data.GetSize() );
              sys.stored_attachments.push_back( new_attachment );
+             if( !strncmp( new_attachment->mimeType(), "image/", 6 ) )
+             {
+                 char *psz_url;
+                 if( asprintf( &psz_url, "attachment://%s",
+                             new_attachment->fileName() ) == -1 )
+                     continue;
+                 if( !sys.meta )
+                     sys.meta = vlc_meta_New();
+                 vlc_meta_SetArtURL( sys.meta, psz_url );
+                 free( psz_url );
+             }
         }
         else
         {

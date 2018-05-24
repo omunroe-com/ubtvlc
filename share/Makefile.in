@@ -950,14 +950,15 @@ EXTRA_DIST = vlc.desktop.in $(skins2_default_vlt_FILES) $(DIST_rsrc) \
 	lua/playlist/france2.lua lua/playlist/googlevideo.lua \
 	lua/playlist/jamendo.lua lua/playlist/joox.lua \
 	lua/playlist/katsomo.lua lua/playlist/koreus.lua \
-	lua/playlist/lelombrik.lua lua/playlist/megavideo.lua \
-	lua/playlist/metacafe.lua lua/playlist/metachannels.lua \
-	lua/playlist/mpora.lua lua/playlist/pinkbike.lua \
-	lua/playlist/pluzz.lua lua/playlist/rockbox_fm_presets.lua \
-	lua/playlist/vimeo.lua lua/playlist/youtube.lua \
-	lua/playlist/youtube_homepage.lua lua/playlist/zapiks.lua \
-	lua/sd/README.txt lua/sd/fmc.lua lua/sd/freebox.lua \
-	lua/sd/icecast.lua lua/sd/jamendo.lua lua/sd/metachannels.lua
+	lua/playlist/lelombrik.lua lua/playlist/metacafe.lua \
+	lua/playlist/metachannels.lua lua/playlist/mpora.lua \
+	lua/playlist/pinkbike.lua lua/playlist/pluzz.lua \
+	lua/playlist/rockbox_fm_presets.lua \
+	lua/playlist/soundcloud.lua lua/playlist/vimeo.lua \
+	lua/playlist/youtube.lua lua/playlist/youtube_homepage.lua \
+	lua/playlist/zapiks.lua lua/sd/README.txt lua/sd/fmc.lua \
+	lua/sd/freebox.lua lua/sd/icecast.lua lua/sd/jamendo.lua \
+	lua/sd/metachannels.lua
 appdatadir = $(datadir)/applications
 @HAVE_WIN32_FALSE@@HAVE_WINCE_FALSE@appdata_DATA = vlc.desktop
 iconsdatadir = $(datadir)/icons/hicolor
@@ -1075,13 +1076,13 @@ luac_verbose_0 = @echo "  LUAC   $@";
 @BUILD_LUA_TRUE@	lua/playlist/katsomo.luac \
 @BUILD_LUA_TRUE@	lua/playlist/koreus.luac \
 @BUILD_LUA_TRUE@	lua/playlist/lelombrik.luac \
-@BUILD_LUA_TRUE@	lua/playlist/megavideo.luac \
 @BUILD_LUA_TRUE@	lua/playlist/metacafe.luac \
 @BUILD_LUA_TRUE@	lua/playlist/metachannels.luac \
 @BUILD_LUA_TRUE@	lua/playlist/mpora.luac \
 @BUILD_LUA_TRUE@	lua/playlist/pinkbike.luac \
 @BUILD_LUA_TRUE@	lua/playlist/pluzz.luac \
 @BUILD_LUA_TRUE@	lua/playlist/rockbox_fm_presets.luac \
+@BUILD_LUA_TRUE@	lua/playlist/soundcloud.luac \
 @BUILD_LUA_TRUE@	lua/playlist/vimeo.luac \
 @BUILD_LUA_TRUE@	lua/playlist/youtube.luac \
 @BUILD_LUA_TRUE@	lua/playlist/youtube_homepage.luac \

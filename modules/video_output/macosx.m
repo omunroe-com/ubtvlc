@@ -2,7 +2,7 @@
  * voutgl.m: MacOS X OpenGL provider
  *****************************************************************************
  * Copyright (C) 2001-2012 the VideoLAN team
- * $Id: ae064a9263e19de4fa340ff7cde0658bd7bb0bf3 $
+ * $Id: 9100d9818cc9db9edb48105c402e673c84406282 $
  *
  * Authors: Colin Delacroix <colin@zoy.org>
  *          Florian G. Pflug <fgp@phlo.org>
@@ -337,10 +337,11 @@ static int Control (vout_display_t *vd, int query, va_list ap)
             return VLC_SUCCESS;
         case VOUT_DISPLAY_CHANGE_DISPLAY_SIZE:
         {
+            // is needed in the case we do not an actual resize
+            [sys->glView performSelectorOnMainThread:@selector(reshapeView:) withObject:nil waitUntilDone:NO];
+
             if (!config_GetInt( vd, "macosx-video-autoresize" ))
                 return VLC_SUCCESS;
-
-            [sys->glView performSelectorOnMainThread:@selector(reshapeView:) withObject:nil waitUntilDone:NO];
 
             NSAutoreleasePool * o_pool = [[NSAutoreleasePool alloc] init];
             NSPoint topleftbase;

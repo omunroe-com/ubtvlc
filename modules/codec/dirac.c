@@ -7,7 +7,7 @@
  *          ##
  *****************************************************************************
  * Copyright (C) 2004-2008 the VideoLAN team
- * $Id: 7573f3d7dcf260b2c12f0ee5a1aec67b51e9ab64 $
+ * $Id: 6301535d0b68d9638c4a4d07b3b0e4fd4db61156 $
  *
  * Authors: Gildas Bazin <gbazin@videolan.org>
  * Rewritten: David Flynn <davidf at rd.bbc.co.uk>
@@ -252,7 +252,7 @@ vlc_module_begin()
     change_integer_range(-1, INT_MAX);
 
     add_integer( ENC_CFG_PREFIX ENC_MCBLK_HEIGHT, -1,
-                 ENC_MCBLK_HEIGHT, ENC_MCBLK_HEIGHT_LONGTEXT, false )
+                 ENC_MCBLK_HEIGHT_TEXT, ENC_MCBLK_HEIGHT_LONGTEXT, false )
     change_integer_range(-1, INT_MAX);
 
     add_integer( ENC_CFG_PREFIX ENC_MCBLK_OVERLAP, -1,

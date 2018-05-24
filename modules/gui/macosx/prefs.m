@@ -2,7 +2,7 @@
  * prefs.m: MacOS X module for vlc
  *****************************************************************************
  * Copyright (C) 2002-2006 VLC authors and VideoLAN
- * $Id: dc91a3977e5b16a037128041fab1470122b4731c $
+ * $Id: 11eb51a075bea398900e58f88b483710d1632a8d $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videolan dot org>
@@ -478,13 +478,20 @@ static VLCPrefs *_o_sharedMainInstance = nil;
 @implementation VLCTreePluginItem
 - (id)initWithPlugin:(module_t *)plugin
 {
-    NSString * name = _NS( module_get_name( plugin, false )?:"" );
+    const char * psz_name = module_get_name( plugin, false );
+    NSString * name;
+    if (psz_name)
+        name = _NS(psz_name);
+    else
+        name = @"";
+
     if(self = [super initWithName:name])
     {
         _configItems = module_config_get( plugin, &_configSize );
         //_plugin = plugin;
         //_help = [_NS(config_CategoryHelpGet( subCategory )) retain];
     }
+
     return self;
 }
 

@@ -2,7 +2,7 @@
  * playlist.m: MacOS X interface module
  *****************************************************************************
 * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: ff88139a4c40f3a708b41c1726c982d742254b9b $
+ * $Id: 1d12022b6f30e7f5abd85e8c44b5d2c81942b53d $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Derk-Jan Hartman <hartman at videola/n dot org>
@@ -1124,18 +1124,16 @@
         playlist_AddInput( p_playlist, p_input, PLAYLIST_INSERT, i_position == -1 ? PLAYLIST_END : i_position + i_item, b_usingPlaylist,
          pl_Locked );
 
+        if( i_item == 0 && !b_enqueue )
+        {
+            playlist_item_t *p_item = playlist_ItemGetByInput( p_playlist, p_input );
+            playlist_Control( p_playlist, PLAYLIST_VIEWPLAY, pl_Locked, p_item->p_parent, p_item );
+        }
+
         vlc_gc_decref( p_input );
     }
     PL_UNLOCK;
-    if( i_position == -1 )
-        i_position = [o_outline_dict count] - 1;
-
     [self playlistUpdated];
-    if( !b_enqueue )
-    {
-        [o_outline_view selectRowIndexes:[NSIndexSet indexSetWithIndex:i_position] byExtendingSelection:NO];
-        [self playItem:nil];
-    }
 }
 
 - (void)appendNodeArray:(NSArray*)o_array inNode:(playlist_item_t *)p_node atPos:(int)i_position enqueue:(BOOL)b_enqueue
@@ -1502,12 +1500,6 @@
         }
     }
 
-    /* Don't allow on drop on playlist root element's child */
-    if( !item && index != NSOutlineViewDropOnItemIndex)
-    {
-        return NSDragOperationNone;
-    }
-
     /* We refuse to drop an item in anything else than a child of the General
        Node. We still accept items that would be root nodes of the outlineview
        however, to allow drop in an empty playlist. */
@@ -1555,10 +1547,17 @@
         NSArray *o_all_items = [o_nodes_array arrayByAddingObjectsFromArray:
                                                                 o_items_array];
         /* If the item is to be dropped as root item of the outline, make it a
-           child of the General node.
+           child of the respective general node, if is either the pl or the ml
            Else, choose the proposed parent as parent. */
-        if( item == nil ) p_new_parent = p_playlist->p_local_category;
-        else p_new_parent = [item pointerValue];
+        if( item == nil )
+        {
+            if ([self currentPlaylistRoot] == p_playlist->p_local_category || [self currentPlaylistRoot] == p_playlist->p_ml_category) 
+                p_new_parent = [self currentPlaylistRoot];
+            else
+                p_new_parent = p_playlist->p_local_category;
+        }
+        else
+            p_new_parent = [item pointerValue];
 
         /* Make sure the proposed parent is a node.
            (This should never be true) */
@@ -1637,6 +1636,18 @@
                                 sortedArrayUsingSelector: @selector(caseInsensitiveCompare:)];
         NSUInteger count = [o_values count];
         NSMutableArray *o_array = [NSMutableArray arrayWithCapacity:count];
+        input_thread_t * p_input = pl_CurrentInput( VLCIntf );
+        BOOL b_returned = NO;
+
+        if (count == 1 && p_input)
+        {
+            b_returned = input_AddSubtitle( p_input, make_URI([[o_values objectAtIndex:0] UTF8String], NULL), true );
+            vlc_object_release( p_input );
+            if(!b_returned)
+                return YES;
+        }
+        else if( p_input )
+            vlc_object_release( p_input );
 
         for( NSUInteger i = 0; i < count; i++)
         {

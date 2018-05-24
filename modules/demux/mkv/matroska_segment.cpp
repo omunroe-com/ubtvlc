@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2010 the VideoLAN team
- * $Id: 17e659bad21c63148afaa6e1cd0b8e210e61d15f $
+ * $Id: c0a0d037d3ca5ea077dcac0af6e178b10290373e $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -725,10 +725,12 @@ void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset, int64_t i_
         }
     }
 
+#ifndef WIN32
     /* Don't try complex seek if we seek to 0 */
     if( i_date == 0 )
     {
         es_out_Control( sys.demuxer.out, ES_OUT_SET_NEXT_DISPLAY_TIME, 0 );
+        es_out_Control( sys.demuxer.out, ES_OUT_SET_PCR, VLC_TS_0 );
         es.I_O().setFilePointer( i_start_pos );
 
         delete ep;
@@ -736,8 +738,10 @@ void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset, int64_t i_
         cluster = NULL;
         sys.i_start_pts = 0;
         sys.i_pts = 0;
+        sys.i_pcr = 0;
         return;       
     }
+#endif
 
     if ( i_index > 0 )
     {
@@ -847,8 +851,10 @@ void matroska_segment_c::Seek( mtime_t i_date, mtime_t i_time_offset, int64_t i_
         if( p_last->i_date < p_min->i_date )
             p_min = p_last;
 
-    sys.i_pts = p_min->i_date;
+    sys.i_pcr = sys.i_pts = p_min->i_date;
+    es_out_Control( sys.demuxer.out, ES_OUT_SET_PCR, VLC_TS_0 + sys.i_pcr );
     cluster = (KaxCluster *) ep->UnGet( p_min->i_seek_pos, p_min->i_cluster_pos );
+
 
     /* hack use BlockGet to get the cluster then goto the wanted block */
     if ( !cluster )

@@ -2,7 +2,7 @@
  * mkv.cpp : matroska demuxer
  *****************************************************************************
  * Copyright (C) 2003-2004 the VideoLAN team
- * $Id: db72f5d9e084185d1e3edd7f86e6690c80e16291 $
+ * $Id: ce7c966a8e28950b8cf7bc8e7eaf8ecc39f996d1 $
  *
  * Authors: Laurent Aimar <fenrir@via.ecp.fr>
  *          Steve Lhomme <steve.lhomme@free.fr>
@@ -332,6 +332,7 @@ public:
     demux_sys_t( demux_t & demux )
         :demuxer(demux)
         ,i_pts(0)
+        ,i_pcr(0)
         ,i_start_pts(0)
         ,i_chapter_time(0)
         ,meta(NULL)
@@ -351,6 +352,7 @@ public:
     demux_t                 & demuxer;
 
     mtime_t                 i_pts;
+    mtime_t                 i_pcr;
     mtime_t                 i_start_pts;
     mtime_t                 i_chapter_time;
 

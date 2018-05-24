@@ -2,7 +2,7 @@
  * x11_display.cpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: d259556d890dcf1b718001409ea45e8ab27ea93d $
+ * $Id: ac02312cf7994210a7adca806d3ab0faea3eb829 $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -63,7 +63,7 @@ X11Display::X11Display( intf_thread_t *pIntf ): SkinObject( pIntf ),
     m_pDisplay = XOpenDisplay( NULL );
     if( m_pDisplay == NULL )
     {
-        MSG_ERR( "Cannot open display" );
+        msg_Dbg( pIntf, "Cannot open X display" );
         return;
     }
 

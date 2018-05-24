@@ -4,7 +4,7 @@
  * interface, such as command line.
  *****************************************************************************
  * Copyright (C) 1998-2007 VLC authors and VideoLAN
- * $Id: 709bf73e1eb52ab0ac43f6fc38caac4ec5bc8a18 $
+ * $Id: 1a60fa10dd40fe57dcdd032f4ec50f2917a80b4a $
  *
  * Authors: Vincent Seguin <seguin@via.ecp.fr>
  *
@@ -201,6 +201,9 @@ void intf_DestroyAll( libvlc_int_t *p_libvlc )
         if( p_intf->pf_run )
         {
             vlc_cancel( p_intf->thread );
+#ifdef __APPLE__
+            if (!p_intf->b_should_run_on_first_thread)
+#endif
             vlc_join( p_intf->thread, NULL );
         }
         module_unneed( p_intf, p_intf->p_module );

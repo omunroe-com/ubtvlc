@@ -381,6 +381,9 @@
 /* Define to 1 if MMX intrinsics are available. */
 #undef HAVE_MMX_INTRINSICS
 
+/* Define to 1 if you have the <mntent.h> header file. */
+#undef HAVE_MNTENT_H
+
 /* Define to 1 if you have the <mpcdec/mpcdec.h> header file. */
 #undef HAVE_MPCDEC_MPCDEC_H
 

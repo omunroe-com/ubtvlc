@@ -188,13 +188,13 @@ nobase_vlclib_DATA = \
 	lua/playlist/katsomo.luac \
 	lua/playlist/koreus.luac \
 	lua/playlist/lelombrik.luac \
-	lua/playlist/megavideo.luac \
 	lua/playlist/metacafe.luac \
 	lua/playlist/metachannels.luac \
 	lua/playlist/mpora.luac \
 	lua/playlist/pinkbike.luac \
 	lua/playlist/pluzz.luac \
 	lua/playlist/rockbox_fm_presets.luac \
+	lua/playlist/soundcloud.luac \
 	lua/playlist/vimeo.luac \
 	lua/playlist/youtube.luac \
 	lua/playlist/youtube_homepage.luac \
@@ -258,13 +258,13 @@ EXTRA_DIST += \
 	lua/playlist/katsomo.lua \
 	lua/playlist/koreus.lua \
 	lua/playlist/lelombrik.lua \
-	lua/playlist/megavideo.lua \
 	lua/playlist/metacafe.lua \
 	lua/playlist/metachannels.lua \
 	lua/playlist/mpora.lua \
 	lua/playlist/pinkbike.lua \
 	lua/playlist/pluzz.lua \
 	lua/playlist/rockbox_fm_presets.lua \
+	lua/playlist/soundcloud.lua \
 	lua/playlist/vimeo.lua \
 	lua/playlist/youtube.lua \
 	lua/playlist/youtube_homepage.lua \

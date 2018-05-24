@@ -3,7 +3,7 @@
  *****************************************************************************
  * Copyright (C) 2009 Geoffroy Couprie
  * Copyright (C) 2009 Laurent Aimar
- * $Id: a46c0c3776aa037dce1d4bb85392874943dcb9aa $
+ * $Id: 6d47a419cf69b8ef738ca92ce5175c8444fa0704 $
  *
  * Authors: Geoffroy Couprie <geal@videolan.org>
  *          Laurent Aimar <fenrir _AT_ videolan _DOT_ org>
@@ -434,7 +434,7 @@ static int Extract(vlc_va_t *external, picture_t *picture, AVFrame *ff)
     if (va->render == MAKEFOURCC('Y','V','1','2') ||
         va->render == MAKEFOURCC('I','M','C','3')) {
         bool imc3 = va->render == MAKEFOURCC('I','M','C','3');
-        size_t chroma_pitch = imc3 ? lock.Pitch : lock.Pitch / 2;
+        size_t chroma_pitch = imc3 ? lock.Pitch : (lock.Pitch / 2);
 
         size_t pitch[3] = {
             lock.Pitch,

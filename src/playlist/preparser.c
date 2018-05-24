@@ -2,7 +2,7 @@
  * preparse.c: Preparser thread.
  *****************************************************************************
  * Copyright © 1999-2009 VLC authors and VideoLAN
- * $Id: d5fc865074924c00f9a767e6cab83e2785115823 $
+ * $Id: ba9a8d979c7046d8ed7f78396c02d2d5c5c51b87 $
  *
  * Authors: Samuel Hocevar <sam@zoy.org>
  *          Clément Stenac <zorglub@videolan.org>
@@ -167,7 +167,9 @@ static void Art( playlist_preparser_t *p_preparser, input_item_t *p_item )
         const char *psz_name = vlc_meta_Get( p_item->p_meta, vlc_meta_Title );
 
         if( p_preparser->i_art_policy == ALBUM_ART_ALL &&
-            ( !psz_arturl || strncmp( psz_arturl, "file://", 7 ) ) )
+                ( !psz_arturl ||
+                  ( strncmp( psz_arturl, "file://", 7 ) &&
+                    strncmp( psz_arturl, "attachment://", 13 ) ) ) )
         {
             msg_Dbg( p_playlist, "meta ok for %s, need to fetch art",
                      psz_name ? psz_name : "(null)" );

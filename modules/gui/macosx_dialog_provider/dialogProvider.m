@@ -2,7 +2,7 @@
  * dialogProvider.m: Minimal Dialog Provider for Mac OS X
  *****************************************************************************
  * Copyright (C) 2009-2011 the VideoLAN team
- * $Id: ed6af0ea3b166f85c5e29c604e6a57588c465915 $
+ * $Id: 785fe00b1e63c4d5939a12751ae67a9eeff909cb $
  *
  * Authors: Felix Paul Kühne <fkuehne at videolan dot org>
  *          Pierre d'Herbemont <pdherbemont # videolan dot>
@@ -463,7 +463,6 @@ bool checkProgressPanel (void *priv)
 #pragma mark Last.FM support
 - (void)globalNotificationReceived: (NSNotification *)theNotification
 {
-    NSLog(@"globalNotificationReceived");
     NSDictionary *userData = [theNotification userInfo];
     BOOL lastFMEnabled = [[userData objectForKey:@"enabled"] intValue];
     NSString *lastFMUsername = [userData objectForKey:@"username"];
@@ -491,7 +490,6 @@ bool checkProgressPanel (void *priv)
     VLCDialogButton *button = sender;
     extension_widget_t *widget = [button widget];
 
-    NSLog(@"(triggerClick)");
     vlc_mutex_lock(&widget->p_dialog->lock);
     extension_WidgetClicked(widget->p_dialog, widget);
     vlc_mutex_unlock(&widget->p_dialog->lock);
@@ -677,7 +675,6 @@ static void updateControlFromWidget(NSView *control, extension_widget_t *widget,
 //            NSString *string = [NSString stringWithUTF8String:widget->psz_text];
 //            NSAttributedString *attrString = [[NSAttributedString alloc] initWithHTML:[string dataUsingEncoding:NSISOLatin1StringEncoding] documentAttributes:NULL];
 //            [[textView textStorage] setAttributedString:[[NSAttributedString alloc] initWithString:@"Hello"]];
-//            NSLog(@"%@", string);
 //            [textView setNeedsDisplay:YES];
 //            [textView scrollRangeToVisible:NSMakeRange(0, 0)];
 //            [attrString release];
@@ -762,7 +759,6 @@ static void updateControlFromWidget(NSView *control, extension_widget_t *widget,
             NSImageView *imageView = (NSImageView *)control;
             NSString *string = widget->psz_text ? [NSString stringWithUTF8String:widget->psz_text] : nil;
             NSImage *image = nil;
-            NSLog(@"Setting image to %@", string);
             if (string)
                 image = [[NSImage alloc] initWithContentsOfURL:[NSURL fileURLWithPath:string]];
             [imageView setImage:image];

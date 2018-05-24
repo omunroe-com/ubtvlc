@@ -2,7 +2,7 @@
  * open.m: Open dialogues for VLC's MacOS X port
  *****************************************************************************
  * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: c1ec64155686c1b4f4337e766d46655f00d0e6bb $
+ * $Id: 069000ea85fb97958914f7b56d4f6af291728cff $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -822,7 +822,7 @@ static VLCOpen *_o_sharedMainInstance = nil;
             [self setMRL: [NSString stringWithFormat: @"dvdnav://%@", pathToOpen]];
             [self showOpticalMediaView: o_disc_dvd_view withIcon: [[NSWorkspace sharedWorkspace] iconForFile: o_currentOpticalDevice]];
         } else {
-            [self setMRL: [NSString stringWithFormat: @"dvdread://%@@%i:%i-", pathToOpen, [o_disc_dvdwomenus_title intValue], [o_disc_dvdwomenus_chapter intValue]]];
+            [self setMRL: [NSString stringWithFormat: @"dvdread://%@#%i:%i-", pathToOpen, [o_disc_dvdwomenus_title intValue], [o_disc_dvdwomenus_chapter intValue]]];
             [self showOpticalMediaView: o_disc_dvdwomenus_view withIcon: [[NSWorkspace sharedWorkspace] iconForFile: o_currentOpticalDevice]];
         }
     }

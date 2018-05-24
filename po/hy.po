@@ -4,12 +4,11 @@
 # Eduard Babayan <edo248@gmail.com>, 2010.
 #
 #
-#: modules/gui/macosx/prefs.m:481 modules/gui/macosx/simple_prefs.m:440
 msgid ""
 msgstr ""
 "Project-Id-Version: vlc\n"
 "Report-Msgid-Bugs-To: vlc-devel@videolan.org\n"
-"POT-Creation-Date: 2012-02-13 01:18+0100\n"
+"POT-Creation-Date: 2012-02-17 18:54+0100\n"
 "PO-Revision-Date: 2010-09-21 15:58+0400\n"
 "Last-Translator: Eduard Babayan <edo248@gmail.com>\n"
 "Language-Team: VLC Armenian <edo248@gmail.com>\n"
@@ -389,7 +388,7 @@ msgstr "VLC ի իրականացման Վիդեո պահանջով`"
 
 #: include/vlc_config_cat.h:175 src/libvlc-module.c:2163
 #: src/playlist/engine.c:217 modules/demux/playlist/playlist.c:63
-#: modules/demux/playlist/playlist.c:64 modules/gui/macosx/MainWindow.m:309
+#: modules/demux/playlist/playlist.c:64 modules/gui/macosx/MainWindow.m:311
 #: modules/gui/qt4/components/controller.hpp:116
 #: modules/gui/qt4/components/playlist/playlist.cpp:191
 #: modules/gui/qt4/components/playlist/selector.cpp:187
@@ -590,7 +589,7 @@ msgstr "&Ծրագրի Մասին"
 #: modules/gui/macosx/MainMenu.m:266 modules/gui/macosx/MainMenu.m:363
 #: modules/gui/macosx/MainMenu.m:370 modules/gui/macosx/MainMenu.m:846
 #: modules/gui/macosx/MainMenu.m:847 modules/gui/macosx/MainMenu.m:848
-#: modules/gui/macosx/MainWindow.m:1135 modules/gui/macosx/playlist.m:487
+#: modules/gui/macosx/MainWindow.m:1147 modules/gui/macosx/playlist.m:487
 #: modules/gui/qt4/components/controller.hpp:114
 #: modules/gui/qt4/dialogs/vlm.cpp:550 modules/gui/qt4/menus.cpp:790
 #: modules/gui/qt4/ui/open.h:253
@@ -637,12 +636,12 @@ msgstr "Հոսք..."
 msgid "Save..."
 msgstr "Պահել..."
 
-#: include/vlc_intf_strings.h:80 modules/gui/macosx/CoreInteraction.m:371
+#: include/vlc_intf_strings.h:80 modules/gui/macosx/CoreInteraction.m:421
 #: modules/gui/macosx/MainMenu.m:280 modules/gui/macosx/MainMenu.m:1178
 msgid "Repeat All"
 msgstr "Կրկնել բոլորը"
 
-#: include/vlc_intf_strings.h:81 modules/gui/macosx/CoreInteraction.m:388
+#: include/vlc_intf_strings.h:81 modules/gui/macosx/CoreInteraction.m:442
 #: modules/gui/macosx/MainMenu.m:279 modules/gui/macosx/MainMenu.m:1171
 msgid "Repeat One"
 msgstr "Կրկնել Մեկը"
@@ -658,7 +657,7 @@ msgstr "Չկրկնել"
 msgid "Random"
 msgstr "Պատահական"
 
-#: include/vlc_intf_strings.h:85 modules/gui/macosx/CoreInteraction.m:352
+#: include/vlc_intf_strings.h:85 modules/gui/macosx/CoreInteraction.m:398
 msgid "Random Off"
 msgstr "Պատահականը Անջատել"
 
@@ -851,7 +850,7 @@ msgstr ""
 
 #: src/audio_output/common.c:85 src/audio_output/common.c:125
 #: src/input/es_out.c:934 src/libvlc-module.c:683
-#: src/video_output/postprocessing.c:98 modules/gui/macosx/MainWindow.m:1965
+#: src/video_output/postprocessing.c:98 modules/gui/macosx/MainWindow.m:1987
 #: modules/video_filter/postproc.c:228
 msgid "Disable"
 msgstr "Անջատել"
@@ -1320,7 +1319,7 @@ msgid "Title"
 msgstr "Վերնագիր"
 
 #: src/input/meta.c:55 modules/gui/macosx/playlistinfo.m:79
-#: modules/gui/macosx/playlist.m:1199
+#: modules/gui/macosx/playlist.m:1197
 msgid "Artist"
 msgstr "Արտիստ"
 
@@ -2725,8 +2724,8 @@ msgstr ""
 #: modules/audio_output/alsa.c:71 modules/audio_output/alsa.c:819
 #: modules/gui/fbosd.c:172 modules/gui/macosx/MainMenu.m:502
 #: modules/gui/macosx/prefs_widgets.m:1311
-#: modules/gui/macosx/simple_prefs.m:422 modules/gui/macosx/simple_prefs.m:563
-#: modules/gui/macosx/simple_prefs.m:790
+#: modules/gui/macosx/simple_prefs.m:422 modules/gui/macosx/simple_prefs.m:575
+#: modules/gui/macosx/simple_prefs.m:802
 #: modules/gui/qt4/components/preferences_widgets.cpp:626
 #: modules/video_filter/marq.c:59 modules/video_filter/rss.c:71
 #: modules/video_filter/rss.c:184 modules/video_output/msw/directx.c:88
@@ -2734,7 +2733,7 @@ msgid "Default"
 msgstr "Հիմնական"
 
 #: src/libvlc-module.c:683 modules/gui/macosx/AudioEffects.m:66
-#: modules/gui/macosx/MainWindow.m:1963 modules/gui/macosx/wizard.m:357
+#: modules/gui/macosx/MainWindow.m:1985 modules/gui/macosx/wizard.m:357
 #: modules/gui/qt4/ui/equalizer.h:133 modules/gui/qt4/ui/vlm.h:290
 msgid "Enable"
 msgstr "Միացնել"
@@ -5264,7 +5263,7 @@ msgstr "Բեռնում..."
 #: modules/gui/macosx/coredialogs.m:181 modules/gui/macosx/open.m:118
 #: modules/gui/macosx/open.m:172 modules/gui/macosx/prefs.m:206
 #: modules/gui/macosx/prefs.m:226 modules/gui/macosx/simple_prefs.m:240
-#: modules/gui/macosx/simple_prefs.m:315 modules/gui/macosx/simple_prefs.m:719
+#: modules/gui/macosx/simple_prefs.m:315 modules/gui/macosx/simple_prefs.m:731
 #: modules/gui/macosx/wizard.m:323
 #: modules/gui/qt4/components/open_panels.cpp:1279
 #: modules/gui/qt4/components/preferences_widgets.cpp:1556
@@ -5348,7 +5347,7 @@ msgid "Install"
 msgstr "Install"
 
 #: src/playlist/engine.c:230 src/playlist/loadsave.c:152 lib/media_list.c:254
-#: modules/gui/macosx/MainWindow.m:311
+#: modules/gui/macosx/MainWindow.m:313
 #: modules/gui/qt4/components/playlist/selector.cpp:193
 msgid "Media Library"
 msgstr "Մեդիա գրադարան"
@@ -6210,36 +6209,36 @@ msgstr "BD"
 msgid "Blu-Ray Disc Input"
 msgstr "Blu-ray Սկավառակ"
 
-#: modules/access/bluray.c:48 modules/gui/qt4/ui/open_disk.h:299
+#: modules/access/bluray.c:52 modules/gui/qt4/ui/open_disk.h:299
 msgid "BluRay"
 msgstr ""
 
-#: modules/access/bluray.c:49
+#: modules/access/bluray.c:53
 #, fuzzy
 msgid "Blu-Ray Disc support (libbluray)"
 msgstr "Blu-ray Սկավառակ"
 
-#: modules/access/bluray.c:142
+#: modules/access/bluray.c:166
 msgid ""
 "This Blu-Ray Disc needs a library for AACS decoding, and your system does "
 "not have it."
 msgstr ""
 
-#: modules/access/bluray.c:147
+#: modules/access/bluray.c:171
 msgid "Your system AACS decoding library does not work. Missing keys?"
 msgstr ""
 
-#: modules/access/bluray.c:156
+#: modules/access/bluray.c:180
 msgid ""
 "This Blu-Ray Disc needs a library for BD+ decoding, and your system does not "
 "have it."
 msgstr ""
 
-#: modules/access/bluray.c:161
+#: modules/access/bluray.c:185
 msgid "Your system BD+ decoding library does not work. Missing configuration?"
 msgstr ""
 
-#: modules/access/bluray.c:198
+#: modules/access/bluray.c:222
 #, fuzzy
 msgid "Blu-Ray error"
 msgstr "Blu-Ray"
@@ -8684,7 +8683,7 @@ msgstr "Էկրանի մուտք"
 #: modules/access/screen/screen.c:88 modules/access/screen/xcb.c:65
 #: modules/gui/macosx/MainMenu.m:511 modules/gui/macosx/open.m:191
 #: modules/gui/macosx/open.m:427 modules/gui/macosx/open.m:1189
-#: modules/gui/macosx/simple_prefs.m:569
+#: modules/gui/macosx/simple_prefs.m:581
 msgid "Screen"
 msgstr "Էկրան"
 
@@ -14451,7 +14450,7 @@ msgid "D-Bus control interface"
 msgstr "D-Bus վերահսկողության ինտերֆեյսի"
 
 #: modules/control/dbus/dbus_root.c:75 modules/gui/macosx/MainWindow.m:255
-#: modules/gui/macosx/MainWindow.m:1048 modules/gui/qt4/dialogs/help.cpp:99
+#: modules/gui/macosx/MainWindow.m:1060 modules/gui/qt4/dialogs/help.cpp:99
 #: modules/gui/qt4/main_interface.cpp:973
 #: modules/gui/qt4/main_interface.cpp:977
 #: modules/gui/qt4/main_interface.cpp:1016
@@ -14539,8 +14538,8 @@ msgstr "Ձայնի վերահսկում"
 msgid "Position Control"
 msgstr "Դիրքի Վերահսկում"
 
-#: modules/control/hotkeys.c:97 modules/gui/macosx/intf.m:1838
-#: modules/gui/macosx/intf.m:2020
+#: modules/control/hotkeys.c:97 modules/gui/macosx/intf.m:1849
+#: modules/gui/macosx/intf.m:2031
 msgid "Ignore"
 msgstr "Անտեսել"
 
@@ -14825,7 +14824,7 @@ msgstr "Բացում"
 
 #: modules/control/rc.c:73 modules/gui/macosx/MainMenu.m:853
 #: modules/gui/macosx/MainMenu.m:854 modules/gui/macosx/MainMenu.m:855
-#: modules/gui/macosx/MainWindow.m:1127 modules/gui/qt4/menus.cpp:798
+#: modules/gui/macosx/MainWindow.m:1139 modules/gui/qt4/menus.cpp:798
 #: modules/notify/xosd.c:238
 msgid "Pause"
 msgstr "Ընդմիջել"
@@ -17585,11 +17584,11 @@ msgstr "Մաքրել"
 msgid "Show Details"
 msgstr "Ցույց տալ մանրամսները"
 
-#: modules/gui/macosx/CoreInteraction.m:343
+#: modules/gui/macosx/CoreInteraction.m:389
 msgid "Random On"
 msgstr "Պատահականը Միացնել"
 
-#: modules/gui/macosx/CoreInteraction.m:405
+#: modules/gui/macosx/CoreInteraction.m:463
 msgid "Repeat Off"
 msgstr "Կրկնումը Անջատել"
 
@@ -17611,34 +17610,34 @@ msgstr ""
 msgid "(no item is being played)"
 msgstr "(ոչինչ միացված չէ)"
 
-#: modules/gui/macosx/intf.m:672 modules/gui/qt4/dialogs/messages.cpp:75
+#: modules/gui/macosx/intf.m:661 modules/gui/qt4/dialogs/messages.cpp:75
 #: modules/gui/qt4/ui/messages_panel.h:141
 #: modules/gui/qt4/ui/messages_panel.h:146
 msgid "Messages"
 msgstr "Հաղորդագրություններ"
 
-#: modules/gui/macosx/intf.m:673
+#: modules/gui/macosx/intf.m:662
 msgid "Open CrashLog..."
 msgstr "Բացել CrashLog ..."
 
-#: modules/gui/macosx/intf.m:674
+#: modules/gui/macosx/intf.m:663
 msgid "Save this Log..."
 msgstr "Պահել այս Լոգը..."
 
-#: modules/gui/macosx/intf.m:677
+#: modules/gui/macosx/intf.m:666
 msgid "Send"
 msgstr "Ուղարկել"
 
-#: modules/gui/macosx/intf.m:678
+#: modules/gui/macosx/intf.m:667
 msgid "Don't Send"
 msgstr "Չուղարկել նամակ"
 
-#: modules/gui/macosx/intf.m:679 modules/gui/macosx/intf.m:680
+#: modules/gui/macosx/intf.m:668 modules/gui/macosx/intf.m:669
 #, fuzzy
 msgid "VLC crashed previously"
 msgstr "VLC վթարի է ենթարկվել նախկինում"
 
-#: modules/gui/macosx/intf.m:681
+#: modules/gui/macosx/intf.m:670
 #, fuzzy
 msgid ""
 "Do you want to send details on the crash to VLC's development team?\n"
@@ -17653,12 +17652,12 @@ msgstr ""
 "մինչեւ VLC վթարի է ենթարկվել հետ միասին այլ օգտակար տեղեկություններ` ա որոնք "
 "հղում են դեպի բեռնել նմուշը ֆայլ, մի URL մի ցանցի առու, ... "
 
-#: modules/gui/macosx/intf.m:682
+#: modules/gui/macosx/intf.m:671
 #, fuzzy
 msgid "I agree to be possibly contacted about this bugreport."
 msgstr "Ես համաձայն եմ լինել հնարավորինս դիմել մասին այս bugreport\"."
 
-#: modules/gui/macosx/intf.m:683
+#: modules/gui/macosx/intf.m:672
 #, fuzzy
 msgid ""
 "Only your default E-Mail address will be submitted, including no further "
@@ -17667,56 +17666,56 @@ msgstr ""
 "Միայն ձեր նախնական E-Mail հասցեն կներկայացվի, այդ թվում, ոչ մի լրացուցիչ "
 "տեղեկություն."
 
-#: modules/gui/macosx/intf.m:1718
+#: modules/gui/macosx/intf.m:1729
 #, fuzzy
 msgid "Error when sending the Crash Report"
 msgstr "Սխալ, երբ ուղարկելով վթարի Ռեպորտաժ"
 
-#: modules/gui/macosx/intf.m:1809
+#: modules/gui/macosx/intf.m:1820
 msgid "No CrashLog found"
 msgstr "CrashLog չի հայտնաբերվել"
 
-#: modules/gui/macosx/intf.m:1809 modules/gui/macosx/prefs.m:227
-#: modules/gui/macosx/simple_prefs.m:720
+#: modules/gui/macosx/intf.m:1820 modules/gui/macosx/prefs.m:227
+#: modules/gui/macosx/simple_prefs.m:732
 msgid "Continue"
 msgstr "Շարունակել"
 
-#: modules/gui/macosx/intf.m:1809
+#: modules/gui/macosx/intf.m:1820
 #, fuzzy
 msgid "Couldn't find any trace of a previous crash."
 msgstr " msgstr \"Հնարավոր չէ գտնել որեւէ հետք է նախորդ վթարի."
 
-#: modules/gui/macosx/intf.m:1836
+#: modules/gui/macosx/intf.m:1847
 msgid "Remove old preferences?"
 msgstr "Ջնջե՞լ հին նախընտրանքները"
 
-#: modules/gui/macosx/intf.m:1837
+#: modules/gui/macosx/intf.m:1848
 #, fuzzy
 msgid "We just found an older version of VLC's preferences files."
 msgstr ""
 "Մենք պարզապես գտել ավելի հին տարբերակ է VLC ի նախընտրությունների ֆայլեր."
 
-#: modules/gui/macosx/intf.m:1838
+#: modules/gui/macosx/intf.m:1849
 #, fuzzy
 msgid "Move To Trash and Relaunch VLC"
 msgstr "Թափոն փոխադրել եւ Relaunch VLC"
 
-#: modules/gui/macosx/intf.m:1949
+#: modules/gui/macosx/intf.m:1960
 #, fuzzy, c-format
 msgid "VLC Debug Log (%s).rtfd"
 msgstr "VLC Debug Մուտք (%s). Rtfd`"
 
-#: modules/gui/macosx/intf.m:2018
+#: modules/gui/macosx/intf.m:2029
 msgid "Relaunch required"
 msgstr ""
 
-#: modules/gui/macosx/intf.m:2019
+#: modules/gui/macosx/intf.m:2030
 msgid ""
 "To make sure that VLC no longer listens to your media key events, it needs "
 "to be restarted."
 msgstr ""
 
-#: modules/gui/macosx/intf.m:2020
+#: modules/gui/macosx/intf.m:2031
 msgid "Relaunch VLC"
 msgstr ""
 
@@ -17967,7 +17966,7 @@ msgstr "Ընթացք"
 msgid "Playback Speed"
 msgstr "Ընթացքի արագություն"
 
-#: modules/gui/macosx/MainMenu.m:273 modules/gui/macosx/simple_prefs.m:600
+#: modules/gui/macosx/MainMenu.m:273 modules/gui/macosx/simple_prefs.m:612
 #: modules/gui/qt4/components/simple_preferences.cpp:500
 #: modules/misc/gnutls.c:83 modules/text_renderer/freetype.c:156
 #: modules/text_renderer/freetype.c:175 modules/text_renderer/quartztext.c:114
@@ -18177,23 +18176,23 @@ msgstr "Բացել մեդիա"
 msgid "Drop media here"
 msgstr ""
 
-#: modules/gui/macosx/MainWindow.m:308
+#: modules/gui/macosx/MainWindow.m:310
 msgid "LIBRARY"
 msgstr ""
 
-#: modules/gui/macosx/MainWindow.m:313
+#: modules/gui/macosx/MainWindow.m:315
 msgid "MY COMPUTER"
 msgstr ""
 
-#: modules/gui/macosx/MainWindow.m:314
+#: modules/gui/macosx/MainWindow.m:316
 msgid "DEVICES"
 msgstr ""
 
-#: modules/gui/macosx/MainWindow.m:315
+#: modules/gui/macosx/MainWindow.m:317
 msgid "LOCAL NETWORK"
 msgstr ""
 
-#: modules/gui/macosx/MainWindow.m:316
+#: modules/gui/macosx/MainWindow.m:318
 msgid "INTERNET"
 msgstr ""
 
@@ -18289,11 +18288,11 @@ msgstr "DVD ընտրացանկեր"
 
 #: modules/gui/macosx/open.m:166 modules/gui/macosx/open.m:168
 #: modules/gui/macosx/output.m:147
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:156
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:215
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:260
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:310
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:404 modules/lua/vlc.c:72
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:157
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:217
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:263
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:314
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:434 modules/lua/vlc.c:72
 #: modules/stream_out/rtp.c:114
 #: share/lua/http/dialogs/stream_config_window.html:32
 #: share/lua/http/dialogs/stream_window.html:91
@@ -18343,10 +18342,10 @@ msgid "Protocol"
 msgstr "Պրոտոկոլ"
 
 #: modules/gui/macosx/open.m:177 modules/gui/macosx/output.m:146
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:214
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:309
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:356
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:403
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:216
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:313
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:378
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:433
 msgid "Address"
 msgstr "Հասցե"
 
@@ -18757,7 +18756,7 @@ msgstr "HTML երգացանկ"
 msgid "Save Playlist"
 msgstr "Պահել &Երգացանկը"
 
-#: modules/gui/macosx/playlist.m:1199
+#: modules/gui/macosx/playlist.m:1197
 msgid "Meta-information"
 msgstr "Մետատվյալներ"
 
@@ -18776,12 +18775,12 @@ msgstr "Վերականգնել բոլորը"
 msgid "Show Basic"
 msgstr "Հիմնական"
 
-#: modules/gui/macosx/prefs.m:226 modules/gui/macosx/simple_prefs.m:719
+#: modules/gui/macosx/prefs.m:226 modules/gui/macosx/simple_prefs.m:731
 #: modules/gui/qt4/dialogs/preferences.cpp:339
 msgid "Reset Preferences"
 msgstr "Զրոյացնել Նախընտրանքները"
 
-#: modules/gui/macosx/prefs.m:229 modules/gui/macosx/simple_prefs.m:722
+#: modules/gui/macosx/prefs.m:229 modules/gui/macosx/simple_prefs.m:734
 #, fuzzy
 msgid ""
 "Beware this will reset the VLC media player preferences.\n"
@@ -19047,55 +19046,55 @@ msgstr "Նախածանց"
 msgid "Sequential numbering"
 msgstr "Հաջորդական համարակալում"
 
-#: modules/gui/macosx/simple_prefs.m:469
+#: modules/gui/macosx/simple_prefs.m:481
 msgid "Last check on: %@"
 msgstr "Վերջին անգամ ստուգվել է %@ -իվ"
 
-#: modules/gui/macosx/simple_prefs.m:471
+#: modules/gui/macosx/simple_prefs.m:483
 msgid "No check was performed yet."
 msgstr "Ոչ մի ստուգում էր կատարվել դեռ"
 
-#: modules/gui/macosx/simple_prefs.m:600 modules/gui/macosx/simple_prefs.m:627
-#: modules/gui/macosx/simple_prefs.m:1185
+#: modules/gui/macosx/simple_prefs.m:612 modules/gui/macosx/simple_prefs.m:639
+#: modules/gui/macosx/simple_prefs.m:1197
 #: modules/gui/qt4/components/simple_preferences.cpp:497
 msgid "Custom"
 msgstr "Սեփական "
 
-#: modules/gui/macosx/simple_prefs.m:600
+#: modules/gui/macosx/simple_prefs.m:612
 #: modules/gui/qt4/components/simple_preferences.cpp:498
 msgid "Lowest latency"
 msgstr "Ամենափոքր ուշացում"
 
-#: modules/gui/macosx/simple_prefs.m:600
+#: modules/gui/macosx/simple_prefs.m:612
 #: modules/gui/qt4/components/simple_preferences.cpp:499
 msgid "Low latency"
 msgstr "Փոքր ուշացում"
 
-#: modules/gui/macosx/simple_prefs.m:601
+#: modules/gui/macosx/simple_prefs.m:613
 #: modules/gui/qt4/components/simple_preferences.cpp:501
 msgid "High latency"
 msgstr "Մեծ ուշացում"
 
-#: modules/gui/macosx/simple_prefs.m:601
+#: modules/gui/macosx/simple_prefs.m:613
 #: modules/gui/qt4/components/simple_preferences.cpp:502
 msgid "Higher latency"
 msgstr "Ավելի մեծ ուշացում"
 
-#: modules/gui/macosx/simple_prefs.m:1085
+#: modules/gui/macosx/simple_prefs.m:1097
 msgid "Choose the folder to save your video snapshots to."
 msgstr "Ընտրեք պանակ վիդեոյի նկարները պահելու համար"
 
-#: modules/gui/macosx/simple_prefs.m:1087
-#: modules/gui/macosx/simple_prefs.m:1199
+#: modules/gui/macosx/simple_prefs.m:1099
+#: modules/gui/macosx/simple_prefs.m:1211
 msgid "Choose"
 msgstr "Ընտրեք"
 
-#: modules/gui/macosx/simple_prefs.m:1197
+#: modules/gui/macosx/simple_prefs.m:1209
 #, fuzzy
 msgid "Choose the directory or filename where the records will be stored."
 msgstr "պանակ կամ ֆայլի անվան, որտեղ գրառումները կպահվեն"
 
-#: modules/gui/macosx/simple_prefs.m:1219
+#: modules/gui/macosx/simple_prefs.m:1231
 #, fuzzy
 msgid ""
 "Press new keys for\n"
@@ -19104,18 +19103,18 @@ msgstr ""
 "Պրես նոր բանալիների համար \n"
 " \"% @  \""
 
-#: modules/gui/macosx/simple_prefs.m:1303
+#: modules/gui/macosx/simple_prefs.m:1315
 #, fuzzy
 msgid "Invalid combination"
 msgstr "Անվավեր մեկտեղումը>>"
 
-#: modules/gui/macosx/simple_prefs.m:1304
+#: modules/gui/macosx/simple_prefs.m:1316
 #, fuzzy
 msgid "Regrettably, these keys cannot be assigned as hotkey shortcuts."
 msgstr "Ցավոք, այդ բանալիները չեն կարող նշանակվել կոճակ դյուրանցումները\"."
 
-#: modules/gui/macosx/simple_prefs.m:1316
-#: modules/gui/macosx/simple_prefs.m:1320
+#: modules/gui/macosx/simple_prefs.m:1328
+#: modules/gui/macosx/simple_prefs.m:1332
 #, fuzzy
 msgid "This combination is already taken by \"%@\"."
 msgstr "Այս համադրություն է, արդեն ձեռնարկվել է \"% @  \"."
@@ -21347,29 +21346,29 @@ msgstr "Այս մոդուլը գրում վերակոդավորված հոսքի
 msgid "Filename"
 msgstr "Ֆայլի անուն"
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:138
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:139
 #: modules/gui/qt4/dialogs/convert.cpp:113
 msgid "Save file..."
 msgstr "Պահել ֆայլը..."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:139
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:140
 #: modules/gui/qt4/dialogs/convert.cpp:115
 msgid ""
 "Containers (*.ps *.ts *.mpg *.ogg *.asf *.mp4 *.mov *.wav *.raw *.flv *.webm)"
 msgstr ""
 "Կոնտեյներներ (*.ps *.ts *.mpg *.ogg *.asf *.mp4 *.mov *.wav *.raw *.flv)"
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:151
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:152
 #, fuzzy
 msgid "This module outputs the transcoded stream to a network via HTTP."
 msgstr "Այս մոդուլը ելքը է վերակոդավորված հոսքի մի ցանցի միջոցով HTTP\"."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:155
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:259
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:156
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:262
 msgid "Path"
 msgstr "Ճանապարհը"
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:210
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:212
 #, fuzzy
 msgid ""
 "This module outputs the transcoded stream to a network via the mms protocol."
@@ -21377,35 +21376,35 @@ msgstr ""
 "Այս մոդուլը ելքը է վերակոդավորված հոսքի մի ցանցի միջոցով MMS "
 "արձանագրությունը."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:255
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:258
 #, fuzzy
 msgid "This module outputs the transcoded stream to a network via RTSP."
 msgstr "Այս մոդուլը ելքը է վերակոդավորված հոսքի մի ցանցի միջոցով RTSP\"."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:305
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:309
 #, fuzzy
 msgid "This module outputs the transcoded stream to a network via UDP."
 msgstr "Այս մոդուլը ելքը է վերակոդավորված հոսքի մի ցանցի միջոցով UDP\"."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:352
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:374
 #, fuzzy
 msgid "This module outputs the transcoded stream to a network via RTP."
 msgstr "Այս մոդուլը ելքը է վերակոդավորված հոսքի մի ցանցի միջոցով RTP\"."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:357
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:379
 msgid "Base port"
 msgstr "Հիմնական պորտ"
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:399
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:429
 #, fuzzy
 msgid "This module outputs the transcoded stream to an Icecast server."
 msgstr "Այս մոդուլը ելքը է վերակոդավորված հոսքի որեւէ Icecast սերվեր."
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:420
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:450
 msgid "Mount Point"
 msgstr "Բեռնման Կետ"
 
-#: modules/gui/qt4/components/sout/sout_widgets.cpp:421
+#: modules/gui/qt4/components/sout/sout_widgets.cpp:451
 msgid "Login:pass"
 msgstr "Անուն:Գաղտնաբառ"
 
@@ -22454,7 +22453,7 @@ msgid ""
 msgstr ""
 "Ցույց տալ ընդլայնված ընտրանքներ, ոչ թե պարզ ընտրանքներ պատուհանը բացելիս"
 
-#: modules/gui/qt4/qt4.cpp:79 modules/gui/skins2/src/skin_main.cpp:455
+#: modules/gui/qt4/qt4.cpp:79 modules/gui/skins2/src/skin_main.cpp:467
 #, fuzzy
 msgid "Systray icon"
 msgstr "Systray պատկերակը"
@@ -22746,22 +22745,22 @@ msgstr "Պահել երգացանկը"
 msgid "XSPF playlist|*.xspf|M3U file|*.m3u|HTML playlist|*.html"
 msgstr "XSPF երգացանկ|*.xspf|M3U ֆայլ|*.m3u |HTML երգացանկ|*.html"
 
-#: modules/gui/skins2/src/skin_main.cpp:450
+#: modules/gui/skins2/src/skin_main.cpp:462
 #, fuzzy
 msgid "Skin to use"
 msgstr "սկինի օգտագործել`"
 
-#: modules/gui/skins2/src/skin_main.cpp:451
+#: modules/gui/skins2/src/skin_main.cpp:463
 #, fuzzy
 msgid "Path to the skin to use."
 msgstr "ճանապարհը դեպի մաշկը օգտագործել."
 
-#: modules/gui/skins2/src/skin_main.cpp:452
+#: modules/gui/skins2/src/skin_main.cpp:464
 #, fuzzy
 msgid "Config of last used skin"
 msgstr "Config անցյալ օգտագործվել սկինի"
 
-#: modules/gui/skins2/src/skin_main.cpp:453
+#: modules/gui/skins2/src/skin_main.cpp:465
 #, fuzzy
 msgid ""
 "Windows configuration of the last skin used. This option is updated "
@@ -22770,22 +22769,22 @@ msgstr ""
 "Windows կոնֆիգուրացիան վերջին սկինի օգտագործվում. Այս տարբերակը թարմացվել է "
 "ավտոմատ կերպով, չեն դիպչում\"."
 
-#: modules/gui/skins2/src/skin_main.cpp:456
+#: modules/gui/skins2/src/skin_main.cpp:468
 #, fuzzy
 msgid "Show a systray icon for VLC"
 msgstr "Ցույց տալ systray պատկերակը համար VLC"
 
-#: modules/gui/skins2/src/skin_main.cpp:457
-#: modules/gui/skins2/src/skin_main.cpp:458
+#: modules/gui/skins2/src/skin_main.cpp:469
+#: modules/gui/skins2/src/skin_main.cpp:470
 msgid "Show VLC on the taskbar"
 msgstr "Ցույց տալ VLCն taskbarի վրա"
 
-#: modules/gui/skins2/src/skin_main.cpp:459
+#: modules/gui/skins2/src/skin_main.cpp:471
 #, fuzzy
 msgid "Enable transparency effects"
 msgstr "Միացնել թափանցիկության էֆեկտներ"
 
-#: modules/gui/skins2/src/skin_main.cpp:460
+#: modules/gui/skins2/src/skin_main.cpp:472
 #, fuzzy
 msgid ""
 "You can disable all transparency effects if you want. This is mainly useful "
@@ -22794,18 +22793,18 @@ msgstr ""
 "Դուք կարող եք անջատել բոլոր թափանցիկության հետեւանքները, եթե ուզում եք. Սա "
 "հӀ«մնӀ¡կա"
 
-#: modules/gui/skins2/src/skin_main.cpp:463
-#: modules/gui/skins2/src/skin_main.cpp:464
+#: modules/gui/skins2/src/skin_main.cpp:475
+#: modules/gui/skins2/src/skin_main.cpp:476
 #, fuzzy
 msgid "Use a skinned playlist"
 msgstr "Օգտագործեք skinned երգացանկ"
 
-#: modules/gui/skins2/src/skin_main.cpp:465
+#: modules/gui/skins2/src/skin_main.cpp:477
 #, fuzzy
 msgid "Display video in a skinned window if any"
 msgstr "Ցույց տալ վիդեո մի skinned պատուհանում, եթե որեւէ"
 
-#: modules/gui/skins2/src/skin_main.cpp:467
+#: modules/gui/skins2/src/skin_main.cpp:479
 #, fuzzy
 msgid ""
 "When set to 'no', this parameter is intended to give old skins a chance to "
@@ -22814,11 +22813,11 @@ msgstr ""
 "Երբ սահմանված է\" ոչ \", այս պարամետրը նախատեսված է տալիս հին սկիներ թույլ է "
 "տրվում - թույլատրված to play ետ վիդեո թեեւ ոչ վիդեո tag է իրականացվում`"
 
-#: modules/gui/skins2/src/skin_main.cpp:491
+#: modules/gui/skins2/src/skin_main.cpp:503
 msgid "Skins"
 msgstr "Սկիներ"
 
-#: modules/gui/skins2/src/skin_main.cpp:492
+#: modules/gui/skins2/src/skin_main.cpp:504
 msgid "Skinnable Interface"
 msgstr "Սկինավորվող Ինտերֆեյս"
 

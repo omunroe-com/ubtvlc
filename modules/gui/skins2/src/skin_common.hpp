@@ -2,7 +2,7 @@
  * skin_common.hpp
  *****************************************************************************
  * Copyright (C) 2003 the VideoLAN team
- * $Id: e992bd8790f3f298456cdc778f2b3c6781cb5f43 $
+ * $Id: b7addbe4f83c1910f6786eb23a01f6ca4f65b55a $
  *
  * Authors: Cyril Deguet     <asmax@via.ecp.fr>
  *          Olivier Teulière <ipkiss@via.ecp.fr>
@@ -142,6 +142,7 @@ struct intf_sys_t
     vlc_thread_t thread;
     vlc_mutex_t  init_lock;
     vlc_cond_t   init_wait;
+    bool         b_error;
     bool         b_ready;
 };
 

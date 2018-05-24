@@ -2,7 +2,7 @@
  * controls.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2011 VLC authors and VideoLAN
- * $Id: bf40882e12ab2b8dd5bef1de1668960356bf3d00 $
+ * $Id: 5e1517d1cb7f45015709ce7a23ea27bb1d4a57c7 $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -218,7 +218,11 @@
     if( !p_input ) return;
 
     input_item_t *p_item = input_GetItem( p_input );
-    if( !p_item ) return;
+    if( !p_item )
+    {
+        vlc_object_release( p_input );
+        return;
+    }
 
     char *path = input_item_GetURI( p_item );
     if( !path ) path = strdup( "" );
@@ -247,6 +251,7 @@
                          [[[[openPanel URLs] objectAtIndex: i] path] UTF8String] );
         }
     }
+    vlc_object_release( p_input );
 }
 
 - (void)scrollWheel:(NSEvent *)theEvent

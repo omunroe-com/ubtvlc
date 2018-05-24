@@ -2,7 +2,7 @@
  * intf.m: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: 88148db2195ba0c2824e09f5a26aea1b31dfdbff $
+ * $Id: b635111a30f08a8fc2574e667cdd9297c4cf5a3b $
  *
  * Authors: Jon Lech Johansen <jon-vl@nanocrew.net>
  *          Christophe Massiot <massiot@via.ecp.fr>
@@ -188,20 +188,9 @@ void WindowClose( vout_window_t *p_wnd )
  * Run: main loop
  *****************************************************************************/
 static NSLock * o_appLock = nil;    // controls access to f_appExit
-static int f_appExit = 0;           // set to 1 when application termination signaled
 
 static void Run( intf_thread_t *p_intf )
 {
-    sigset_t set;
-
-    /* Make sure the "force quit" menu item does quit instantly.
-     * VLC overrides SIGTERM which is sent by the "force quit"
-     * menu item to make sure daemon mode quits gracefully, so
-     * we un-override SIGTERM here. */
-    sigemptyset( &set );
-    sigaddset( &set, SIGTERM );
-    pthread_sigmask( SIG_UNBLOCK, &set, NULL );
-
     NSAutoreleasePool * o_pool = [[NSAutoreleasePool alloc] init];
     [VLCApplication sharedApplication];
 
@@ -688,15 +677,14 @@ static VLCMain *_o_sharedMainInstance = nil;
 
 - (void)applicationWillTerminate:(NSNotification *)notification
 {
-    if( !p_intf )
-        return;
-
     /* don't allow a double termination call. If the user has
      * already invoked the quit then simply return this time. */
-    int isTerminating = false;
+    static bool f_appExit = false;
+    bool isTerminating;
 
     [o_appLock lock];
-    isTerminating = (f_appExit++ > 0 ? 1 : 0);
+    isTerminating = f_appExit;
+    f_appExit = true;
     [o_appLock unlock];
 
     if (isTerminating)
@@ -712,9 +700,6 @@ static VLCMain *_o_sharedMainInstance = nil;
     config_PutInt( p_intf, "random", var_GetBool( p_playlist, "random" ) );
     config_PutInt( p_intf, "loop", var_GetBool( p_playlist, "loop" ) );
     config_PutInt( p_intf, "repeat", var_GetBool( p_playlist, "repeat" ) );
-
-    // save stuff
-    config_SaveConfigFile( p_intf );
 
     msg_Dbg( p_intf, "Terminating" );
 
@@ -739,6 +724,13 @@ static VLCMain *_o_sharedMainInstance = nil;
     var_DelCallback(p_playlist, "fullscreen", FullscreenChanged, self);
     var_DelCallback(p_intf->p_libvlc, "intf-toggle-fscontrol", ShowController, self);
     var_DelCallback(p_intf->p_libvlc, "intf-show", ShowController, self);
+
+    input_thread_t * p_input = playlist_CurrentInput( p_playlist );
+    if( p_input )
+    {
+        var_DelCallback( p_input, "intf-event", InputEvent, [VLCMain sharedInstance] );
+        vlc_object_release( p_input );
+    }
 
     /* remove global observer watching for vout device changes correctly */
     [[NSNotificationCenter defaultCenter] removeObserver: self];
@@ -877,6 +869,22 @@ static VLCMain *_o_sharedMainInstance = nil;
     char *psz_uri = make_URI([o_filename UTF8String], "file" );
     if( !psz_uri )
         return( FALSE );
+
+    input_thread_t * p_input = pl_CurrentInput( VLCIntf );
+    BOOL b_returned = NO;
+
+    if (p_input)
+    {
+        b_returned = input_AddSubtitle( p_input, psz_uri, true );
+        vlc_object_release( p_input );
+        if(!b_returned)
+        {
+            free( psz_uri );
+            return YES;
+        }
+    }
+    else if( p_input )
+        vlc_object_release( p_input );
 
     NSDictionary *o_dic = [NSDictionary dictionaryWithObject:[NSString stringWithCString:psz_uri encoding:NSUTF8StringEncoding] forKey:@"ITEM_URL"];
 
@@ -1365,8 +1373,9 @@ unsigned int CocoaKeyToVLC( unichar i_key )
             if( p_input != NULL && [self activeVideoPlayback] )
             {
                 [o_mainwindow performSelectorOnMainThread:@selector(enterFullscreen) withObject:nil waitUntilDone:NO];
-                vlc_object_release( p_input );
             }
+            if (p_input)
+                vlc_object_release( p_input );
         }
         else
         {
@@ -1385,10 +1394,12 @@ unsigned int CocoaKeyToVLC( unichar i_key )
     {
         var_AddCallback( p_input, "intf-event", InputEvent, [VLCMain sharedInstance] );
         [o_mainmenu setRateControlsEnabled: YES];
-        vlc_object_release( p_input );
     }
     else
         [o_mainmenu setRateControlsEnabled: NO];
+
+    if (p_input)
+        vlc_object_release( p_input );
 
     [o_playlist updateRowSelection];
     [o_mainwindow updateWindow];

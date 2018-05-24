@@ -2,7 +2,7 @@
  * MainWindow.h: MacOS X interface module
  *****************************************************************************
  * Copyright (C) 2002-2012 VLC authors and VideoLAN
- * $Id: 5ed83249a0a121ff5546f9682f6fc60513fab16c $
+ * $Id: 80051f08e79d648c50e0b10137618581fe623a33 $
  *
  * Authors: Felix Paul Kühne <fkuehne -at- videolan -dot- org>
  *          Jon Lech Johansen <jon-vl@nanocrew.net>
@@ -73,6 +73,7 @@
     BOOL b_dark_interface;
     BOOL b_nativeFullscreenMode;
     BOOL b_video_playback_enabled;
+    BOOL b_dropzone_active;
     int i_lastShownVolume;
     input_state_e cachedInputState;
 
