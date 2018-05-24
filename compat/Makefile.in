@@ -79,14 +79,13 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = compat
-DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am nrand48.c \
-	vasprintf.c atof.c setenv.c asprintf.c strndup.c strtof.c \
-	strlcpy.c strcasestr.c strtok_r.c strverscmp.c swab.c lldiv.c \
-	dirfd.c fdopendir.c strnlen.c tdestroy.c strtoll.c strsep.c \
-	atoll.c inet_pton.c localtime_r.c gmtime_r.c rewind.c \
-	strcasecmp.c getpid.c strdup.c fsync.c getdelim.c \
-	posix_memalign.c poll.c flockfile.c \
-	$(top_srcdir)/autotools/depcomp
+DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am strcasecmp.c \
+	strsep.c localtime_r.c fsync.c strtof.c getpid.c tdestroy.c \
+	getdelim.c atof.c vasprintf.c dirfd.c strndup.c lldiv.c \
+	posix_memalign.c gmtime_r.c fdopendir.c strlcpy.c rewind.c \
+	nrand48.c strdup.c strcasestr.c setenv.c atoll.c asprintf.c \
+	inet_pton.c strverscmp.c strtok_r.c strnlen.c swab.c \
+	flockfile.c strtoll.c poll.c $(top_srcdir)/autotools/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/dolt.m4 \
 	$(top_srcdir)/m4/flags.m4 $(top_srcdir)/m4/gettext.m4 \
@@ -483,7 +482,6 @@ LIBPTHREAD = @LIBPTHREAD@
 LIBS = @LIBS@
 LIBS_a52tofloat32 = @LIBS_a52tofloat32@
 LIBS_aa = @LIBS_aa@
-LIBS_access_avio = @LIBS_access_avio@
 LIBS_access_mtp = @LIBS_access_mtp@
 LIBS_access_output_shout = @LIBS_access_output_shout@
 LIBS_access_rtmp = @LIBS_access_rtmp@
@@ -494,7 +492,6 @@ LIBS_android_opaque = @LIBS_android_opaque@
 LIBS_android_surface = @LIBS_android_surface@
 LIBS_audiobargraph_a = @LIBS_audiobargraph_a@
 LIBS_audiobargraph_v = @LIBS_audiobargraph_v@
-LIBS_avcodec = @LIBS_avcodec@
 LIBS_ball = @LIBS_ball@
 LIBS_bonjour = @LIBS_bonjour@
 LIBS_caca = @LIBS_caca@
@@ -530,7 +527,6 @@ LIBS_growl = @LIBS_growl@
 LIBS_headphone_channel_mixer = @LIBS_headphone_channel_mixer@
 LIBS_hotkeys = @LIBS_hotkeys@
 LIBS_hqdn3d = @LIBS_hqdn3d@
-LIBS_i420_rgb_mmx = @LIBS_i420_rgb_mmx@
 LIBS_kate = @LIBS_kate@
 LIBS_libass = @LIBS_libass@
 LIBS_libbluray = @LIBS_libbluray@
