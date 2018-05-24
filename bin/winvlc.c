@@ -68,7 +68,7 @@ static BOOL SetDefaultDllDirectories_(DWORD flags)
     if (h == NULL)
         return FALSE;
 
-    BOOL WINAPI (*SetDefaultDllDirectoriesReal)(DWORD);
+    BOOL (WINAPI * SetDefaultDllDirectoriesReal)(DWORD);
 
     SetDefaultDllDirectoriesReal = GetProcAddress(h,
                                                   "SetDefaultDllDirectories");
@@ -129,31 +129,41 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
     putenv("VLC_DATA_PATH=Z:"TOP_SRCDIR"/share");
 #endif
 
+#ifndef NDEBUG
+    /* Disable stderr buffering. Indeed, stderr can be buffered on Windows (if
+     * connected to a pipe). */
+    setvbuf (stderr, NULL, _IONBF, BUFSIZ);
+#endif
+
+#if (_WIN32_WINNT < _WIN32_WINNT_WIN7)
     SetErrorMode(SEM_FAILCRITICALERRORS);
+#endif
     HeapSetInformation(NULL, HeapEnableTerminationOnCorruption, NULL, 0);
 
-    /* SetProcessDEPPolicy */
-    HINSTANCE h_Kernel32 = LoadLibraryW(L"kernel32.dll");
-    if(h_Kernel32)
+    /* SetProcessDEPPolicy, SetDllDirectory, & Co. */
+    HINSTANCE h_Kernel32 = GetModuleHandle(TEXT("kernel32.dll"));
+    if (h_Kernel32 != NULL)
     {
-        BOOL (WINAPI * mySetProcessDEPPolicy)( DWORD dwFlags);
-        BOOL (WINAPI * mySetDllDirectoryA)(const char* lpPathName);
+        /* Enable DEP */
 # define PROCESS_DEP_ENABLE 1
-
-        mySetProcessDEPPolicy = (BOOL WINAPI (*)(DWORD))
+        BOOL (WINAPI * mySetProcessDEPPolicy)( DWORD dwFlags);
+        mySetProcessDEPPolicy = (BOOL (WINAPI *)(DWORD))
                             GetProcAddress(h_Kernel32, "SetProcessDEPPolicy");
         if(mySetProcessDEPPolicy)
             mySetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 
         /* Do NOT load any library from cwd. */
-        mySetDllDirectoryA = (BOOL WINAPI (*)(const char*))
+        BOOL (WINAPI * mySetDllDirectoryA)(const char* lpPathName);
+        mySetDllDirectoryA = (BOOL (WINAPI *)(const char*))
                             GetProcAddress(h_Kernel32, "SetDllDirectoryA");
         if(mySetDllDirectoryA)
             mySetDllDirectoryA("");
-
-        FreeLibrary(h_Kernel32);
     }
 
+    /***
+     * The LoadLibrary* calls from the modules and the 3rd party code
+     * will search in SYSTEM32 only
+     * */
     SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
     /***
      * Load DLLs from system32 before any other folder (when possible)
@@ -206,7 +216,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance,
         SetUnhandledExceptionFilter(vlc_exception_filter);
     }
 
-    _setmode( STDIN_FILENO, _O_BINARY ); /* Needed for pipes */
+    _setmode( _fileno( stdin ), _O_BINARY ); /* Needed for pipes */
 
     /* */
     if (!lang)
@@ -324,28 +334,21 @@ static void check_crashdump(void)
                             FTP_TRANSFER_TYPE_BINARY, 0) )
                     fprintf(stderr, "Report sent correctly to FTP.\n");
                 else
-                    MessageBox( NULL, L"There was an error while "\
-                                "transferring the data to the FTP server.\n"\
-                                "Thanks a lot for the help.",
-                                L"Report sending failed", MB_OK);
+                    fprintf(stderr,"Couldn't send report to FTP server\n");
+
                 InternetCloseHandle_(ftp);
             }
             else
             {
-                MessageBox( NULL, L"There was an error while connecting to " \
-                                "the FTP server. "\
-                                "Thanks a lot for the help.",
-                                L"Report sending failed", MB_OK);
-                fprintf(stderr,"Can't connect to FTP server 0x%08lu\n",
+                fprintf(stderr, "Can't connect to FTP server 0x%08lx\n",
                         (unsigned long)GetLastError());
             }
             InternetCloseHandle_(Hint);
         }
         else
         {
-              MessageBox( NULL, L"There was an error while connecting to the Internet.\n"\
-                                "Thanks a lot for the help anyway.",
-                                L"Report sending failed", MB_OK);
+              fprintf(stderr, "There was an error while connecting to the "
+                      "Internet  0x%08lx\n", (unsigned long)GetLastError());
         }
 done:
         if (hWininet != NULL)
@@ -394,7 +397,7 @@ LONG WINAPI vlc_exception_filter(struct _EXCEPTION_POINTERS *lpExceptionInfo)
         const EXCEPTION_RECORD *const pException = (const EXCEPTION_RECORD *)
             lpExceptionInfo->ExceptionRecord;
         /* No nested exceptions for now */
-        fwprintf( fd, L"\n\n[exceptions]\n%08x at %px", 
+        fwprintf( fd, L"\n\n[exceptions]\n%08x at %px",
                 pException->ExceptionCode, pException->ExceptionAddress );
 
         for( unsigned int i = 0; i < pException->NumberParameters; i++ )
