@@ -63,6 +63,44 @@ struct demux_sys_t
         }
         if (demux_Control( demux->p_next, DEMUX_CAN_SEEK, &canSeek ) != VLC_SUCCESS)
             canSeek = false;
+
+        int i_current_title;
+        if( demux_Control( p_demux->p_next, DEMUX_GET_TITLE,
+                           &i_current_title ) == VLC_SUCCESS )
+        {
+            input_title_t** pp_titles;
+            int i_nb_titles, i_title_offset, i_chapter_offset;
+            if( demux_Control( demux->p_next, DEMUX_GET_TITLE_INFO, &pp_titles,
+                              &i_nb_titles, &i_title_offset,
+                              &i_chapter_offset ) == VLC_SUCCESS )
+            {
+                int64_t i_longest_duration = 0;
+                int i_longest_title = 0;
+                bool b_is_interactive = false;
+                for( int i = 0 ; i < i_nb_titles; ++i )
+                {
+                    if( pp_titles[i]->i_length > i_longest_duration )
+                    {
+                        i_longest_duration = pp_titles[i]->i_length;
+                        i_longest_title = i;
+                    }
+                    if( i_current_title == i &&
+                            pp_titles[i]->i_flags & INPUT_TITLE_INTERACTIVE )
+                    {
+                        b_is_interactive = true;
+                    }
+                    vlc_input_title_Delete( pp_titles[i] );
+                }
+                free( pp_titles );
+
+                if( b_is_interactive == true )
+                {
+                    demux_Control( p_demux->p_next, DEMUX_SET_TITLE,
+                                   i_longest_title );
+                    p_demux->info.i_update = p_demux->p_next->info.i_update;
+                }
+            }
+        }
     }
 
     ~demux_sys_t()
@@ -260,6 +298,31 @@ struct demux_sys_t
             p_renderer = NULL;
             m_startTime = VLC_TS_INVALID;
             return VLC_SUCCESS;
+        case DEMUX_CAN_PAUSE:
+        case DEMUX_CAN_CONTROL_PACE:
+        {
+            int ret;
+            va_list ap;
+
+            va_copy( ap, args );
+            ret = demux_vaControl( p_demux_filter->p_next, i_query, args );
+            if( ret != VLC_SUCCESS )
+                *va_arg( ap, bool* ) = false;
+            va_end( ap );
+            return VLC_SUCCESS;
+        }
+        case DEMUX_GET_PTS_DELAY:
+        {
+            int ret;
+            va_list ap;
+
+            va_copy( ap, args );
+            ret = demux_vaControl( p_demux_filter->p_next, i_query, args );
+            if( ret != VLC_SUCCESS )
+                *va_arg( ap, int64_t* ) = 0;
+            va_end( ap );
+            return VLC_SUCCESS;
+        }
         }
 
         return demux_vaControl( p_demux_filter->p_next, i_query, args );

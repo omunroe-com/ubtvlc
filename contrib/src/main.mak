@@ -44,6 +44,9 @@ ARCH := $(shell $(SRC)/get-arch.sh $(HOST))
 ifeq ($(ARCH)-$(HAVE_WIN32),x86_64-1)
 HAVE_WIN64 := 1
 endif
+ifeq ($(ARCH)-$(HAVE_WIN32),aarch64-1)
+HAVE_WIN64 := 1
+endif
 
 ifdef HAVE_CROSS_COMPILE
 need_pkg = 1
@@ -463,6 +466,7 @@ ifndef WITH_OPTIMIZATION
 else
 	echo "set(CMAKE_BUILD_TYPE Release)" >> $@
 endif
+	echo "set(CMAKE_SYSTEM_PROCESSOR $(ARCH))" >> $@
 ifdef HAVE_WIN32
 ifdef HAVE_WINDOWSPHONE
 	echo "set(CMAKE_SYSTEM_NAME WindowsPhone)" >> $@

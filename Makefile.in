@@ -413,7 +413,7 @@ am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/share/Info.plist.in ABOUT-NLS AUTHORS COPYING \
 	COPYING.LIB ChangeLog INSTALL NEWS README THANKS \
 	autotools/compile autotools/config.guess \
-	autotools/config.rpath autotools/config.sub \
+	autotools/config.rpath autotools/config.sub autotools/depcomp \
 	autotools/install-sh autotools/ltmain.sh autotools/missing \
 	autotools/ylwrap
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -2233,6 +2233,7 @@ VLC.app: install
 @HAVE_BREAKPAD_TRUE@	cp -R $(CONTRIB_DIR)/Frameworks/Breakpad.framework $@/Contents/Frameworks
 	mkdir -p $@/Contents/MacOS/share/locale/
 @BUILD_LUA_TRUE@	cp -r "$(prefix)/share/vlc/lua" $@/Contents/MacOS/share/
+@BUILD_LUA_TRUE@	cp -r "$(prefix)/lib/vlc/lua" $@/Contents/MacOS/share/
 	cp -r $(srcdir)/share/hrtfs $@/Contents/MacOS/share/
 	mkdir -p $@/Contents/MacOS/include/
 	(cd "$(prefix)/include" && $(AMTAR) -c --exclude "plugins" vlc) | $(AMTAR) -x -C $@/Contents/MacOS/include/
@@ -2260,7 +2261,7 @@ package-macosx: VLC.app
 @HAVE_DMGBUILD_TRUE@		-D app="$(abs_top_builddir)/VLC.app" "VLC Media Player" "$(abs_top_builddir)/vlc-$(VERSION).dmg"
 @HAVE_DMGBUILD_FALSE@	@echo "Packaging non-fancy DMG"
 @HAVE_DMGBUILD_FALSE@	mkdir -p "$(top_builddir)/vlc-$(VERSION)"
-@HAVE_DMGBUILD_FALSE@	cp -R "$(top_builddir)/VLC.app" "$(top_builddir)/vlc-$(VERSION)/VLC.app"
+@HAVE_DMGBUILD_FALSE@	cp -Rp "$(top_builddir)/VLC.app" "$(top_builddir)/vlc-$(VERSION)/VLC.app"
 @HAVE_DMGBUILD_FALSE@	$(LN_S) -f /Applications "$(top_builddir)/vlc-$(VERSION)/"
 @HAVE_DMGBUILD_FALSE@	hdiutil create -srcfolder "$(top_builddir)/vlc-$(VERSION)" -volname "VLC Media Player" \
 @HAVE_DMGBUILD_FALSE@		-format UDBZ -o "$(top_builddir)/vlc-$(VERSION).dmg"
@@ -2269,10 +2270,21 @@ package-macosx: VLC.app
 package-macosx-zip: VLC.app
 	rm -f "$(top_builddir)/vlc-$(VERSION).zip"
 	mkdir -p $(top_builddir)/vlc-$(VERSION)/Goodies/
-	cp -R $(top_builddir)/VLC.app $(top_builddir)/vlc-$(VERSION)/VLC.app
+	cp -Rp $(top_builddir)/VLC.app $(top_builddir)/vlc-$(VERSION)/VLC.app
 	cd $(srcdir); cp -R AUTHORS COPYING README THANKS NEWS $(abs_top_builddir)/vlc-$(VERSION)/Goodies/
 	zip -r -y -9 $(top_builddir)/vlc-$(VERSION).zip $(top_builddir)/vlc-$(VERSION)
 	rm -rf "$(top_builddir)/vlc-$(VERSION)"
+
+package-macosx-release:
+	rm -f "$(top_builddir)/vlc-$(VERSION)-release.zip"
+	mkdir -p $(top_builddir)/vlc-$(VERSION)-release
+	cp -Rp $(top_builddir)/VLC.app $(top_builddir)/vlc-$(VERSION)-release/
+	cp $(srcdir)/extras/package/macosx/dmg/* $(top_builddir)/vlc-$(VERSION)-release/
+	cp "$(srcdir)/extras/package/macosx/codesign.sh" $(top_builddir)/vlc-$(VERSION)-release/
+	cp "$(prefix)/lib/vlc/vlc-cache-gen" $(top_builddir)/vlc-$(VERSION)-release/
+	install_name_tool -add_rpath "@executable_path/VLC.app/Contents/MacOS/lib" $(top_builddir)/vlc-$(VERSION)-release/vlc-cache-gen
+	zip -r -y -9 $(top_builddir)/vlc-$(VERSION)-release.zip $(top_builddir)/vlc-$(VERSION)-release
+	rm -rf "$(top_builddir)/vlc-$(VERSION)-release"
 
 package-translations:
 	mkdir -p "$(srcdir)/vlc-translations-$(VERSION)"
@@ -2293,7 +2305,7 @@ package-translations:
 	$(AMTAR) chof - $(srcdir)/vlc-translations-$(VERSION) \
 	  | GZIP=$(GZIP_ENV) gzip -c >$(srcdir)/vlc-translations-$(VERSION).tar.gz
 
-.PHONY: package-macosx package-macosx-zip package-translations pseudo-bundle
+.PHONY: package-macosx package-macosx-zip package-macosx-release package-translations pseudo-bundle
 
 @HAVE_WIN32_TRUE@build-npapi: fetch-npapi
 @HAVE_WIN32_TRUE@	$(MAKE) install-npapi
@@ -2384,7 +2396,7 @@ package-win-common: package-win-install package-win-sdk
 	-cp $(CONTRIB_DIR)/share/java/*.jar $(win32_destdir)/plugins/access/
 
 @BUILD_LUA_TRUE@	mkdir -p $(win32_destdir)/lua/
-@BUILD_LUA_TRUE@	cp -r $(prefix)/share/vlc/lua/* $(win32_destdir)/lua/
+@BUILD_LUA_TRUE@	cp -r $(prefix)/lib/vlc/lua/* $(win32_destdir)/lua/
 
 @BUILD_SKINS_TRUE@	rm -fr $(win32_destdir)/skins
 @BUILD_SKINS_TRUE@	cp -r $(prefix)/share/vlc/skins2 $(win32_destdir)/skins

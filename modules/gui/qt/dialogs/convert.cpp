@@ -2,7 +2,7 @@
  * convert.cpp : Convertion dialogs
  ****************************************************************************
  * Copyright (C) 2009 the VideoLAN team
- * $Id: 1c7b1a85eda5c7d87219675fbcec35115fdf1994 $
+ * $Id: 8a87518fa9429a57bc6d07ff1986cda14ab20f96 $
  *
  * Authors: Jean-Baptiste Kempf <jb (at) videolan.org>
  *
@@ -36,6 +36,9 @@
 #include <QDialogButtonBox>
 #include <QFileDialog>
 #include <QCheckBox>
+
+#define urlToDisplayString(filestr) toNativeSeparators(QUrl(filestr).toDisplayString(\
+    QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::NormalizePathSegments ))
 
 ConvertDialog::ConvertDialog( QWidget *parent, intf_thread_t *_p_intf,
                               const QStringList& inputMRLs )
@@ -71,6 +74,7 @@ ConvertDialog::ConvertDialog( QWidget *parent, intf_thread_t *_p_intf,
     fileLine = new QLineEdit;
     fileLine->setMinimumWidth( 300 );
     fileLine->setFocus( Qt::ActiveWindowFocusReason );
+    fileLine->setReadOnly(true);
     destLabel->setBuddy( fileLine );
     // You can set a specific name for only one file.
     if(singleFileSelected)
@@ -154,11 +158,11 @@ void ConvertDialog::fileBrowse()
 {
     QString fileExtension = ( ! profile->isEnabled() ) ? ".*" : "." + profile->getMux();
 
-    QString fileName = QFileDialog::getSaveFileName( this, qtr( "Save file..." ),
+    outgoingMRL = QFileDialog::getSaveFileUrl( this, qtr( "Save file..." ),
         p_intf->p_sys->filepath,
         QString( "%1 (*%2);;%3 (*.*)" ).arg( qtr( "Containers" ) )
             .arg( fileExtension ).arg( qtr("All") ), 0, QFileDialog::DontConfirmOverwrite );
-    fileLine->setText( toNativeSeparators( fileName ) );
+    fileLine->setText( urlToDisplayString( outgoingMRL ) );
     setDestinationFileExtension();
 }
 
@@ -198,7 +202,7 @@ void ConvertDialog::close()
             // Only one file, use the destination provided
             if(singleFileSelected)
             {
-                newFileName = fileLine->text();
+                newFileName = outgoingMRL.toLocalFile();
             }
 
             // Multiple, use the convention.
@@ -209,7 +213,7 @@ void ConvertDialog::close()
                 newFileName = incomingMRLs->at(i);
 
                 // Remove the file:// from the front of our MRL
-                newFileName = newFileName.remove(0,7);
+                newFileName = QUrl(newFileName).toLocalFile();
 
                 // Remote the existing extention (if any)
                 int extentionPos = newFileName.lastIndexOf('.');
@@ -244,13 +248,14 @@ void ConvertDialog::close()
 
 void ConvertDialog::setDestinationFileExtension()
 {
-    if( !fileLine->text().isEmpty() && profile->isEnabled() )
+    if( !outgoingMRL.isEmpty() && profile->isEnabled() )
     {
-        QString newFileExtension = "." + profile->getMux();
-        if( fileLine->text().lastIndexOf( "." ) == -1 )
+        QString filepath = outgoingMRL.path(QUrl::FullyEncoded);
+        if( filepath.lastIndexOf( "." ) == -1 )
         {
-            QString newFileName = fileLine->text().append( newFileExtension );
-            fileLine->setText( toNativeSeparators( newFileName ) );
+            QString newFileExtension = "." + profile->getMux();
+            outgoingMRL.setPath(filepath + newFileExtension);
+            fileLine->setText( urlToDisplayString( outgoingMRL ) );
         }
     }
 }

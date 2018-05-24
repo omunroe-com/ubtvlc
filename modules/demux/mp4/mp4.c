@@ -126,6 +126,7 @@ struct demux_sys_t
 #define DEMUX_TRACK_MAX_PRELOAD (CLOCK_FREQ * 15) /* maximum preloading, to deal with interleaving */
 
 #define VLC_DEMUXER_EOS (VLC_DEMUXER_EGENERIC - 1)
+#define VLC_DEMUXER_FATAL (VLC_DEMUXER_EGENERIC - 2)
 
 const uint32_t rgi_pict_atoms[2] = { ATOM_PICT, ATOM_pict };
 const char *psz_meta_roots[] = { "/moov/udta/meta/ilst",
@@ -317,6 +318,8 @@ static inline int64_t MP4_TrackGetDTS( demux_t *p_demux, mp4_track_t *p_track )
         }
     }
 
+    i_dts = MP4_rescale( i_dts, p_track->i_timescale, CLOCK_FREQ );
+
     /* now handle elst */
     if( p_track->p_elst && p_track->BOXDATA(p_elst)->i_entry_count )
     {
@@ -327,16 +330,16 @@ static inline int64_t MP4_TrackGetDTS( demux_t *p_demux, mp4_track_t *p_track )
               elst->i_media_rate_fraction[p_track->i_elst] > 0 ) &&
             elst->i_media_time[p_track->i_elst] > 0 )
         {
-            i_dts -= elst->i_media_time[p_track->i_elst];
+            i_dts -= MP4_rescale( elst->i_media_time[p_track->i_elst], p_track->i_timescale, CLOCK_FREQ );
         }
 
         /* add i_elst_time */
-        i_dts += MP4_rescale( p_track->i_elst_time, p_sys->i_timescale, p_track->i_timescale );
+        i_dts += MP4_rescale( p_track->i_elst_time, p_sys->i_timescale, CLOCK_FREQ );
 
         if( i_dts < 0 ) i_dts = 0;
     }
 
-    return MP4_rescale( i_dts, p_track->i_timescale, CLOCK_FREQ );
+    return i_dts;
 }
 
 static inline bool MP4_TrackGetPTSDelta( demux_t *p_demux, mp4_track_t *p_track,
@@ -4290,7 +4293,7 @@ static int FragDemuxTrack( demux_t *p_demux, mp4_track_t *p_track,
         {
             if( p_block )
                 block_Release( p_block );
-            return VLC_DEMUXER_EOF;
+            return VLC_DEMUXER_FATAL;
         }
 
 #if 0
@@ -4392,6 +4395,8 @@ static int DemuxMoof( demux_t *p_demux )
 
             if( i_ret == VLC_DEMUXER_SUCCESS )
                 i_status = VLC_DEMUXER_SUCCESS;
+            else if( i_ret == VLC_DEMUXER_FATAL )
+                i_status = VLC_DEMUXER_EOF;
         }
 
         if( i_status != VLC_DEMUXER_SUCCESS || !tk )

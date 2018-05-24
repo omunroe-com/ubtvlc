@@ -2,7 +2,7 @@
  * menus.cpp : Qt menus
  *****************************************************************************
  * Copyright © 2006-2011 the VideoLAN team
- * $Id: ede795a55c810ca2a24bf5f7ccd7c6ff310f1f09 $
+ * $Id: 77392d611f62fe435cc92ac2ccfb7609d67fc48b $
  *
  * Authors: Clément Stenac <zorglub@videolan.org>
  *          Jean-Baptiste Kempf <jb@videolan.org>
@@ -670,15 +670,9 @@ QMenu *VLCMenuBar::VideoMenu( intf_thread_t *p_intf, QMenu *current )
     QVector<vlc_object_t *> objects;
     QVector<const char *> varnames;
 
-    if ( !rendererMenu )
-        rendererMenu = RendererMenu( p_intf );
-
     if( current->isEmpty() )
     {
         addActionWithSubmenu( current, "video-es", qtr( "Video &Track" ) );
-
-        current->addSeparator();
-        current->addMenu( rendererMenu );
 
         current->addSeparator();
         /* Surface modifiers */
@@ -732,6 +726,13 @@ QMenu *VLCMenuBar::NavigMenu( intf_thread_t *p_intf, QMenu *menu )
     action->setData( "bookmark" );
 
     menu->addSeparator();
+
+    if ( !rendererMenu )
+        rendererMenu = RendererMenu( p_intf );
+
+    menu->addMenu( rendererMenu );
+    menu->addSeparator();
+
 
     PopupMenuControlEntries( menu, p_intf );
 
@@ -1650,11 +1651,12 @@ QMenu *VLCMenuBar::RendererMenu(intf_thread_t *p_intf, QMenu *menu )
 
     submenu->addSeparator();
 
-    action = new QAction( qtr("Scan"), submenu );
-    action->setCheckable(true);
+    action = new QAction( qtr("Scanning..."), submenu );
+    action->setEnabled( false );
     submenu->addAction( action );
 
-    CONNECT( action, triggered(bool), ActionsManager::getInstance( p_intf ), ScanRendererAction( bool ) );
+    CONNECT( submenu, aboutToShow(), ActionsManager::getInstance( p_intf ), StartRendererScan() );
+    CONNECT( submenu, aboutToHide(), ActionsManager::getInstance( p_intf ), RendererMenuCountdown() );
     CONNECT( rendererGroup, triggered(QAction*), ActionsManager::getInstance( p_intf ), RendererSelected( QAction* ) );
 
     return submenu;

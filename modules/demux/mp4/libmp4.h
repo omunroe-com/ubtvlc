@@ -234,11 +234,13 @@ typedef int64_t stime_t;
 #define ATOM_VP31 VLC_FOURCC( 'V', 'P', '3', '1' )
 #define ATOM_vp31 VLC_FOURCC( 'v', 'p', '3', '1' )
 #define ATOM_h264 VLC_FOURCC( 'h', '2', '6', '4' )
+#define ATOM_H264 VLC_FOURCC( 'H', '2', '6', '4' )
 #define ATOM_qdrw VLC_FOURCC( 'q', 'd', 'r', 'w' )
 #define ATOM_vp08 VLC_FOURCC( 'v', 'p', '0', '8' )
 #define ATOM_vp09 VLC_FOURCC( 'v', 'p', '0', '9' )
 #define ATOM_vp10 VLC_FOURCC( 'v', 'p', '1', '0' )
 #define ATOM_WMV3 VLC_FOURCC( 'W', 'M', 'V', '3' )
+#define ATOM_WVC1 VLC_FOURCC( 'W', 'V', 'C', '1' )
 
 #define ATOM_avc1 VLC_FOURCC( 'a', 'v', 'c', '1' )
 #define ATOM_avc3 VLC_FOURCC( 'a', 'v', 'c', '3' )
@@ -941,8 +943,8 @@ typedef struct MP4_Box_data_elst_s
 
     uint32_t i_entry_count;
 
-    uint64_t *i_segment_duration;
-    int64_t  *i_media_time;
+    uint64_t *i_segment_duration; /* movie timescale */
+    int64_t  *i_media_time; /* media(track) timescale */
     uint16_t *i_media_rate_integer;
     uint16_t *i_media_rate_fraction;
 
