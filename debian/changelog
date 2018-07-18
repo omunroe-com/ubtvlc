@@ -1,3 +1,9 @@
+vlc (3.0.3-1-1ubuntu1) bionic; urgency=medium
+
+  * New upstream bugfix release (LP: #1774067).
+
+ -- Simon Quigley <tsimonq2@ubuntu.com>  Wed, 18 Jul 2018 09:06:05 -0500
+
 vlc (3.0.3-1-1) unstable; urgency=high
 
   * New upstream version.
