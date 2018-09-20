@@ -23,9 +23,10 @@ confflags += \
 confflags += \
 	--enable-a52 \
 	--enable-aa \
+	--enable-aom \
 	--enable-aribsub \
-	--enable-bluray \
 	--enable-avahi \
+	--enable-bluray \
 	--enable-caca \
 	--enable-chromaprint \
 	--enable-chromecast \
