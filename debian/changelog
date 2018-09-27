@@ -1,3 +1,9 @@
+vlc (3.0.4-2build1) cosmic; urgency=medium
+
+  * Rebuild against new liblivemedia64.
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Thu, 27 Sep 2018 19:31:24 +0200
+
 vlc (3.0.4-2) unstable; urgency=medium
 
   * debian/: Build AOM plugin.
